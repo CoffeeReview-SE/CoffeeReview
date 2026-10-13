@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import {
+  Alert,
   Image,
   Pressable,
   ScrollView,
@@ -9,16 +10,14 @@ import {
   TextInput,
   View,
   useWindowDimensions,
-  Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
-<<<<<<< HEAD:FE/React_Native/project/src/app&web/Users/account.tsx
 import * as ImagePicker from "expo-image-picker";
+import { useRouter } from "expo-router";
 import {
-  deleteCurrentAccount,
-  deleteAddress,
   changeCurrentPassword,
+  deleteAddress,
+  deleteCurrentAccount,
   getAddresses,
   getCurrentUser,
   getPromoEmailPreference,
@@ -28,7 +27,7 @@ import {
   updateCurrentUser,
   type Address,
   type UserProfile,
-} from "./authService";
+} from "../Use-cases/authService";
 
 type AccountInlineSection =
   | "profile"
@@ -37,9 +36,6 @@ type AccountInlineSection =
   | "favorites"
   | "wallet"
   | "coupons";
-=======
-import { getCurrentUser, logoutUser, type UserProfile } from "../Use-cases/authService";
->>>>>>> 55e6b04bdb0039b31ed0125a769dac91701491a9:src/Features/auth/FE/account.tsx
 
 const menuItems = [
   {
@@ -169,7 +165,6 @@ export default function AccountScreen() {
         </Pressable>
       </View>
 
-<<<<<<< HEAD:FE/React_Native/project/src/app&web/Users/account.tsx
       <View style={[styles.layout, isMobile && styles.layoutMobile]}>
         {!isMobile && (
           <View style={styles.sidebar}>
@@ -182,116 +177,62 @@ export default function AccountScreen() {
                   />
                 ) : (
                   <Ionicons name="person" size={30} color="#d32f2f" />
-=======
-      <ImageBackground
-        source={require("@/assets/image/anhnen.png")}
-        style={styles.heroBackground}
-        imageStyle={styles.heroBackgroundImage}
-        resizeMode="cover"
-      >
-        <View style={styles.heroOverlay}>
-          <View style={[styles.layout, isMobile && styles.layoutMobile]}>
-            {!isMobile && (
-              <View style={styles.sidebar}>
-                <View style={styles.userSummary}>
-                  <View style={styles.avatar}>
-                    <Ionicons name="person" size={30} color="#d32f2f" />
-                  </View>
-                  <Text style={styles.userName}>{user.fullName}</Text>
-                  <Text style={styles.userEmail}>{user.email}</Text>
-                </View>
-                {["Tổng quan", ...menuItems.map((item) => item.label)].map(
-                  (label, index) => (
-                    <Pressable
-                      key={label}
-                      style={[
-                        styles.sideItem,
-                        index === 0 && styles.sideItemActive,
-                      ]}
-                      onPress={() =>
-                        index === 1
-                          ? router.push("/orders")
-                          : index === 0
-                            ? undefined
-                            : Alert.alert(
-                                label,
-                                "Mục này sẽ được hoàn thiện ở bước tiếp theo.",
-                              )
-                      }
-                    >
-                      <Ionicons
-                        name={
-                          index === 0
-                            ? "grid-outline"
-                            : (menuItems[index - 1]?.icon ?? "grid-outline")
-                        }
-                        size={18}
-                        color={index === 0 ? "#d32f2f" : "#555"}
-                      />
-                      <Text
-                        style={[
-                          styles.sideText,
-                          index === 0 && styles.sideTextActive,
-                        ]}
-                      >
-                        {label}
-                      </Text>
-                    </Pressable>
-                  ),
->>>>>>> 55e6b04bdb0039b31ed0125a769dac91701491a9:src/Features/auth/FE/account.tsx
                 )}
               </View>
               <Text style={styles.userName}>{user.fullName}</Text>
               <Text style={styles.userEmail}>{user.email}</Text>
             </View>
-            {["Tổng quan", ...menuItems.map((item) => item.label)].map(
-              (label, index) => (
-                <Pressable
-                  key={label}
+            {[
+              "Tổng quan",
+              ...menuItems.map((item) => item.label),
+            ].map((label, index) => (
+              <Pressable
+                key={label}
+                style={[
+                  styles.sideItem,
+                  (index === 0
+                    ? activeSection === null
+                    : menuItems[index - 1]?.section === activeSection) &&
+                    styles.sideItemActive,
+                ]}
+                onPress={() => {
+                  if (index === 0) {
+                    setActiveSection(null);
+                    return;
+                  }
+
+                  const item = menuItems[index - 1];
+                  if (item?.route) return router.push(item.route);
+                  if (item?.section) return setActiveSection(item.section);
+
+                  Alert.alert(
+                    label,
+                    "Mục này sẽ được hoàn thiện ở bước tiếp theo.",
+                  );
+                }}
+              >
+                <Ionicons
+                  name={
+                    index === 0
+                      ? "grid-outline"
+                      : (menuItems[index - 1]?.icon ?? "grid-outline")
+                  }
+                  size={18}
+                  color={index === 0 ? "#d32f2f" : "#555"}
+                />
+                <Text
                   style={[
-                    styles.sideItem,
+                    styles.sideText,
                     (index === 0
                       ? activeSection === null
                       : menuItems[index - 1]?.section === activeSection) &&
-                      styles.sideItemActive,
+                      styles.sideTextActive,
                   ]}
-                  onPress={() => {
-                    if (index === 0) {
-                      setActiveSection(null);
-                      return;
-                    }
-                    const item = menuItems[index - 1];
-                    if (item?.route) return router.push(item.route);
-                    if (item?.section) return setActiveSection(item.section);
-                    Alert.alert(
-                      label,
-                      "Mục này sẽ được hoàn thiện ở bước tiếp theo.",
-                    );
-                  }}
                 >
-                  <Ionicons
-                    name={
-                      index === 0
-                        ? "grid-outline"
-                        : (menuItems[index - 1]?.icon ?? "grid-outline")
-                    }
-                    size={18}
-                    color={index === 0 ? "#d32f2f" : "#555"}
-                  />
-                  <Text
-                    style={[
-                      styles.sideText,
-                      (index === 0
-                        ? activeSection === null
-                        : menuItems[index - 1]?.section === activeSection) &&
-                        styles.sideTextActive,
-                    ]}
-                  >
-                    {label}
-                  </Text>
-                </Pressable>
-              ),
-            )}
+                  {label}
+                </Text>
+              </Pressable>
+            ))}
             <Pressable style={styles.logoutButton} onPress={handleLogout}>
               <Ionicons name="log-out-outline" size={18} color="#d32f2f" />
               <Text style={styles.logoutText}>Đăng xuất</Text>
