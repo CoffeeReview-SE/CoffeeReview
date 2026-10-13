@@ -195,7 +195,7 @@ function Sidebar({ width }: { width: number }) {
         onPress={() => router.push("/main_Admin")}
       >
         <Image
-          source={require("../../../image/logo.jpg")}
+          source={require("../../../../assets/image/logo.jpg")}
           style={styles.brandImage}
           resizeMode="contain"
         />
@@ -240,7 +240,7 @@ function Sidebar({ width }: { width: number }) {
         </Pressable>
       </ScrollView>
       <Image
-        source={require("../../../image/anh logo.png")}
+        source={require("../../../../assets/image/anh logo.png")}
         style={styles.promoImage}
         resizeMode="contain"
       />
