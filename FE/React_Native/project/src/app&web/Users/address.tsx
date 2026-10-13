@@ -31,6 +31,7 @@ const empty = (): Address => ({
 export default function AddressesScreen() {
   const router = useRouter();
   const [items, setItems] = useState<Address[]>([]);
+  const [userId, setUserId] = useState<string | null>(null);
   const [form, setForm] = useState<Address | null>(null);
   const [loading, setLoading] = useState(true);
   useEffect(() => {
@@ -40,10 +41,11 @@ export default function AddressesScreen() {
         router.replace("/login");
         return;
       }
-      setItems(await getAddresses());
+      setUserId(user.id);
+      setItems(await getAddresses(user.id));
       setLoading(false);
     })();
-  }, []);
+  }, [router]);
   const field = (key: keyof Address, value: string | boolean) =>
     setForm((old) => (old ? { ...old, [key]: value } : old));
   const edit = (a?: Address) =>
@@ -56,7 +58,8 @@ export default function AddressesScreen() {
       !form.province.trim() ||
       !form.district.trim() ||
       !form.ward.trim() ||
-      !form.detail.trim()
+      !form.detail.trim() ||
+      !userId
     ) {
       Alert.alert(
         "Thiếu thông tin",
@@ -64,7 +67,7 @@ export default function AddressesScreen() {
       );
       return;
     }
-    setItems(await saveAddress(form));
+    setItems(await saveAddress(form, userId));
     setForm(null);
     Alert.alert("Thành công", "Địa chỉ đã được lưu.");
   };
@@ -74,7 +77,8 @@ export default function AddressesScreen() {
       {
         text: "Xóa",
         style: "destructive",
-        onPress: async () => setItems(await deleteAddress(id)),
+        onPress: async () =>
+          setItems(await deleteAddress(id, userId ?? undefined)),
       },
     ]);
   return (
@@ -171,7 +175,12 @@ export default function AddressesScreen() {
             {!a.isDefault && (
               <Pressable
                 onPress={async () =>
-                  setItems(await saveAddress({ ...a, isDefault: true }))
+                  setItems(
+                    await saveAddress(
+                      { ...a, isDefault: true },
+                      userId ?? undefined,
+                    ),
+                  )
                 }
               >
                 <Text style={s.link}>Đặt mặc định</Text>

@@ -1,49 +1,84 @@
 import React, { useEffect, useState } from "react";
 import {
   Image,
-  ImageBackground,
   Pressable,
   ScrollView,
   StyleSheet,
+  Switch,
   Text,
+  TextInput,
   View,
   useWindowDimensions,
   Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { getCurrentUser, logoutUser, type UserProfile } from "./authService";
+import * as ImagePicker from "expo-image-picker";
+import {
+  deleteCurrentAccount,
+  deleteAddress,
+  changeCurrentPassword,
+  getAddresses,
+  getCurrentUser,
+  getPromoEmailPreference,
+  logoutUser,
+  saveAddress,
+  setPromoEmailPreference,
+  updateCurrentUser,
+  type Address,
+  type UserProfile,
+} from "./authService";
+
+type AccountInlineSection =
+  | "profile"
+  | "settings"
+  | "addresses"
+  | "favorites"
+  | "wallet"
+  | "coupons";
 
 const menuItems = [
   {
     icon: "receipt-outline" as const,
     label: "Đơn hàng của tôi",
     detail: "Theo dõi trạng thái đơn hàng",
+    route: "/orders" as const,
+  },
+  {
+    icon: "cart-outline" as const,
+    label: "Giỏ hàng",
+    detail: "Xem các sản phẩm bạn đã chọn",
+    route: "/cart" as const,
   },
   {
     icon: "location-outline" as const,
     label: "Địa chỉ giao hàng",
     detail: "Quản lý địa chỉ nhận hàng",
+    section: "addresses" as const,
   },
   {
     icon: "heart-outline" as const,
     label: "Sản phẩm yêu thích",
     detail: "Các sản phẩm bạn đã lưu",
+    section: "favorites" as const,
   },
   {
     icon: "wallet-outline" as const,
     label: "Ví của tôi",
     detail: "Phương thức thanh toán",
+    section: "wallet" as const,
   },
   {
     icon: "pricetag-outline" as const,
     label: "Mã giảm giá",
     detail: "Ưu đãi dành cho bạn",
+    section: "coupons" as const,
   },
   {
     icon: "settings-outline" as const,
     label: "Cài đặt tài khoản",
     detail: "Bảo mật và tùy chọn",
+    section: "settings" as const,
   },
 ];
 
@@ -53,6 +88,8 @@ export default function AccountScreen() {
   const isMobile = width < 700;
   const [user, setUser] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [activeSection, setActiveSection] =
+    useState<AccountInlineSection | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -64,7 +101,7 @@ export default function AccountScreen() {
           setUser(currentUser);
           setIsLoading(false);
         }
-      } catch (error) {
+      } catch {
         if (isMounted) {
           setUser(null);
           setIsLoading(false);
@@ -101,6 +138,10 @@ export default function AccountScreen() {
     return null;
   }
 
+  const selectedMenuItem = menuItems.find(
+    (item) => item.section === activeSection,
+  );
+
   return (
     <ScrollView style={styles.page} contentContainerStyle={styles.pageContent}>
       <View style={[styles.header, isMobile && styles.headerMobile]}>
@@ -119,80 +160,98 @@ export default function AccountScreen() {
           style={styles.homeButton}
           onPress={() => router.replace("/")}
         >
-          <Ionicons name="home-outline" size={18} color="#d32f2f" />
+          <Ionicons name="home-outline" size={18} color="#fff" />
           <Text style={styles.homeText}>Trang chủ</Text>
         </Pressable>
       </View>
 
-      <ImageBackground
-        source={require("../../../image/anhnen.png")}
-        style={styles.heroBackground}
-        imageStyle={styles.heroBackgroundImage}
-        resizeMode="cover"
-      >
-        <View style={styles.heroOverlay}>
-          <View style={[styles.layout, isMobile && styles.layoutMobile]}>
-            {!isMobile && (
-              <View style={styles.sidebar}>
-                <View style={styles.userSummary}>
-                  <View style={styles.avatar}>
-                    <Ionicons name="person" size={30} color="#d32f2f" />
-                  </View>
-                  <Text style={styles.userName}>{user.fullName}</Text>
-                  <Text style={styles.userEmail}>{user.email}</Text>
-                </View>
-                {["Tổng quan", ...menuItems.map((item) => item.label)].map(
-                  (label, index) => (
-                    <Pressable
-                      key={label}
-                      style={[
-                        styles.sideItem,
-                        index === 0 && styles.sideItemActive,
-                      ]}
-                      onPress={() =>
-                        index === 1
-                          ? router.push("/orders")
-                          : index === 0
-                            ? undefined
-                            : Alert.alert(
-                                label,
-                                "Mục này sẽ được hoàn thiện ở bước tiếp theo.",
-                              )
-                      }
-                    >
-                      <Ionicons
-                        name={
-                          index === 0
-                            ? "grid-outline"
-                            : (menuItems[index - 1]?.icon ?? "grid-outline")
-                        }
-                        size={18}
-                        color={index === 0 ? "#d32f2f" : "#555"}
-                      />
-                      <Text
-                        style={[
-                          styles.sideText,
-                          index === 0 && styles.sideTextActive,
-                        ]}
-                      >
-                        {label}
-                      </Text>
-                    </Pressable>
-                  ),
+      <View style={[styles.layout, isMobile && styles.layoutMobile]}>
+        {!isMobile && (
+          <View style={styles.sidebar}>
+            <View style={styles.userSummary}>
+              <View style={styles.avatar}>
+                {user.avatarUri ? (
+                  <Image
+                    source={{ uri: user.avatarUri }}
+                    style={styles.avatarPhoto}
+                  />
+                ) : (
+                  <Ionicons name="person" size={30} color="#d32f2f" />
                 )}
-                <Pressable style={styles.logoutButton} onPress={handleLogout}>
-                  <Ionicons name="log-out-outline" size={18} color="#d32f2f" />
-                  <Text style={styles.logoutText}>Đăng xuất</Text>
-                </Pressable>
               </View>
+              <Text style={styles.userName}>{user.fullName}</Text>
+              <Text style={styles.userEmail}>{user.email}</Text>
+            </View>
+            {["Tổng quan", ...menuItems.map((item) => item.label)].map(
+              (label, index) => (
+                <Pressable
+                  key={label}
+                  style={[
+                    styles.sideItem,
+                    (index === 0
+                      ? activeSection === null
+                      : menuItems[index - 1]?.section === activeSection) &&
+                      styles.sideItemActive,
+                  ]}
+                  onPress={() => {
+                    if (index === 0) {
+                      setActiveSection(null);
+                      return;
+                    }
+                    const item = menuItems[index - 1];
+                    if (item?.route) return router.push(item.route);
+                    if (item?.section) return setActiveSection(item.section);
+                    Alert.alert(
+                      label,
+                      "Mục này sẽ được hoàn thiện ở bước tiếp theo.",
+                    );
+                  }}
+                >
+                  <Ionicons
+                    name={
+                      index === 0
+                        ? "grid-outline"
+                        : (menuItems[index - 1]?.icon ?? "grid-outline")
+                    }
+                    size={18}
+                    color={index === 0 ? "#d32f2f" : "#555"}
+                  />
+                  <Text
+                    style={[
+                      styles.sideText,
+                      (index === 0
+                        ? activeSection === null
+                        : menuItems[index - 1]?.section === activeSection) &&
+                        styles.sideTextActive,
+                    ]}
+                  >
+                    {label}
+                  </Text>
+                </Pressable>
+              ),
             )}
+            <Pressable style={styles.logoutButton} onPress={handleLogout}>
+              <Ionicons name="log-out-outline" size={18} color="#d32f2f" />
+              <Text style={styles.logoutText}>Đăng xuất</Text>
+            </Pressable>
+          </View>
+        )}
 
-            <View style={styles.main}>
-              <Text style={styles.pageTitle}>Tài khoản của tôi</Text>
-              <Text style={styles.pageSubtitle}>
-                Quản lý thông tin cá nhân và hoạt động mua sắm của bạn.
-              </Text>
+        <View style={styles.main}>
+          <Text style={styles.pageTitle}>
+            {activeSection === "profile"
+              ? "Chỉnh sửa thông tin cá nhân"
+              : (selectedMenuItem?.label ?? "Tài khoản của tôi")}
+          </Text>
+          <Text style={styles.pageSubtitle}>
+            {activeSection === "profile"
+              ? "Cập nhật họ tên, email và số điện thoại của bạn."
+              : (selectedMenuItem?.detail ??
+                "Quản lý thông tin cá nhân và hoạt động mua sắm của bạn.")}
+          </Text>
 
+          {activeSection === null ? (
+            <>
               <View
                 style={[
                   styles.profileCard,
@@ -201,7 +260,14 @@ export default function AccountScreen() {
               >
                 <View style={styles.profileLeft}>
                   <View style={styles.avatarLarge}>
-                    <Ionicons name="person" size={32} color="#d32f2f" />
+                    {user.avatarUri ? (
+                      <Image
+                        source={{ uri: user.avatarUri }}
+                        style={styles.avatarPhotoLarge}
+                      />
+                    ) : (
+                      <Ionicons name="person" size={32} color="#d32f2f" />
+                    )}
                   </View>
                   <View style={{ flex: 1 }}>
                     <Text style={styles.greeting}>
@@ -215,12 +281,7 @@ export default function AccountScreen() {
                 </View>
                 <Pressable
                   style={styles.editButton}
-                  onPress={() =>
-                    Alert.alert(
-                      "Thông tin cá nhân",
-                      "Form chỉnh sửa thông tin sẽ được bổ sung sau.",
-                    )
-                  }
+                  onPress={() => setActiveSection("profile")}
                 >
                   <Ionicons name="create-outline" size={16} color="#d32f2f" />
                   <Text style={styles.editText}>Chỉnh sửa</Text>
@@ -239,7 +300,7 @@ export default function AccountScreen() {
                 <StatCard
                   icon="heart-outline"
                   title="Yêu thích"
-                  value="5"
+                  value="0"
                   note="Sản phẩm đã lưu"
                 />
                 <StatCard
@@ -265,14 +326,10 @@ export default function AccountScreen() {
                       styles.menuItem,
                       index < menuItems.length - 1 && styles.menuItemBorder,
                     ]}
-                    onPress={() =>
-                      item.label === "Đơn hàng của tôi"
-                        ? router.push("/orders")
-                        : Alert.alert(
-                            item.label,
-                            "Mục này sẽ được hoàn thiện ở bước tiếp theo.",
-                          )
-                    }
+                    onPress={() => {
+                      if (item.route) return router.push(item.route);
+                      if (item.section) return setActiveSection(item.section);
+                    }}
                   >
                     <View style={styles.menuIcon}>
                       <Ionicons name={item.icon} size={21} color="#d32f2f" />
@@ -285,19 +342,818 @@ export default function AccountScreen() {
                   </Pressable>
                 ))}
               </View>
-
-              {isMobile && (
-                <Pressable style={styles.mobileLogout} onPress={handleLogout}>
-                  <Ionicons name="log-out-outline" size={18} color="#d32f2f" />
-                  <Text style={styles.logoutText}>Đăng xuất</Text>
-                </Pressable>
+            </>
+          ) : (
+            <View style={styles.inlineSectionWrap}>
+              <Pressable
+                style={styles.inlineBackButton}
+                onPress={() => setActiveSection(null)}
+              >
+                <Ionicons name="arrow-back" size={17} color="#d32f2f" />
+                <Text style={styles.inlineBackText}>Tổng quan tài khoản</Text>
+              </Pressable>
+              {activeSection === "addresses" && (
+                <InlineAddressSection userId={user.id} />
+              )}
+              {activeSection === "profile" && (
+                <InlineProfileEditor user={user} onUpdated={setUser} />
+              )}
+              {activeSection === "settings" && (
+                <InlineAccountSettings
+                  userId={user.id}
+                  onAccountDeleted={() => {
+                    setUser(null);
+                    router.replace("/login");
+                  }}
+                />
+              )}
+              {activeSection === "favorites" && (
+                <InlineEmptySection
+                  icon="heart-outline"
+                  title="Chưa có sản phẩm yêu thích"
+                  description="Sản phẩm bạn lưu sẽ xuất hiện tại đây."
+                />
+              )}
+              {activeSection === "wallet" && <InlineWalletSection />}
+              {activeSection === "coupons" && (
+                <InlineEmptySection
+                  icon="pricetag-outline"
+                  title="Chưa có mã giảm giá"
+                  description="Mã ưu đãi khả dụng sẽ được hiển thị tại đây."
+                />
               )}
             </View>
-          </View>
+          )}
+
+          {isMobile && (
+            <Pressable style={styles.mobileLogout} onPress={handleLogout}>
+              <Ionicons name="log-out-outline" size={18} color="#d32f2f" />
+              <Text style={styles.logoutText}>Đăng xuất</Text>
+            </Pressable>
+          )}
         </View>
-      </ImageBackground>
+      </View>
       <Text style={styles.footer}>© BVP Shop</Text>
     </ScrollView>
+  );
+}
+
+function InlineProfileEditor({
+  user,
+  onUpdated,
+}: {
+  user: UserProfile;
+  onUpdated: (user: UserProfile) => void;
+}) {
+  const [fullName, setFullName] = useState(user.fullName);
+  const [email, setEmail] = useState(user.email);
+  const [phone, setPhone] = useState(user.phone);
+  const [birthDate, setBirthDate] = useState(user.birthDate ?? "");
+  const [gender, setGender] = useState<UserProfile["gender"]>(user.gender);
+  const [avatarUri, setAvatarUri] = useState(user.avatarUri ?? "");
+  const [feedback, setFeedback] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+
+  const chooseAvatar = async () => {
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ["images"],
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.65,
+        base64: true,
+      });
+      if (!result.canceled && result.assets[0]) {
+        const asset = result.assets[0];
+        if (asset.base64 && asset.base64.length <= 1_500_000) {
+          setAvatarUri(
+            `data:${asset.mimeType ?? "image/jpeg"};base64,${asset.base64}`,
+          );
+        } else {
+          setFeedback("Ảnh quá lớn. Hãy chọn ảnh khác có dung lượng nhỏ hơn.");
+          return;
+        }
+        setFeedback("");
+      }
+    } catch {
+      setFeedback("Không mở được thư viện ảnh. Vui lòng thử lại.");
+    }
+  };
+
+  const saveProfile = async () => {
+    if (!fullName.trim() || !email.trim() || !phone.trim()) {
+      setFeedback("Vui lòng nhập đầy đủ họ tên, email và số điện thoại.");
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      setFeedback("Email chưa đúng định dạng.");
+      return;
+    }
+    if (!/^[0-9+()\-\s]{9,15}$/.test(phone.trim())) {
+      setFeedback("Số điện thoại chưa hợp lệ.");
+      return;
+    }
+    if (birthDate.trim()) {
+      const dateMatch = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(birthDate.trim());
+      if (!dateMatch) {
+        setFeedback("Ngày sinh dùng định dạng DD/MM/YYYY.");
+        return;
+      }
+      const [, day, month, year] = dateMatch;
+      const parsedDate = new Date(Number(year), Number(month) - 1, Number(day));
+      if (
+        parsedDate.getFullYear() !== Number(year) ||
+        parsedDate.getMonth() !== Number(month) - 1 ||
+        parsedDate.getDate() !== Number(day) ||
+        parsedDate > new Date()
+      ) {
+        setFeedback("Ngày sinh không hợp lệ.");
+        return;
+      }
+    }
+
+    setIsSaving(true);
+    setFeedback("");
+    try {
+      onUpdated(
+        await updateCurrentUser({
+          fullName,
+          email,
+          phone,
+          birthDate,
+          gender,
+          avatarUri,
+        }),
+      );
+      setFeedback("Thông tin cá nhân đã được cập nhật.");
+    } catch (error) {
+      setFeedback(
+        error instanceof Error ? error.message : "Không lưu được thông tin.",
+      );
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  return (
+    <View style={styles.inlinePanel}>
+      <Text style={styles.inlineSectionTitle}>Thông tin cá nhân</Text>
+      <Text style={styles.inlineSectionDescription}>
+        Cập nhật thông tin cá nhân hiển thị trên tài khoản và đơn hàng.
+      </Text>
+      <View style={styles.avatarEditorRow}>
+        <View style={styles.avatarEditorPreview}>
+          {avatarUri ? (
+            <Image
+              source={{ uri: avatarUri }}
+              style={styles.avatarEditorImage}
+            />
+          ) : (
+            <Ionicons name="person" size={34} color="#d32f2f" />
+          )}
+        </View>
+        <View style={styles.avatarEditorCopy}>
+          <Text style={styles.inlineFieldLabel}>Ảnh đại diện</Text>
+          <Text style={styles.inlineSectionDescription}>
+            Chọn ảnh từ thư viện trên thiết bị.
+          </Text>
+          <Pressable
+            style={styles.inlineSecondaryButton}
+            onPress={chooseAvatar}
+          >
+            <Text style={styles.inlineSecondaryButtonText}>Chọn ảnh</Text>
+          </Pressable>
+        </View>
+      </View>
+      <Text style={styles.inlineFieldLabel}>Họ và tên</Text>
+      <TextInput
+        value={fullName}
+        onChangeText={setFullName}
+        placeholder="Họ và tên"
+        style={styles.inlineInput}
+      />
+      <Text style={styles.inlineFieldLabel}>Email</Text>
+      <TextInput
+        value={email}
+        onChangeText={setEmail}
+        placeholder="Email"
+        keyboardType="email-address"
+        autoCapitalize="none"
+        autoCorrect={false}
+        style={styles.inlineInput}
+      />
+      <Text style={styles.inlineFieldLabel}>Số điện thoại</Text>
+      <TextInput
+        value={phone}
+        onChangeText={setPhone}
+        placeholder="Số điện thoại"
+        keyboardType="phone-pad"
+        style={styles.inlineInput}
+      />
+      <Text style={styles.inlineFieldLabel}>Ngày sinh</Text>
+      <TextInput
+        value={birthDate}
+        onChangeText={setBirthDate}
+        placeholder="DD/MM/YYYY"
+        style={styles.inlineInput}
+      />
+      <Text style={styles.inlineFieldLabel}>Giới tính</Text>
+      <View style={styles.genderOptions}>
+        {(
+          [
+            ["female", "Nữ"],
+            ["male", "Nam"],
+            ["other", "Khác"],
+          ] as const
+        ).map(([value, label]) => (
+          <Pressable
+            key={value}
+            accessibilityRole="radio"
+            accessibilityState={{ checked: gender === value }}
+            onPress={() => setGender(value)}
+            style={[
+              styles.genderOption,
+              gender === value && styles.genderOptionSelected,
+            ]}
+          >
+            <Text
+              style={[
+                styles.genderOptionText,
+                gender === value && styles.genderOptionTextSelected,
+              ]}
+            >
+              {label}
+            </Text>
+          </Pressable>
+        ))}
+      </View>
+      {!!feedback && (
+        <Text
+          style={[
+            styles.inlineFeedback,
+            feedback.includes("đã được cập nhật") && styles.inlineSuccess,
+          ]}
+        >
+          {feedback}
+        </Text>
+      )}
+      <View style={styles.inlineActions}>
+        <Pressable
+          style={styles.inlinePrimaryButton}
+          onPress={saveProfile}
+          disabled={isSaving}
+        >
+          <Text style={styles.inlinePrimaryButtonText}>
+            {isSaving ? "Đang lưu..." : "Lưu thay đổi"}
+          </Text>
+        </Pressable>
+      </View>
+    </View>
+  );
+}
+
+function InlineAccountSettings({
+  userId,
+  onAccountDeleted,
+}: {
+  userId: string;
+  onAccountDeleted: () => void;
+}) {
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [promoEmails, setPromoEmails] = useState(false);
+  const [feedback, setFeedback] = useState("");
+  const [isSavingPassword, setIsSavingPassword] = useState(false);
+  const [deletePassword, setDeletePassword] = useState("");
+  const [deleteConfirmation, setDeleteConfirmation] = useState("");
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false);
+
+  useEffect(() => {
+    let isMounted = true;
+    getPromoEmailPreference(userId)
+      .then((enabled) => {
+        if (isMounted) setPromoEmails(enabled);
+      })
+      .catch(() => {
+        if (isMounted) setFeedback("Không tải được tùy chọn thông báo.");
+      });
+    return () => {
+      isMounted = false;
+    };
+  }, [userId]);
+
+  const savePassword = async () => {
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      setFeedback("Vui lòng nhập đủ mật khẩu hiện tại và mật khẩu mới.");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setFeedback("Mật khẩu xác nhận không khớp.");
+      return;
+    }
+
+    setIsSavingPassword(true);
+    setFeedback("");
+    try {
+      await changeCurrentPassword(currentPassword, newPassword);
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+      setFeedback("Mật khẩu đã được thay đổi.");
+    } catch (error) {
+      setFeedback(
+        error instanceof Error ? error.message : "Không đổi được mật khẩu.",
+      );
+    } finally {
+      setIsSavingPassword(false);
+    }
+  };
+
+  const togglePromoEmails = async (enabled: boolean) => {
+    setPromoEmails(enabled);
+    try {
+      await setPromoEmailPreference(userId, enabled);
+      setFeedback("");
+    } catch {
+      setPromoEmails(!enabled);
+      setFeedback("Không lưu được tùy chọn email khuyến mãi.");
+    }
+  };
+
+  const confirmAccountDeletion = () => {
+    if (!deletePassword || deleteConfirmation !== "XOA TAI KHOAN") {
+      setFeedback(
+        'Nhập mật khẩu và chính xác cụm "XOA TAI KHOAN" để tiếp tục.',
+      );
+      return;
+    }
+
+    Alert.alert(
+      "Xóa tài khoản vĩnh viễn?",
+      "Tài khoản, địa chỉ đã lưu và tùy chọn email khuyến mãi của bạn sẽ bị xóa khỏi thiết bị này. Thao tác này không thể hoàn tác.",
+      [
+        { text: "Giữ tài khoản", style: "cancel" },
+        {
+          text: "Xóa tài khoản",
+          style: "destructive",
+          onPress: async () => {
+            setIsDeletingAccount(true);
+            setFeedback("");
+            try {
+              await deleteCurrentAccount(deletePassword, deleteConfirmation);
+              onAccountDeleted();
+            } catch (error) {
+              setFeedback(
+                error instanceof Error
+                  ? error.message
+                  : "Không thể xóa tài khoản.",
+              );
+              setIsDeletingAccount(false);
+            }
+          },
+        },
+      ],
+    );
+  };
+
+  return (
+    <View style={styles.inlineSectionWrap}>
+      <View style={styles.inlinePanel}>
+        <Text style={styles.inlineSectionTitle}>Đổi mật khẩu</Text>
+        <Text style={styles.inlineSectionDescription}>
+          Dùng mật khẩu hiện tại để đặt mật khẩu mới cho tài khoản.
+        </Text>
+        <Text style={styles.inlineFieldLabel}>Mật khẩu hiện tại</Text>
+        <TextInput
+          value={currentPassword}
+          onChangeText={setCurrentPassword}
+          placeholder="Nhập mật khẩu hiện tại"
+          secureTextEntry
+          style={styles.inlineInput}
+        />
+        <Text style={styles.inlineFieldLabel}>Mật khẩu mới</Text>
+        <TextInput
+          value={newPassword}
+          onChangeText={setNewPassword}
+          placeholder="Ít nhất 6 ký tự"
+          secureTextEntry
+          style={styles.inlineInput}
+        />
+        <Text style={styles.inlineFieldLabel}>Xác nhận mật khẩu mới</Text>
+        <TextInput
+          value={confirmPassword}
+          onChangeText={setConfirmPassword}
+          placeholder="Nhập lại mật khẩu mới"
+          secureTextEntry
+          style={styles.inlineInput}
+        />
+        <View style={styles.inlineActions}>
+          <Pressable
+            style={styles.inlinePrimaryButton}
+            onPress={savePassword}
+            disabled={isSavingPassword}
+          >
+            <Text style={styles.inlinePrimaryButtonText}>
+              {isSavingPassword ? "Đang cập nhật..." : "Đổi mật khẩu"}
+            </Text>
+          </Pressable>
+        </View>
+      </View>
+
+      <View style={styles.inlinePanel}>
+        <View style={styles.inlineSwitchRow}>
+          <View style={styles.inlineSectionCopy}>
+            <Text style={styles.inlineFieldLabel}>Email khuyến mãi</Text>
+            <Text style={styles.inlineSectionDescription}>
+              Cho phép nhận thông tin ưu đãi qua email.
+            </Text>
+          </View>
+          <Switch
+            value={promoEmails}
+            onValueChange={togglePromoEmails}
+            trackColor={{ true: "#d32f2f" }}
+          />
+        </View>
+        <View style={styles.inlineNotice}>
+          <Ionicons
+            name="information-circle-outline"
+            size={19}
+            color="#946200"
+          />
+          <Text style={styles.inlineNoticeText}>
+            Tùy chọn được lưu trên thiết bị này; gửi email cần dịch vụ backend.
+          </Text>
+        </View>
+      </View>
+
+      <View style={styles.inlinePanel}>
+        <Text style={styles.inlineSectionTitle}>Bảo mật tài khoản</Text>
+        <VerificationStatus
+          label="Email"
+          value={userId ? "Chưa xác minh" : "Không khả dụng"}
+        />
+        <VerificationStatus label="Số điện thoại" value="Chưa xác minh" />
+        <View style={styles.inlineNotice}>
+          <Ionicons
+            name="information-circle-outline"
+            size={19}
+            color="#946200"
+          />
+          <Text style={styles.inlineNoticeText}>
+            Xác minh email hoặc số điện thoại cần backend gửi mã xác thực; bản
+            demo chưa hỗ trợ.
+          </Text>
+        </View>
+      </View>
+
+      <View style={styles.inlinePanel}>
+        <Text style={styles.inlineSectionTitle}>Ngôn ngữ</Text>
+        <View style={styles.languageRow}>
+          <Text style={styles.inlineFieldLabel}>Ngôn ngữ giao diện</Text>
+          <Text style={styles.languageValue}>Tiếng Việt</Text>
+        </View>
+        <Text style={styles.inlineSectionDescription}>
+          BVP Shop hiện chỉ có giao diện tiếng Việt nên chưa có lựa chọn ngôn
+          ngữ khác.
+        </Text>
+      </View>
+
+      <View style={styles.dangerPanel}>
+        <Text style={styles.dangerTitle}>Xóa tài khoản</Text>
+        <Text style={styles.inlineSectionDescription}>
+          Xóa tài khoản và dữ liệu gắn với tài khoản trên thiết bị này. Cần nhập
+          lại mật khẩu và xác nhận rõ ràng.
+        </Text>
+        <Text style={styles.inlineFieldLabel}>Mật khẩu hiện tại</Text>
+        <TextInput
+          value={deletePassword}
+          onChangeText={setDeletePassword}
+          placeholder="Nhập mật khẩu để xác nhận"
+          secureTextEntry
+          style={styles.inlineInput}
+        />
+        <Text style={styles.inlineFieldLabel}>
+          Nhập XOA TAI KHOAN để xác nhận
+        </Text>
+        <TextInput
+          value={deleteConfirmation}
+          onChangeText={setDeleteConfirmation}
+          placeholder="XOA TAI KHOAN"
+          autoCapitalize="characters"
+          style={styles.inlineInput}
+        />
+        <Pressable
+          style={styles.deleteAccountButton}
+          onPress={confirmAccountDeletion}
+          disabled={isDeletingAccount}
+        >
+          <Text style={styles.deleteAccountButtonText}>
+            {isDeletingAccount ? "Đang xóa..." : "Xóa tài khoản vĩnh viễn"}
+          </Text>
+        </Pressable>
+      </View>
+
+      {!!feedback && <Text style={styles.inlineFeedback}>{feedback}</Text>}
+    </View>
+  );
+}
+
+function VerificationStatus({
+  label,
+  value,
+}: {
+  label: string;
+  value: string;
+}) {
+  return (
+    <View style={styles.verificationRow}>
+      <Text style={styles.verificationLabel}>{label}</Text>
+      <View style={styles.verificationValueGroup}>
+        <Ionicons name="alert-circle-outline" size={16} color="#946200" />
+        <Text style={styles.verificationValue}>{value}</Text>
+      </View>
+    </View>
+  );
+}
+
+function InlineAddressSection({ userId }: { userId: string }) {
+  const [addresses, setAddresses] = useState<Address[]>([]);
+  const [form, setForm] = useState<Address | null>(null);
+  const [feedback, setFeedback] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    let isMounted = true;
+    getAddresses(userId)
+      .then((savedAddresses) => {
+        if (isMounted) setAddresses(savedAddresses);
+      })
+      .catch(() => {
+        if (isMounted) setFeedback("Không tải được danh sách địa chỉ.");
+      });
+    return () => {
+      isMounted = false;
+    };
+  }, [userId]);
+
+  const updateField = (
+    key: "receiver" | "phone" | "province" | "district" | "ward" | "detail",
+    value: string,
+  ) => setForm((current) => (current ? { ...current, [key]: value } : current));
+
+  const startNewAddress = () => {
+    setForm({
+      id: `${Date.now()}`,
+      receiver: "",
+      phone: "",
+      province: "",
+      district: "",
+      ward: "",
+      detail: "",
+      isDefault: addresses.length === 0,
+    });
+    setFeedback("");
+  };
+
+  const saveCurrentAddress = async () => {
+    if (!form) return;
+    if (
+      !form.receiver.trim() ||
+      !form.phone.trim() ||
+      !form.province.trim() ||
+      !form.district.trim() ||
+      !form.ward.trim() ||
+      !form.detail.trim()
+    ) {
+      setFeedback("Vui lòng điền đầy đủ thông tin địa chỉ.");
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      setAddresses(await saveAddress(form, userId));
+      setForm(null);
+      setFeedback("");
+    } catch {
+      setFeedback("Không lưu được địa chỉ. Vui lòng thử lại.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const confirmDelete = (address: Address) => {
+    Alert.alert("Xóa địa chỉ", `Xóa địa chỉ của ${address.receiver}?`, [
+      { text: "Hủy", style: "cancel" },
+      {
+        text: "Xóa",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            setAddresses(await deleteAddress(address.id, userId));
+          } catch {
+            setFeedback("Không xóa được địa chỉ. Vui lòng thử lại.");
+          }
+        },
+      },
+    ]);
+  };
+
+  const addressFields = [
+    {
+      key: "receiver",
+      label: "Họ tên người nhận",
+      placeholder: "Nguyễn Văn A",
+    },
+    { key: "phone", label: "Số điện thoại", placeholder: "09..." },
+    {
+      key: "province",
+      label: "Tỉnh / Thành phố",
+      placeholder: "TP. Hồ Chí Minh",
+    },
+    { key: "district", label: "Quận / Huyện", placeholder: "Quận 1" },
+    { key: "ward", label: "Phường / Xã", placeholder: "Phường Bến Nghé" },
+    {
+      key: "detail",
+      label: "Địa chỉ chi tiết",
+      placeholder: "Số nhà, tên đường...",
+    },
+  ] as const;
+
+  return (
+    <View style={styles.inlineSectionWrap}>
+      <View style={styles.inlineSectionToolbar}>
+        <View style={styles.inlineSectionCopy}>
+          <Text style={styles.inlineSectionTitle}>Địa chỉ đã lưu</Text>
+          <Text style={styles.inlineSectionDescription}>
+            Chọn địa chỉ nhận hàng mặc định hoặc cập nhật danh sách của bạn.
+          </Text>
+        </View>
+        {!form && (
+          <Pressable
+            style={styles.inlinePrimaryButton}
+            onPress={startNewAddress}
+          >
+            <Ionicons name="add" size={18} color="#fff" />
+            <Text style={styles.inlinePrimaryButtonText}>Thêm địa chỉ</Text>
+          </Pressable>
+        )}
+      </View>
+
+      {form && (
+        <View style={styles.inlinePanel}>
+          <Text style={styles.inlineSectionTitle}>
+            {addresses.some((address) => address.id === form.id)
+              ? "Chỉnh sửa địa chỉ"
+              : "Địa chỉ mới"}
+          </Text>
+          {addressFields.map((field) => (
+            <View key={field.key}>
+              <Text style={styles.inlineFieldLabel}>{field.label}</Text>
+              <TextInput
+                value={form[field.key]}
+                onChangeText={(value) => updateField(field.key, value)}
+                placeholder={field.placeholder}
+                placeholderTextColor="#999"
+                style={styles.inlineInput}
+                keyboardType={field.key === "phone" ? "phone-pad" : "default"}
+              />
+            </View>
+          ))}
+          <View style={styles.inlineSwitchRow}>
+            <Text style={styles.inlineFieldLabel}>
+              Đặt làm địa chỉ mặc định
+            </Text>
+            <Switch
+              value={form.isDefault}
+              onValueChange={(value) =>
+                setForm((current) =>
+                  current ? { ...current, isDefault: value } : current,
+                )
+              }
+              trackColor={{ true: "#d32f2f" }}
+            />
+          </View>
+          <View style={styles.inlineActions}>
+            <Pressable
+              style={styles.inlineSecondaryButton}
+              onPress={() => {
+                setForm(null);
+                setFeedback("");
+              }}
+            >
+              <Text style={styles.inlineSecondaryButtonText}>Hủy</Text>
+            </Pressable>
+            <Pressable
+              style={styles.inlinePrimaryButton}
+              onPress={saveCurrentAddress}
+              disabled={isSaving}
+            >
+              <Text style={styles.inlinePrimaryButtonText}>
+                {isSaving ? "Đang lưu..." : "Lưu địa chỉ"}
+              </Text>
+            </Pressable>
+          </View>
+        </View>
+      )}
+
+      {!!feedback && <Text style={styles.inlineFeedback}>{feedback}</Text>}
+
+      {addresses.length === 0 && !form ? (
+        <InlineEmptySection
+          icon="location-outline"
+          title="Bạn chưa lưu địa chỉ nào"
+          description="Thêm địa chỉ để thuận tiện cho lần đặt hàng tiếp theo."
+        />
+      ) : (
+        addresses.map((address) => (
+          <View key={address.id} style={styles.inlinePanel}>
+            <View style={styles.inlineAddressHeader}>
+              <View style={styles.inlineSectionCopy}>
+                <Text style={styles.inlineAddressName}>
+                  {address.receiver} · {address.phone}
+                </Text>
+                <Text style={styles.inlineAddressText}>
+                  {address.detail}, {address.ward}, {address.district},{" "}
+                  {address.province}
+                </Text>
+              </View>
+              {address.isDefault && (
+                <Text style={styles.inlineDefaultBadge}>Mặc định</Text>
+              )}
+            </View>
+            <View style={styles.inlineActions}>
+              <Pressable onPress={() => setForm({ ...address })}>
+                <Text style={styles.inlineLink}>Chỉnh sửa</Text>
+              </Pressable>
+              {!address.isDefault && (
+                <Pressable
+                  onPress={async () => {
+                    try {
+                      setAddresses(
+                        await saveAddress(
+                          { ...address, isDefault: true },
+                          userId,
+                        ),
+                      );
+                    } catch {
+                      setFeedback("Không thể đổi địa chỉ mặc định.");
+                    }
+                  }}
+                >
+                  <Text style={styles.inlineLink}>Đặt mặc định</Text>
+                </Pressable>
+              )}
+              <Pressable onPress={() => confirmDelete(address)}>
+                <Text style={styles.inlineDelete}>Xóa</Text>
+              </Pressable>
+            </View>
+          </View>
+        ))
+      )}
+    </View>
+  );
+}
+
+function InlineEmptySection({
+  icon,
+  title,
+  description,
+}: {
+  icon: keyof typeof Ionicons.glyphMap;
+  title: string;
+  description: string;
+}) {
+  return (
+    <View style={styles.inlineEmptyPanel}>
+      <View style={styles.inlineEmptyIcon}>
+        <Ionicons name={icon} size={27} color="#d32f2f" />
+      </View>
+      <Text style={styles.inlineEmptyTitle}>{title}</Text>
+      <Text style={styles.inlineSectionDescription}>{description}</Text>
+    </View>
+  );
+}
+
+function InlineWalletSection() {
+  return (
+    <View style={styles.inlinePanel}>
+      <View style={styles.inlineWalletHeader}>
+        <View style={styles.inlineEmptyIcon}>
+          <Ionicons name="wallet-outline" size={25} color="#d32f2f" />
+        </View>
+        <View style={styles.inlineSectionCopy}>
+          <Text style={styles.inlineFieldLabel}>Số dư ví hiện tại</Text>
+          <Text style={styles.inlineWalletBalance}>0đ</Text>
+        </View>
+      </View>
+      <View style={styles.inlineNotice}>
+        <Ionicons name="information-circle-outline" size={19} color="#946200" />
+        <Text style={styles.inlineNoticeText}>
+          Ví điện tử và phương thức thanh toán chưa được kết nối trong bản demo.
+        </Text>
+      </View>
+    </View>
   );
 }
 
@@ -327,26 +1183,11 @@ function StatCard({
 const styles = StyleSheet.create({
   page: { flex: 1, backgroundColor: "#f5f5f5" },
   pageContent: { flexGrow: 1, paddingBottom: 24 },
-  heroBackground: {
-    width: "100%",
-    minHeight: 520,
-    overflow: "hidden",
-  },
-  heroBackgroundImage: {
-    opacity: 0.82,
-  },
-  heroOverlay: {
-    backgroundColor: "rgba(255, 255, 255, 0.38)",
-    paddingTop: 12,
-    paddingBottom: 18,
-  },
   header: {
     minHeight: 76,
     paddingHorizontal: 32,
     paddingVertical: 14,
-    backgroundColor: "#fff",
-    borderBottomWidth: 1,
-    borderBottomColor: "#e8e8e8",
+    backgroundColor: "red",
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
@@ -354,15 +1195,15 @@ const styles = StyleSheet.create({
   headerMobile: { paddingHorizontal: 16, minHeight: 64 },
   brand: { flexDirection: "row", alignItems: "center", gap: 9 },
   logo: { width: 38, height: 38, borderRadius: 8 },
-  brandText: { color: "#d32f2f", fontSize: 20, fontWeight: "800" },
-  headerCaption: { color: "#040404", fontSize: 13 },
+  brandText: { color: "#fff", fontSize: 20, fontWeight: "800" },
+  headerCaption: { color: "#fff", fontSize: 13 },
   homeButton: {
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
     padding: 8,
   },
-  homeText: { color: "#d32f2f", fontSize: 14, fontWeight: "600" },
+  homeText: { color: "#fff", fontSize: 14, fontWeight: "600" },
   layout: {
     width: "94%",
     maxWidth: 1200,
@@ -408,7 +1249,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   sideItemActive: { backgroundColor: "#fff0f0" },
-  sideText: { color: "#0000", fontSize: 12, flex: 1 },
+  sideText: { color: "#555", fontSize: 12, flex: 1 },
   sideTextActive: { color: "#d32f2f", fontWeight: "700" },
   logoutButton: {
     marginTop: 14,
@@ -449,6 +1290,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+  avatarPhoto: { width: 60, height: 60, borderRadius: 30 },
+  avatarPhotoLarge: { width: 68, height: 68, borderRadius: 34 },
   greeting: { fontSize: 17, fontWeight: "700", color: "#222" },
   muted: { fontSize: 12, color: "#777", marginTop: 5 },
   emailText: { fontSize: 12, color: "#d32f2f", marginTop: 5 },
@@ -482,6 +1325,257 @@ const styles = StyleSheet.create({
   sectionHeader: { marginTop: 26, marginBottom: 12 },
   sectionTitle: { fontSize: 18, color: "#222", fontWeight: "800" },
   sectionCaption: { color: "#888", fontSize: 12, marginTop: 4 },
+  inlineSectionWrap: { gap: 14 },
+  inlineBackButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 7,
+    alignSelf: "flex-start",
+    paddingVertical: 7,
+  },
+  inlineBackText: { color: "#d32f2f", fontSize: 13, fontWeight: "700" },
+  inlineSectionToolbar: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12,
+    flexWrap: "wrap",
+  },
+  inlineSectionCopy: { flex: 1, minWidth: 0 },
+  inlineSectionTitle: { color: "#222", fontSize: 17, fontWeight: "800" },
+  inlineSectionDescription: {
+    color: "#777",
+    fontSize: 12,
+    lineHeight: 19,
+    marginTop: 4,
+  },
+  inlinePrimaryButton: {
+    minHeight: 42,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    backgroundColor: "#d32f2f",
+    borderRadius: 8,
+  },
+  inlinePrimaryButtonText: {
+    color: "#fff",
+    fontSize: 13,
+    fontWeight: "700",
+  },
+  inlineSecondaryButton: {
+    minHeight: 42,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 15,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#ddd",
+    backgroundColor: "#fff",
+  },
+  inlineSecondaryButtonText: {
+    color: "#555",
+    fontSize: 13,
+    fontWeight: "600",
+  },
+  inlinePanel: {
+    backgroundColor: "#fff",
+    borderWidth: 1,
+    borderColor: "#e7e7e7",
+    borderRadius: 10,
+    padding: 18,
+    gap: 12,
+  },
+  inlineFieldLabel: {
+    color: "#444",
+    fontSize: 13,
+    fontWeight: "600",
+    marginBottom: 6,
+  },
+  inlineInput: {
+    width: "100%",
+    minHeight: 44,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    color: "#222",
+    backgroundColor: "#fff",
+    borderWidth: 1,
+    borderColor: "#ddd",
+    borderRadius: 7,
+  },
+  inlineSwitchRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12,
+    marginTop: 4,
+  },
+  inlineActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "flex-end",
+    flexWrap: "wrap",
+    gap: 14,
+    marginTop: 4,
+  },
+  inlineFeedback: { color: "#b42318", fontSize: 12, lineHeight: 18 },
+  inlineSuccess: { color: "#16834a" },
+  avatarEditorRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 14,
+    paddingVertical: 8,
+  },
+  avatarEditorPreview: {
+    width: 76,
+    height: 76,
+    borderRadius: 38,
+    overflow: "hidden",
+    backgroundColor: "#fff0f0",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  avatarEditorImage: { width: 76, height: 76, borderRadius: 38 },
+  avatarEditorCopy: { flex: 1, alignItems: "flex-start", gap: 5 },
+  genderOptions: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  genderOption: {
+    minWidth: 68,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 14,
+    paddingVertical: 9,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: "#ddd",
+    backgroundColor: "#fff",
+  },
+  genderOptionSelected: { borderColor: "#d32f2f", backgroundColor: "#fff0f0" },
+  genderOptionText: { color: "#555", fontSize: 13, fontWeight: "600" },
+  genderOptionTextSelected: { color: "#d32f2f", fontWeight: "700" },
+  inlineAddressHeader: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    gap: 12,
+    flexWrap: "wrap",
+  },
+  inlineAddressName: { color: "#333", fontSize: 14, fontWeight: "700" },
+  inlineAddressText: {
+    color: "#666",
+    fontSize: 12,
+    lineHeight: 19,
+    marginTop: 7,
+  },
+  inlineDefaultBadge: {
+    color: "#b42318",
+    backgroundColor: "#fff0f0",
+    overflow: "hidden",
+    borderRadius: 12,
+    paddingHorizontal: 9,
+    paddingVertical: 4,
+    fontSize: 11,
+    fontWeight: "700",
+  },
+  inlineLink: { color: "#d32f2f", fontSize: 12, fontWeight: "700" },
+  inlineDelete: { color: "#b42318", fontSize: 12, fontWeight: "700" },
+  inlineEmptyPanel: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 22,
+    paddingVertical: 32,
+    backgroundColor: "#fff",
+    borderWidth: 1,
+    borderColor: "#e7e7e7",
+    borderRadius: 10,
+  },
+  inlineEmptyIcon: {
+    width: 52,
+    height: 52,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 10,
+    borderRadius: 26,
+    backgroundColor: "#fff0f0",
+  },
+  inlineEmptyTitle: {
+    color: "#333",
+    fontSize: 15,
+    fontWeight: "700",
+    textAlign: "center",
+  },
+  inlineWalletHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 14,
+  },
+  inlineWalletBalance: {
+    color: "#222",
+    fontSize: 26,
+    fontWeight: "800",
+    marginTop: 4,
+  },
+  inlineNotice: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 8,
+    padding: 12,
+    backgroundColor: "#fff8e6",
+    borderRadius: 8,
+  },
+  inlineNoticeText: { flex: 1, color: "#73530b", fontSize: 12, lineHeight: 18 },
+  verificationRow: {
+    minHeight: 42,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "#f0f0f0",
+  },
+  verificationLabel: { color: "#444", fontSize: 13, fontWeight: "600" },
+  verificationValueGroup: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  verificationValue: { color: "#946200", fontSize: 12, fontWeight: "600" },
+  languageRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    flexWrap: "wrap",
+    gap: 10,
+  },
+  languageValue: {
+    color: "#555",
+    fontSize: 12,
+    fontWeight: "700",
+    paddingHorizontal: 11,
+    paddingVertical: 7,
+    borderRadius: 16,
+    backgroundColor: "#f3f3f3",
+  },
+  dangerPanel: {
+    backgroundColor: "#fffafa",
+    borderWidth: 1,
+    borderColor: "#efcaca",
+    borderRadius: 10,
+    padding: 18,
+    gap: 10,
+  },
+  dangerTitle: { color: "#a12622", fontSize: 16, fontWeight: "800" },
+  deleteAccountButton: {
+    minHeight: 44,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 8,
+    backgroundColor: "#b42318",
+  },
+  deleteAccountButtonText: { color: "#fff", fontSize: 13, fontWeight: "700" },
   menuCard: {
     backgroundColor: "#fff",
     borderRadius: 12,
