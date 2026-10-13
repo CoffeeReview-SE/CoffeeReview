@@ -2,8 +2,6 @@
 bin/
 obj/
 node_modules
-<<<<<<< HEAD
-=======
 .expo/
 
 # @generated expo-cli sync-2b81b286409207a5da26e14c78851eb30d8ccbdb
@@ -11,4 +9,3 @@ node_modules
 
 expo-env.d.ts
 # @end expo-cli
->>>>>>> 7b644577e68dade65858bac0a24746d2f988993b
