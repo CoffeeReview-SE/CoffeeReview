@@ -29,9 +29,6 @@ type Order = {
   image: string;
 };
 
-// ===== KIỂU DỮ LIỆU BỘ LỌC =====
-type FilterType = "status" | "payment" | "date";
-
 // ===== DỮ LIỆU MẪU CÁC ĐƠN HÀNG =====
 const orders: Order[] = [
   {
