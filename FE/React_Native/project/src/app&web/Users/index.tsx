@@ -1,5 +1,6 @@
 import { useRouter } from "expo-router";
 import React from "react";
+import { getCurrentUser } from "./authService";
 import {
   Image,
   Pressable,
@@ -61,13 +62,11 @@ function PhoneLayout() {
 
   return (
     <View style={styles.phoneContainer}>
-
       {/* ================================================= */}
       {/*                     HEADER                        */}
       {/* ================================================= */}
 
       <View style={styles.phoneHeader}>
-
         {/* logo */}
         <View style={styles.phoneLogo}>
           <Image
@@ -80,7 +79,6 @@ function PhoneLayout() {
 
         {/* Customer icons */}
         <View style={styles.phoneCustomerIcons}>
-
           {/* Giỏ hàng */}
           <HoverButton
             style={styles.phoneIconItem}
@@ -102,9 +100,7 @@ function PhoneLayout() {
                   />
                 </View>
 
-                <Text style={styles.phoneIconText}>
-                  Giỏ hàng
-                </Text>
+                <Text style={styles.phoneIconText}>Giỏ hàng</Text>
               </>
             )}
           </HoverButton>
@@ -130,9 +126,7 @@ function PhoneLayout() {
                   />
                 </View>
 
-                <Text style={styles.phoneIconText}>
-                  Đơn hàng
-                </Text>
+                <Text style={styles.phoneIconText}>Đơn hàng</Text>
               </>
             )}
           </HoverButton>
@@ -141,6 +135,7 @@ function PhoneLayout() {
           <HoverButton
             style={styles.phoneIconItem}
             hoverStyle={styles.iconItemHover}
+            onPress={() => router.push("/account")}
           >
             {(hovered: boolean) => (
               <>
@@ -157,18 +152,14 @@ function PhoneLayout() {
                   />
                 </View>
 
-                <Text style={styles.phoneIconText}>
-                  Tài khoản
-                </Text>
+                <Text style={styles.phoneIconText}>Tài khoản</Text>
               </>
             )}
           </HoverButton>
-
         </View>
 
         {/* Search bar */}
         <View style={styles.phoneSearchBar}>
-
           <TextInput
             placeholder="Tìm kiếm sản phẩm"
             placeholderTextColor="#888"
@@ -179,15 +170,9 @@ function PhoneLayout() {
             style={styles.phoneSearchButton}
             hoverStyle={styles.buttonHover}
           >
-            <Ionicons
-              name="search"
-              size={20}
-              color="#ffffff"
-            />
+            <Ionicons name="search" size={20} color="#ffffff" />
           </HoverButton>
-
         </View>
-
       </View>
 
       {/* ================================================= */}
@@ -198,31 +183,25 @@ function PhoneLayout() {
         style={styles.phoneContentScroll}
         showsVerticalScrollIndicator={false}
       >
-
         {/* ================================================= */}
         {/*                       MAIN                         */}
         {/* ================================================= */}
 
         {/* Banner */}
         <View style={styles.phoneBanner}>
-
           {/* bên trái */}
           <View style={styles.phoneBannerLeft}>
-
             <Text style={styles.phoneBannerSmallTitle}>
               MUA SẮM DỄ DÀNG - TIỆN LỢI MỖI NGÀY
             </Text>
 
             <Text style={styles.phoneBannerTitle}>
               Sản phẩm chất lượng{"\n"}
-              <Text style={styles.bannerTitleHighlight}>
-                Giá tốt mỗi ngày
-              </Text>
+              <Text style={styles.bannerTitleHighlight}>Giá tốt mỗi ngày</Text>
             </Text>
 
             <Text style={styles.phoneBannerDescription}>
-              Khám phá hàng ngàn sản phẩm chính hãng
-              với nhiều ưu đãi hấp dẫn.
+              Khám phá hàng ngàn sản phẩm chính hãng với nhiều ưu đãi hấp dẫn.
             </Text>
 
             {/* Mua ngay */}
@@ -230,24 +209,18 @@ function PhoneLayout() {
               style={styles.phoneBuyButton}
               hoverStyle={styles.buttonHover}
             >
-              <Text style={styles.buyButtonText}>
-                Mua ngay
-              </Text>
+              <Text style={styles.buyButtonText}>Mua ngay</Text>
             </HoverButton>
-
           </View>
 
           {/* bên phải */}
           <View style={styles.phoneBannerRight}>
-
             <Image
               source={require("../../../image/Designer.png")}
               style={styles.phoneBannerImage}
               resizeMode="contain"
             />
-
           </View>
-
         </View>
 
         {/* ================================================= */}
@@ -255,24 +228,14 @@ function PhoneLayout() {
         {/* ================================================= */}
 
         <View style={styles.phoneCategories}>
-
           {/* Tất cả */}
           <HoverButton
-            style={[
-              styles.phoneCategory,
-              styles.categoryActive,
-            ]}
+            style={[styles.phoneCategory, styles.categoryActive]}
             hoverStyle={styles.categoryHover}
           >
-            <Ionicons
-              name="grid-outline"
-              size={23}
-              color="#ffffff"
-            />
+            <Ionicons name="grid-outline" size={23} color="#ffffff" />
 
-            <Text style={styles.categoryTextActive}>
-              Tất cả
-            </Text>
+            <Text style={styles.categoryTextActive}>Tất cả</Text>
           </HoverButton>
 
           {/* Điện thoại */}
@@ -280,15 +243,9 @@ function PhoneLayout() {
             style={styles.phoneCategory}
             hoverStyle={styles.categoryHover}
           >
-            <Ionicons
-              name="phone-portrait-outline"
-              size={23}
-              color="red"
-            />
+            <Ionicons name="phone-portrait-outline" size={23} color="red" />
 
-            <Text style={styles.phoneCategoryText}>
-              Điện thoại
-            </Text>
+            <Text style={styles.phoneCategoryText}>Điện thoại</Text>
           </HoverButton>
 
           {/* Laptop */}
@@ -296,15 +253,9 @@ function PhoneLayout() {
             style={styles.phoneCategory}
             hoverStyle={styles.categoryHover}
           >
-            <Ionicons
-              name="laptop-outline"
-              size={23}
-              color="red"
-            />
+            <Ionicons name="laptop-outline" size={23} color="red" />
 
-            <Text style={styles.phoneCategoryText}>
-              Laptop
-            </Text>
+            <Text style={styles.phoneCategoryText}>Laptop</Text>
           </HoverButton>
 
           {/* Phụ kiện */}
@@ -312,17 +263,10 @@ function PhoneLayout() {
             style={styles.phoneCategory}
             hoverStyle={styles.categoryHover}
           >
-            <Ionicons
-              name="headset-outline"
-              size={23}
-              color="red"
-            />
+            <Ionicons name="headset-outline" size={23} color="red" />
 
-            <Text style={styles.phoneCategoryText}>
-              Phụ kiện
-            </Text>
+            <Text style={styles.phoneCategoryText}>Phụ kiện</Text>
           </HoverButton>
-
         </View>
 
         {/* ================================================= */}
@@ -330,71 +274,47 @@ function PhoneLayout() {
         {/* ================================================= */}
 
         <View style={styles.phoneFeaturedProducts}>
-
           {/* Tiêu đề */}
           <View style={styles.titleRow}>
-
-            <Text style={styles.phoneTitle}>
-              Sản phẩm nổi bật
-            </Text>
+            <Text style={styles.phoneTitle}>Sản phẩm nổi bật</Text>
 
             <HoverButton
               style={styles.viewAllButton}
               hoverStyle={styles.viewAllHover}
             >
-              <Text style={styles.viewAll}>
-                Xem tất cả
-              </Text>
+              <Text style={styles.viewAll}>Xem tất cả</Text>
             </HoverButton>
-
           </View>
 
           {/* Danh sách sản phẩm */}
           <View style={styles.phoneProductList}>
-
             {/* Product 1 */}
             <Pressable
               style={styles.phoneProductCard}
-              onPress={() =>
-                router.push("/product_detail")
-              }
+              onPress={() => router.push("/product_detail")}
             >
-
               <Image
                 source={require("../../../image/16e4.jpg")}
                 style={styles.phoneProductImage}
                 resizeMode="contain"
               />
 
-              <Text style={styles.phoneProductName}>
-                iPhone 16e 128GB
-              </Text>
+              <Text style={styles.phoneProductName}>iPhone 16e 128GB</Text>
 
-              <Text style={styles.rating}>
-                ⭐ 4.8
-              </Text>
+              <Text style={styles.rating}>⭐ 4.8</Text>
 
-              <Text style={styles.phonePrice}>
-                16.990.000đ
-              </Text>
+              <Text style={styles.phonePrice}>16.990.000đ</Text>
 
               <HoverButton
                 style={styles.addCartButton}
                 hoverStyle={styles.buttonHover}
               >
-                <Text style={styles.addCartText}>
-                  Thêm vào giỏ
-                </Text>
+                <Text style={styles.addCartText}>Thêm vào giỏ</Text>
               </HoverButton>
-
             </Pressable>
-
           </View>
-
         </View>
-
       </ScrollView>
-
     </View>
   );
 }
@@ -408,30 +328,23 @@ function DesktopLayout() {
 
   return (
     <View style={styles.container}>
-
       {/* ================================================= */}
       {/*                     HEADER                        */}
       {/* ================================================= */}
 
       <View style={styles.header}>
-
         {/* logo */}
         <View style={styles.logo}>
-
           <Image
             source={require("../../../image/logo.jpg")}
             style={styles.logoImage}
           />
 
-          <Text style={styles.logoText}>
-            BVP Shop
-          </Text>
-
+          <Text style={styles.logoText}>BVP Shop</Text>
         </View>
 
         {/* search bar */}
         <View style={styles.searchBar}>
-
           <TextInput
             placeholder="Tìm kiếm sản phẩm"
             placeholderTextColor="#888"
@@ -442,18 +355,12 @@ function DesktopLayout() {
             style={styles.searchButton}
             hoverStyle={styles.buttonHover}
           >
-            <Ionicons
-              name="search"
-              size={22}
-              color="#ffffff"
-            />
+            <Ionicons name="search" size={22} color="#ffffff" />
           </HoverButton>
-
         </View>
 
         {/* Customer icons */}
         <View style={styles.customerIcons}>
-
           {/* Giỏ hàng */}
           <HoverButton
             style={styles.iconItem}
@@ -463,25 +370,16 @@ function DesktopLayout() {
             {(hovered: boolean) => (
               <>
                 <View
-                  style={[
-                    styles.iconButton,
-                    hovered && styles.iconButtonHover,
-                  ]}
+                  style={[styles.iconButton, hovered && styles.iconButtonHover]}
                 >
                   <Ionicons
                     name="cart-outline"
                     size={25}
-                    color={
-                      hovered
-                        ? "red"
-                        : "#ffffff"
-                    }
+                    color={hovered ? "red" : "#ffffff"}
                   />
                 </View>
 
-                <Text style={styles.iconText}>
-                  Giỏ hàng
-                </Text>
+                <Text style={styles.iconText}>Giỏ hàng</Text>
               </>
             )}
           </HoverButton>
@@ -495,25 +393,16 @@ function DesktopLayout() {
             {(hovered: boolean) => (
               <>
                 <View
-                  style={[
-                    styles.iconButton,
-                    hovered && styles.iconButtonHover,
-                  ]}
+                  style={[styles.iconButton, hovered && styles.iconButtonHover]}
                 >
                   <Ionicons
                     name="cube-outline"
                     size={25}
-                    color={
-                      hovered
-                        ? "red"
-                        : "#ffffff"
-                    }
+                    color={hovered ? "red" : "#ffffff"}
                   />
                 </View>
 
-                <Text style={styles.iconText}>
-                  Đơn hàng
-                </Text>
+                <Text style={styles.iconText}>Đơn hàng</Text>
               </>
             )}
           </HoverButton>
@@ -522,35 +411,25 @@ function DesktopLayout() {
           <HoverButton
             style={styles.iconItem}
             hoverStyle={styles.iconItemHover}
+            onPress={() => router.push("/account")}
           >
             {(hovered: boolean) => (
               <>
                 <View
-                  style={[
-                    styles.iconButton,
-                    hovered && styles.iconButtonHover,
-                  ]}
+                  style={[styles.iconButton, hovered && styles.iconButtonHover]}
                 >
                   <Ionicons
                     name="person-outline"
                     size={25}
-                    color={
-                      hovered
-                        ? "red"
-                        : "#ffffff"
-                    }
+                    color={hovered ? "red" : "#ffffff"}
                   />
                 </View>
 
-                <Text style={styles.iconText}>
-                  Tài khoản
-                </Text>
+                <Text style={styles.iconText}>Tài khoản</Text>
               </>
             )}
           </HoverButton>
-
         </View>
-
       </View>
 
       {/* ================================================= */}
@@ -561,31 +440,25 @@ function DesktopLayout() {
         style={styles.contentScroll}
         showsVerticalScrollIndicator={false}
       >
-
         {/* ================================================= */}
         {/*                       MAIN                         */}
         {/* ================================================= */}
 
         {/* Banner */}
         <View style={styles.banner}>
-
           {/* bên trái */}
           <View style={styles.bannerLeft}>
-
             <Text style={styles.bannerSmallTitle}>
               MUA SẮM DỄ DÀNG - TIỆN LỢI MỖI NGÀY
             </Text>
 
             <Text style={styles.bannerTitle}>
               Sản phẩm chất lượng{"\n"}
-              <Text style={styles.bannerTitleHighlight}>
-                Giá tốt mỗi ngày
-              </Text>
+              <Text style={styles.bannerTitleHighlight}>Giá tốt mỗi ngày</Text>
             </Text>
 
             <Text style={styles.bannerDescription}>
-              Khám phá hàng ngàn sản phẩm chính hãng
-              với nhiều ưu đãi hấp dẫn.
+              Khám phá hàng ngàn sản phẩm chính hãng với nhiều ưu đãi hấp dẫn.
             </Text>
 
             {/* Mua ngay */}
@@ -593,24 +466,18 @@ function DesktopLayout() {
               style={styles.buyButton}
               hoverStyle={styles.buttonHover}
             >
-              <Text style={styles.buyButtonText}>
-                Mua ngay
-              </Text>
+              <Text style={styles.buyButtonText}>Mua ngay</Text>
             </HoverButton>
-
           </View>
 
           {/* bên phải */}
           <View style={styles.bannerRight}>
-
             <Image
               source={require("../../../image/Designer.png")}
               style={styles.bannerImage}
               resizeMode="contain"
             />
-
           </View>
-
         </View>
 
         {/* ================================================= */}
@@ -618,24 +485,14 @@ function DesktopLayout() {
         {/* ================================================= */}
 
         <View style={styles.categories}>
-
           {/* Tất cả */}
           <HoverButton
-            style={[
-              styles.category,
-              styles.categoryActive,
-            ]}
+            style={[styles.category, styles.categoryActive]}
             hoverStyle={styles.categoryHover}
           >
-            <Ionicons
-              name="grid-outline"
-              size={28}
-              color="#ffffff"
-            />
+            <Ionicons name="grid-outline" size={28} color="#ffffff" />
 
-            <Text style={styles.categoryTextActive}>
-              Tất cả
-            </Text>
+            <Text style={styles.categoryTextActive}>Tất cả</Text>
           </HoverButton>
 
           {/* Điện thoại */}
@@ -643,15 +500,9 @@ function DesktopLayout() {
             style={styles.category}
             hoverStyle={styles.categoryHover}
           >
-            <Ionicons
-              name="phone-portrait-outline"
-              size={28}
-              color="red"
-            />
+            <Ionicons name="phone-portrait-outline" size={28} color="red" />
 
-            <Text style={styles.categoryText}>
-              Điện thoại
-            </Text>
+            <Text style={styles.categoryText}>Điện thoại</Text>
           </HoverButton>
 
           {/* Laptop */}
@@ -659,15 +510,9 @@ function DesktopLayout() {
             style={styles.category}
             hoverStyle={styles.categoryHover}
           >
-            <Ionicons
-              name="laptop-outline"
-              size={28}
-              color="red"
-            />
+            <Ionicons name="laptop-outline" size={28} color="red" />
 
-            <Text style={styles.categoryText}>
-              Laptop
-            </Text>
+            <Text style={styles.categoryText}>Laptop</Text>
           </HoverButton>
 
           {/* Phụ kiện */}
@@ -675,17 +520,10 @@ function DesktopLayout() {
             style={styles.category}
             hoverStyle={styles.categoryHover}
           >
-            <Ionicons
-              name="headset-outline"
-              size={28}
-              color="red"
-            />
+            <Ionicons name="headset-outline" size={28} color="red" />
 
-            <Text style={styles.categoryText}>
-              Phụ kiện
-            </Text>
+            <Text style={styles.categoryText}>Phụ kiện</Text>
           </HoverButton>
-
         </View>
 
         {/* ================================================= */}
@@ -693,71 +531,47 @@ function DesktopLayout() {
         {/* ================================================= */}
 
         <View style={styles.featuredProducts}>
-
           {/* Tiêu đề */}
           <View style={styles.titleRow}>
-
-            <Text style={styles.title}>
-              Sản phẩm nổi bật
-            </Text>
+            <Text style={styles.title}>Sản phẩm nổi bật</Text>
 
             <HoverButton
               style={styles.viewAllButton}
               hoverStyle={styles.viewAllHover}
             >
-              <Text style={styles.viewAll}>
-                Xem tất cả
-              </Text>
+              <Text style={styles.viewAll}>Xem tất cả</Text>
             </HoverButton>
-
           </View>
 
           {/* Danh sách sản phẩm */}
           <View style={styles.productList}>
-
             {/* Product 1 */}
             <Pressable
               style={styles.productCard}
-              onPress={() =>
-                router.push("/product_detail")
-              }
+              onPress={() => router.push("/product_detail")}
             >
-
               <Image
                 source={require("../../../image/16e4.jpg")}
                 style={styles.productImage}
                 resizeMode="contain"
               />
 
-              <Text style={styles.productName}>
-                iPhone 16e 128GB
-              </Text>
+              <Text style={styles.productName}>iPhone 16e 128GB</Text>
 
-              <Text style={styles.rating}>
-                ⭐ 4.8
-              </Text>
+              <Text style={styles.rating}>⭐ 4.8</Text>
 
-              <Text style={styles.price}>
-                16.990.000đ
-              </Text>
+              <Text style={styles.price}>16.990.000đ</Text>
 
               <HoverButton
                 style={styles.addCartButton}
                 hoverStyle={styles.buttonHover}
               >
-                <Text style={styles.addCartText}>
-                  Thêm vào giỏ
-                </Text>
+                <Text style={styles.addCartText}>Thêm vào giỏ</Text>
               </HoverButton>
-
             </Pressable>
-
           </View>
-
         </View>
-
       </ScrollView>
-
     </View>
   );
 }
@@ -767,7 +581,6 @@ function DesktopLayout() {
 /* ================================================= */
 
 const styles = StyleSheet.create({
-
   /* ================================================= */
   /*                DESKTOP CONTAINER                  */
   /* ================================================= */
@@ -1615,5 +1428,4 @@ const styles = StyleSheet.create({
 
     marginBottom: 10,
   },
-
 });

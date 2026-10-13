@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState } from "react";
 import {
+  Alert,
   ImageBackground,
   KeyboardAvoidingView,
   Platform,
@@ -10,24 +11,94 @@ import {
   TextInput,
   View,
   useWindowDimensions,
-} from 'react-native';
+} from "react-native";
+import { useRouter } from "expo-router";
+import { registerUser } from "./authService";
 
 const RegisterScreen = () => {
+  const router = useRouter();
   const { width } = useWindowDimensions();
-
-  // Kiểm tra màn hình có phải điện thoại nhỏ hay không
   const isMobile = width < 600;
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [password, setPassword] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleRegister = async () => {
+    const trimmedName = fullName.trim();
+    const trimmedEmail = email.trim();
+    const trimmedPhone = phone.trim();
+    const trimmedPassword = password.trim();
+
+    if (!trimmedName || !trimmedEmail || !trimmedPhone || !trimmedPassword) {
+      Alert.alert(
+        "Thiếu thông tin",
+        "Vui lòng điền đầy đủ tên, email, số điện thoại và mật khẩu.",
+      );
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(trimmedEmail)) {
+      Alert.alert(
+        "Email không hợp lệ",
+        "Vui lòng nhập địa chỉ email đúng định dạng.",
+      );
+      return;
+    }
+
+    if (!/^[0-9+()\-\s]{9,15}$/.test(trimmedPhone)) {
+      Alert.alert(
+        "Số điện thoại không hợp lệ",
+        "Vui lòng nhập số điện thoại hợp lệ.",
+      );
+      return;
+    }
+
+    if (trimmedPassword.length < 6) {
+      Alert.alert("Mật khẩu quá ngắn", "Mật khẩu phải có ít nhất 6 ký tự.");
+      return;
+    }
+
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+
+    try {
+      await registerUser({
+        fullName: trimmedName,
+        email: trimmedEmail,
+        phone: trimmedPhone,
+        password: trimmedPassword,
+      });
+
+      Alert.alert(
+        "Đăng ký thành công",
+        "Tài khoản của bạn đã được tạo. Hãy đăng nhập để tiếp tục.",
+      );
+      router.replace("/login");
+    } catch (error) {
+      Alert.alert(
+        "Đăng ký thất bại",
+        error instanceof Error
+          ? error.message
+          : "Đã xảy ra lỗi khi tạo tài khoản.",
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <ImageBackground
-      source={require('../../../image/anhnen.png')}
+      source={require("../../../image/anhnen.png")}
       style={styles.background}
       resizeMode="cover"
       imageStyle={styles.backgroundImage}
     >
       <KeyboardAvoidingView
         style={styles.container}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
         <ScrollView
           contentContainerStyle={[
@@ -37,81 +108,61 @@ const RegisterScreen = () => {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <View
-            style={[
-              styles.login,
-              isMobile && styles.loginMobile,
-            ]}
-          >
-            <Text
-              style={[
-                styles.title,
-                isMobile && styles.titleMobile,
-              ]}
-            >
+          <View style={[styles.login, isMobile && styles.loginMobile]}>
+            <Text style={[styles.title, isMobile && styles.titleMobile]}>
               Đăng ký
             </Text>
 
-            {/* EMAIL */}
             <Text style={styles.label}>Email</Text>
-
             <TextInput
-              style={[
-                styles.input,
-                isMobile && styles.inputMobile,
-              ]}
+              value={email}
+              onChangeText={setEmail}
+              style={[styles.input, isMobile && styles.inputMobile]}
               placeholder="Nhập email"
               keyboardType="email-address"
               autoCapitalize="none"
               autoCorrect={false}
             />
 
-            {/* HỌ VÀ TÊN */}
             <Text style={styles.label}>Họ và tên</Text>
-
             <TextInput
-              style={[
-                styles.input,
-                isMobile && styles.inputMobile,
-              ]}
+              value={fullName}
+              onChangeText={setFullName}
+              style={[styles.input, isMobile && styles.inputMobile]}
               placeholder="Nhập họ và tên"
               autoCapitalize="words"
             />
 
-            {/* SỐ ĐIỆN THOẠI */}
             <Text style={styles.label}>Số điện thoại</Text>
-
             <TextInput
-              style={[
-                styles.input,
-                isMobile && styles.inputMobile,
-              ]}
+              value={phone}
+              onChangeText={setPhone}
+              style={[styles.input, isMobile && styles.inputMobile]}
               placeholder="Nhập số điện thoại"
               keyboardType="phone-pad"
             />
 
-            {/* MẬT KHẨU */}
             <Text style={styles.label}>Mật khẩu</Text>
-
             <TextInput
-              style={[
-                styles.input,
-                isMobile && styles.inputMobile,
-              ]}
+              value={password}
+              onChangeText={setPassword}
+              style={[styles.input, isMobile && styles.inputMobile]}
               placeholder="Nhập mật khẩu"
               secureTextEntry
             />
 
-            {/* BUTTON */}
             <View style={styles.btn}>
               <Pressable
+                onPress={handleRegister}
+                disabled={isSubmitting}
                 style={[
                   styles.button,
                   isMobile && styles.buttonMobile,
+                  isSubmitting && styles.buttonDisabled,
                 ]}
               >
                 <Text style={styles.buttonText}>
-                  Đăng ký
+                  {isSubmitting ? "Đang đăng ký..." : "Đăng ký"}
                 </Text>
               </Pressable>
             </View>
@@ -129,15 +180,15 @@ const styles = StyleSheet.create({
 
   background: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#f5f5f5',
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#f5f5f5",
   },
 
   backgroundImage: {
     ...StyleSheet.absoluteFill,
-    width: '100%',
-    height: '100%',
+    width: "100%",
+    height: "100%",
   },
 
   /* ========================= */
@@ -146,13 +197,13 @@ const styles = StyleSheet.create({
 
   container: {
     flex: 1,
-    width: '100%',
-    justifyContent: 'center',
+    width: "100%",
+    justifyContent: "center",
   },
 
   scrollContent: {
     flexGrow: 1,
-    justifyContent: 'center',
+    justifyContent: "center",
     paddingHorizontal: 20,
     paddingVertical: 30,
   },
@@ -167,21 +218,21 @@ const styles = StyleSheet.create({
   /* ========================= */
 
   login: {
-    width: '100%',
+    width: "100%",
     maxWidth: 420,
-    alignSelf: 'center',
+    alignSelf: "center",
 
     padding: 24,
 
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: "#ddd",
     borderRadius: 15,
 
-    backgroundColor: 'rgba(255,255,255,0.9)',
+    backgroundColor: "rgba(255,255,255,0.9)",
 
     elevation: 5,
 
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: {
       width: 0,
       height: 5,
@@ -191,7 +242,7 @@ const styles = StyleSheet.create({
   },
 
   loginMobile: {
-    width: '100%',
+    width: "100%",
     maxWidth: 420,
     padding: 18,
     borderRadius: 12,
@@ -202,10 +253,10 @@ const styles = StyleSheet.create({
   /* ========================= */
 
   title: {
-    color: '#d32f2f',
+    color: "#d32f2f",
     fontSize: 32,
-    fontWeight: 'bold',
-    textAlign: 'center',
+    fontWeight: "bold",
+    textAlign: "center",
     marginBottom: 25,
   },
 
@@ -219,12 +270,12 @@ const styles = StyleSheet.create({
   /* ========================= */
 
   label: {
-    width: '100%',
-    textAlign: 'left',
+    width: "100%",
+    textAlign: "left",
     fontSize: 18,
     marginBottom: 8,
-    color: '#333',
-    fontWeight: '600',
+    color: "#333",
+    fontWeight: "600",
   },
 
   /* ========================= */
@@ -232,10 +283,10 @@ const styles = StyleSheet.create({
   /* ========================= */
 
   input: {
-    width: '100%',
+    width: "100%",
 
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderColor: "#ccc",
     borderRadius: 8,
 
     paddingHorizontal: 14,
@@ -245,7 +296,7 @@ const styles = StyleSheet.create({
 
     fontSize: 16,
 
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
   },
 
   inputMobile: {
@@ -261,31 +312,33 @@ const styles = StyleSheet.create({
   /* ========================= */
 
   btn: {
-    alignItems: 'center',
+    alignItems: "center",
     marginTop: 8,
   },
 
   button: {
-    backgroundColor: '#d32f2f',
+    backgroundColor: "#d32f2f",
     borderRadius: 15,
 
     paddingVertical: 14,
     paddingHorizontal: 32,
 
-    width: '100%',
+    width: "100%",
 
-    alignItems: 'center',
+    alignItems: "center",
   },
-
+  buttonDisabled: {
+    opacity: 0.7,
+  },
   buttonMobile: {
     paddingVertical: 13,
     borderRadius: 10,
   },
 
   buttonText: {
-    color: 'white',
+    color: "white",
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
 });
 
