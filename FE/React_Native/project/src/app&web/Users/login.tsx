@@ -186,14 +186,7 @@ export default function LoginScreen() {
               <Text style={styles.optionText}>Nhớ đăng nhập</Text>
             </Pressable>
 
-            <Pressable
-              onPress={() =>
-                Alert.alert(
-                  "Quên mật khẩu",
-                  "Chức năng khôi phục mật khẩu sẽ được kết nối sau.",
-                )
-              }
-            >
+            <Pressable onPress={() => router.push("/forgot_password")}>
               <Text style={styles.link}>Quên mật khẩu?</Text>
             </Pressable>
           </View>

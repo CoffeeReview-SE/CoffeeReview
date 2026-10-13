@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import {
-  Alert,
   ImageBackground,
   KeyboardAvoidingView,
   Platform,
@@ -19,25 +18,22 @@ export default function ForgotPasswordScreen() {
   const { width } = useWindowDimensions();
   const isMobile = width < 600;
   const [email, setEmail] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [feedback, setFeedback] = useState("");
 
   const handleSubmit = () => {
     const normalizedEmail = email.trim();
     if (!normalizedEmail) {
-      Alert.alert("Thiếu email", "Vui lòng nhập email đã đăng ký.");
+      setFeedback("Vui lòng nhập email đã đăng ký.");
       return;
     }
 
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
-      Alert.alert("Email không hợp lệ", "Vui lòng kiểm tra lại địa chỉ email.");
+      setFeedback("Email chưa đúng định dạng. Vui lòng kiểm tra lại.");
       return;
     }
 
-    setIsSubmitting(true);
-    Alert.alert(
-      "Khôi phục mật khẩu",
-      "Chức năng gửi email khôi phục chưa được kết nối trong bản demo.",
-      [{ text: "Đã hiểu", onPress: () => setIsSubmitting(false) }],
+    setFeedback(
+      "Ứng dụng chưa kết nối dịch vụ email/backend nên chưa thể gửi mã OTP thật.",
     );
   };
 
@@ -65,14 +61,16 @@ export default function ForgotPasswordScreen() {
               Quên mật khẩu?
             </Text>
             <Text style={styles.description}>
-              Nhập email bạn đã dùng để đăng ký. Chúng tôi sẽ hướng dẫn bạn
-              khôi phục quyền truy cập.
+              Nhập email đã đăng ký để nhận mã OTP khôi phục mật khẩu.
             </Text>
 
             <Text style={styles.label}>Email</Text>
             <TextInput
               value={email}
-              onChangeText={setEmail}
+              onChangeText={(value) => {
+                setEmail(value);
+                setFeedback("");
+              }}
               style={[styles.input, isMobile && styles.inputMobile]}
               placeholder="Nhập email đã đăng ký"
               placeholderTextColor="#999"
@@ -84,11 +82,16 @@ export default function ForgotPasswordScreen() {
 
             <Pressable
               onPress={handleSubmit}
-              disabled={isSubmitting}
               style={[styles.button, isMobile && styles.buttonMobile]}
             >
-              <Text style={styles.buttonText}>Gửi hướng dẫn khôi phục</Text>
+              <Text style={styles.buttonText}>Gửi mã OTP</Text>
             </Pressable>
+
+            {!!feedback && (
+              <Text style={styles.feedback} accessibilityLiveRegion="polite">
+                {feedback}
+              </Text>
+            )}
 
             <Pressable
               accessibilityRole="button"
@@ -211,6 +214,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "700",
     textAlign: "center",
+  },
+  feedback: {
+    color: "#a12622",
+    fontSize: 13,
+    lineHeight: 19,
+    textAlign: "center",
+    marginTop: 12,
   },
   backButton: {
     alignSelf: "center",
