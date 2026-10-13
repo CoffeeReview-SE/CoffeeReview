@@ -285,6 +285,7 @@ export default function ProductDetail() {
                     <HeaderButton
                         icon="user"
                         text="Tài khoản"
+                        onPress={() => router.push("/account")}
                         isMobile={isMobile}
                     />
                 </View>

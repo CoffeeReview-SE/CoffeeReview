@@ -13,22 +13,23 @@ import { getCurrentUser, updateCurrentUser, UserProfile } from "../Use-cases/aut
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const [user, setUser] = useState<UserProfile | null>(null);
+  const [, setUser] = useState<UserProfile | null>(null);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   // Nạp thông tin hồ sơ và đưa người chưa đăng nhập về màn hình đăng nhập.
   useEffect(() => {
     getCurrentUser().then((u) => {
-      if (!u) router.replace("/login");
-      else {
-        setUser(u);
-        setName(u.fullName);
-        setEmail(u.email);
-        setPhone(u.phone);
+      if (!u) {
+        router.replace("/login");
+        return;
       }
+      setUser(u);
+      setName(u.fullName);
+      setEmail(u.email);
+      setPhone(u.phone);
     });
-  }, []);
+  }, [router]);
   const save = async () => {
     // Họ tên và email là các trường bắt buộc trước khi cập nhật hồ sơ.
     if (!name.trim() || !email.trim()) {
