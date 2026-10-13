@@ -10,6 +10,7 @@ import {
     useWindowDimensions,
 } from "react-native";
 
+import { Ionicons } from "@expo/vector-icons";
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 import { useRouter } from "expo-router";
 
@@ -43,12 +44,14 @@ export default function ProductDetail() {
 
     const { width } = useWindowDimensions();
 
+    // Dùng cùng ngưỡng 600px để chuyển bố cục và style sang phiên bản điện thoại.
     const isMobile = width < 600;
 
     /* ================================================= */
     /*                     STATE                         */
     /* ================================================= */
 
+    // Lưu lựa chọn hiện tại để cập nhật ảnh chính và trạng thái được chọn trong giao diện.
     const [selectedColor, setSelectedColor] = useState(1);
     const [selectedCapacity, setSelectedCapacity] = useState(1);
     const [selectedImage, setSelectedImage] = useState(0);
@@ -114,16 +117,19 @@ export default function ProductDetail() {
     function HeaderButton({
         icon,
         text,
+        onPress,
     }: {
         icon: string;
         text: string;
+        onPress?: () => void;
     }) {
         return (
             <HoverButton
+                onPress={onPress}
                 style={[
                     styles.headerButtonContainer,
                     isMobile &&
-                        styles.headerButtonContainerMobile,
+                    styles.headerButtonContainerMobile,
                 ]}
                 hoverStyle={styles.headerButtonContainerHover}
             >
@@ -133,19 +139,22 @@ export default function ProductDetail() {
                             style={[
                                 styles.headerButton,
                                 isMobile &&
-                                    styles.headerButtonMobile,
+                                styles.headerButtonMobile,
                                 hovered &&
-                                    styles.headerButtonHover,
+                                styles.headerButtonHover,
                             ]}
                         >
-                            <FontAwesome6
-                                name={icon as any}
-                                size={isMobile ? 18 : 22}
-                                color={
-                                    hovered
-                                        ? "red"
-                                        : "#ffffff"
+                            {/* Ánh xạ tên icon header sang các icon Ionicons tương ứng. */}
+                            <Ionicons
+                                name={
+                                    icon === "cart-shopping"
+                                        ? "cart-outline"
+                                        : icon === "box"
+                                            ? "cube-outline"
+                                            : "person-outline"
                                 }
+                                size={isMobile ? 22 : 25}
+                                color={hovered ? "red" : "#ffffff"}
                             />
                         </View>
 
@@ -153,7 +162,7 @@ export default function ProductDetail() {
                             style={[
                                 styles.headerButtonText,
                                 isMobile &&
-                                    styles.headerButtonTextMobile,
+                                styles.headerButtonTextMobile,
                             ]}
                         >
                             {text}
@@ -198,7 +207,7 @@ export default function ProductDetail() {
                         style={[
                             styles.logoImage,
                             isMobile &&
-                                styles.logoImageMobile,
+                            styles.logoImageMobile,
                         ]}
                     />
 
@@ -206,7 +215,7 @@ export default function ProductDetail() {
                         style={[
                             styles.logoText,
                             isMobile &&
-                                styles.logoTextMobile,
+                            styles.logoTextMobile,
                         ]}
                     >
                         BVP Shop
@@ -221,7 +230,7 @@ export default function ProductDetail() {
                     style={[
                         styles.searchBar,
                         isMobile &&
-                            styles.searchBarMobile,
+                        styles.searchBarMobile,
                     ]}
                 >
                     <TextInput
@@ -230,7 +239,7 @@ export default function ProductDetail() {
                         style={[
                             styles.searchInput,
                             isMobile &&
-                                styles.searchInputMobile,
+                            styles.searchInputMobile,
                         ]}
                     />
 
@@ -238,7 +247,7 @@ export default function ProductDetail() {
                         style={[
                             styles.searchButton,
                             isMobile &&
-                                styles.searchButtonMobile,
+                            styles.searchButtonMobile,
                         ]}
                         hoverStyle={styles.buttonHover}
                     >
@@ -258,7 +267,7 @@ export default function ProductDetail() {
                     style={[
                         styles.customerIcons,
                         isMobile &&
-                            styles.customerIconsMobile,
+                        styles.customerIconsMobile,
                     ]}
                 >
                     {/* Giỏ hàng */}
@@ -266,6 +275,7 @@ export default function ProductDetail() {
                     <HeaderButton
                         icon="cart-shopping"
                         text="Giỏ hàng"
+                        onPress={() => router.push("/cart")}
                     />
 
                     {/* Đơn hàng */}
@@ -273,6 +283,7 @@ export default function ProductDetail() {
                     <HeaderButton
                         icon="box"
                         text="Đơn hàng"
+                        onPress={() => router.push("/orders")}
                     />
 
                     {/* Tài khoản */}
@@ -293,7 +304,7 @@ export default function ProductDetail() {
                 contentContainerStyle={[
                     styles.scrollContent,
                     isMobile &&
-                        styles.scrollContentMobile,
+                    styles.scrollContentMobile,
                 ]}
                 showsVerticalScrollIndicator={false}
             >
@@ -306,7 +317,7 @@ export default function ProductDetail() {
                     style={[
                         styles.productDetail,
                         isMobile &&
-                            styles.productDetailMobile,
+                        styles.productDetailMobile,
                     ]}
                 >
 
@@ -318,7 +329,7 @@ export default function ProductDetail() {
                         style={[
                             styles.productImages,
                             isMobile &&
-                                styles.productImagesMobile,
+                            styles.productImagesMobile,
                         ]}
                     >
 
@@ -328,19 +339,19 @@ export default function ProductDetail() {
                             style={[
                                 styles.mainImage,
                                 isMobile &&
-                                    styles.mainImageMobile,
+                                styles.mainImageMobile,
                             ]}
                         >
                             <Image
                                 source={
                                     productImages[
-                                        selectedImage
+                                    selectedImage
                                     ]
                                 }
                                 style={[
                                     styles.mainProductImage,
                                     isMobile &&
-                                        styles.mainProductImageMobile,
+                                    styles.mainProductImageMobile,
                                 ]}
                             />
                         </View>
@@ -351,11 +362,12 @@ export default function ProductDetail() {
                             style={[
                                 styles.thumbnailList,
                                 isMobile &&
-                                    styles.thumbnailListMobile,
+                                styles.thumbnailListMobile,
                             ]}
                         >
                             {productImages.map(
                                 (image, index) => (
+                                    // Chọn ảnh thu nhỏ để đổi ảnh chính đang hiển thị.
                                     <Pressable
                                         key={index}
                                         onPress={() =>
@@ -366,10 +378,10 @@ export default function ProductDetail() {
                                         style={[
                                             styles.thumbnail,
                                             isMobile &&
-                                                styles.thumbnailMobile,
+                                            styles.thumbnailMobile,
                                             selectedImage ===
-                                                index &&
-                                                styles.thumbnailActive,
+                                            index &&
+                                            styles.thumbnailActive,
                                         ]}
                                     >
                                         <Image
@@ -392,7 +404,7 @@ export default function ProductDetail() {
                         style={[
                             styles.informationProduct,
                             isMobile &&
-                                styles.informationProductMobile,
+                            styles.informationProductMobile,
                         ]}
                     >
 
@@ -402,7 +414,7 @@ export default function ProductDetail() {
                             style={[
                                 styles.productName,
                                 isMobile &&
-                                    styles.productNameMobile,
+                                styles.productNameMobile,
                             ]}
                         >
                             iPhone 16e 128GB
@@ -414,7 +426,7 @@ export default function ProductDetail() {
                             style={[
                                 styles.productPrice,
                                 isMobile &&
-                                    styles.productPriceMobile,
+                                styles.productPriceMobile,
                             ]}
                         >
                             16.990.000 ₫
@@ -426,14 +438,14 @@ export default function ProductDetail() {
                             style={[
                                 styles.infoProduct,
                                 isMobile &&
-                                    styles.infoProductMobile,
+                                styles.infoProductMobile,
                             ]}
                         >
                             <Text
                                 style={[
                                     styles.infoText,
                                     isMobile &&
-                                        styles.infoTextMobile,
+                                    styles.infoTextMobile,
                                 ]}
                             >
                                 Màn hình 6.1"
@@ -443,7 +455,7 @@ export default function ProductDetail() {
                                 style={[
                                     styles.infoText,
                                     isMobile &&
-                                        styles.infoTextMobile,
+                                    styles.infoTextMobile,
                                 ]}
                             >
                                 Chip A18
@@ -453,7 +465,7 @@ export default function ProductDetail() {
                                 style={[
                                     styles.infoText,
                                     isMobile &&
-                                        styles.infoTextMobile,
+                                    styles.infoTextMobile,
                                 ]}
                             >
                                 Camera 48MP
@@ -463,7 +475,7 @@ export default function ProductDetail() {
                                 style={[
                                     styles.infoText,
                                     isMobile &&
-                                        styles.infoTextMobile,
+                                    styles.infoTextMobile,
                                 ]}
                             >
                                 Pin 4820 mAh
@@ -474,11 +486,12 @@ export default function ProductDetail() {
                         {/*                     CHỌN MÀU                     */}
                         {/* ================================================= */}
 
+                        {/* Cập nhật màu đang chọn để làm nổi bật lựa chọn trong danh sách. */}
                         <View
                             style={[
                                 styles.colorContainer,
                                 isMobile &&
-                                    styles.colorContainerMobile,
+                                styles.colorContainerMobile,
                             ]}
                         >
                             {colors.map((item) => (
@@ -492,24 +505,24 @@ export default function ProductDetail() {
                                     style={[
                                         styles.colorItem,
                                         isMobile &&
-                                            styles.colorItemMobile,
+                                        styles.colorItemMobile,
                                         selectedColor ===
-                                            item.id &&
-                                            styles.colorItemActive,
+                                        item.id &&
+                                        styles.colorItemActive,
                                     ]}
                                 >
                                     <View
                                         style={[
                                             styles.colorCircle,
                                             isMobile &&
-                                                styles.colorCircleMobile,
+                                            styles.colorCircleMobile,
                                             {
                                                 backgroundColor:
                                                     item.color,
                                             },
                                             selectedColor ===
-                                                item.id &&
-                                                styles.colorCircleActive,
+                                            item.id &&
+                                            styles.colorCircleActive,
                                         ]}
                                     />
 
@@ -517,7 +530,7 @@ export default function ProductDetail() {
                                         style={[
                                             styles.colorText,
                                             isMobile &&
-                                                styles.colorTextMobile,
+                                            styles.colorTextMobile,
                                         ]}
                                     >
                                         {item.name}
@@ -530,11 +543,12 @@ export default function ProductDetail() {
                         {/*                  CHỌN DUNG LƯỢNG                */}
                         {/* ================================================= */}
 
+                        {/* Cập nhật dung lượng đang chọn và trạng thái hiển thị của nút. */}
                         <View
                             style={[
                                 styles.capacityContainer,
                                 isMobile &&
-                                    styles.capacityContainerMobile,
+                                styles.capacityContainerMobile,
                             ]}
                         >
                             {capacities.map((item) => (
@@ -548,20 +562,20 @@ export default function ProductDetail() {
                                     style={[
                                         styles.capacityItem,
                                         isMobile &&
-                                            styles.capacityItemMobile,
+                                        styles.capacityItemMobile,
                                         selectedCapacity ===
-                                            item.id &&
-                                            styles.capacityItemActive,
+                                        item.id &&
+                                        styles.capacityItemActive,
                                     ]}
                                 >
                                     <Text
                                         style={[
                                             styles.capacityText,
                                             isMobile &&
-                                                styles.capacityTextMobile,
+                                            styles.capacityTextMobile,
                                             selectedCapacity ===
-                                                item.id &&
-                                                styles.capacityTextActive,
+                                            item.id &&
+                                            styles.capacityTextActive,
                                         ]}
                                     >
                                         {item.name}
@@ -578,9 +592,10 @@ export default function ProductDetail() {
                             style={[
                                 styles.buyContainer,
                                 isMobile &&
-                                    styles.buyContainerMobile,
+                                styles.buyContainerMobile,
                             ]}
                         >
+                            {/* Các handler bên dưới hiện là placeholder, chưa gọi API mua hàng/giỏ hàng. */}
                             {/* MUA NGAY */}
 
                             <Pressable
@@ -594,18 +609,18 @@ export default function ProductDetail() {
                                 }: {
                                     pressed: boolean;
                                 }) => [
-                                    styles.buyButton,
-                                    isMobile &&
+                                        styles.buyButton,
+                                        isMobile &&
                                         styles.buyButtonMobile,
-                                    pressed &&
+                                        pressed &&
                                         styles.actionButtonPressed,
-                                ]}
+                                    ]}
                             >
                                 <Text
                                     style={[
                                         styles.buttonText,
                                         isMobile &&
-                                            styles.buttonTextMobile,
+                                        styles.buttonTextMobile,
                                     ]}
                                 >
                                     MUA NGAY
@@ -625,18 +640,18 @@ export default function ProductDetail() {
                                 }: {
                                     pressed: boolean;
                                 }) => [
-                                    styles.cartButton,
-                                    isMobile &&
+                                        styles.cartButton,
+                                        isMobile &&
                                         styles.cartButtonMobile,
-                                    pressed &&
+                                        pressed &&
                                         styles.actionButtonPressed,
-                                ]}
+                                    ]}
                             >
                                 <Text
                                     style={[
                                         styles.buttonText,
                                         isMobile &&
-                                            styles.buttonTextMobile,
+                                        styles.buttonTextMobile,
                                     ]}
                                 >
                                     🛒 THÊM VÀO GIỎ
@@ -656,18 +671,18 @@ export default function ProductDetail() {
                                 }: {
                                     pressed: boolean;
                                 }) => [
-                                    styles.favoriteButton,
-                                    isMobile &&
+                                        styles.favoriteButton,
+                                        isMobile &&
                                         styles.favoriteButtonMobile,
-                                    pressed &&
+                                        pressed &&
                                         styles.actionButtonPressed,
-                                ]}
+                                    ]}
                             >
                                 <Text
                                     style={[
                                         styles.favoriteText,
                                         isMobile &&
-                                            styles.favoriteTextMobile,
+                                        styles.favoriteTextMobile,
                                     ]}
                                 >
                                     ♡
