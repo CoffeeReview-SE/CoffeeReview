@@ -18,6 +18,7 @@ import {
   saveAddress,
 } from "../Use-cases/authService";
 
+// Tạo biểu mẫu địa chỉ rỗng; ID thật được gán khi bắt đầu thêm địa chỉ mới.
 const empty = (): Address => ({
   id: "",
   receiver: "",
@@ -34,6 +35,7 @@ export default function AddressesScreen() {
   const [userId, setUserId] = useState<string | null>(null);
   const [form, setForm] = useState<Address | null>(null);
   const [loading, setLoading] = useState(true);
+  // Chỉ cho phép quản lý địa chỉ sau khi xác định được tài khoản đang đăng nhập.
   useEffect(() => {
     (async () => {
       const user = await getCurrentUser();
@@ -48,9 +50,11 @@ export default function AddressesScreen() {
   }, [router]);
   const field = (key: keyof Address, value: string | boolean) =>
     setForm((old) => (old ? { ...old, [key]: value } : old));
+  // Sao chép địa chỉ đang chọn để sửa, hoặc khởi tạo một địa chỉ mới.
   const edit = (a?: Address) =>
     setForm(a ? { ...a } : { ...empty(), id: String(Date.now()) });
   const save = async () => {
+    // Không lưu khi thiếu bất kỳ phần nào của địa chỉ hoặc chưa có userId.
     if (
       !form ||
       !form.receiver.trim() ||
@@ -71,6 +75,7 @@ export default function AddressesScreen() {
     setForm(null);
     Alert.alert("Thành công", "Địa chỉ đã được lưu.");
   };
+  // Hỏi xác nhận trước khi xóa vì thao tác này thay đổi danh sách đã lưu.
   const remove = (id: string) =>
     Alert.alert("Xóa địa chỉ", "Bạn có chắc muốn xóa địa chỉ này?", [
       { text: "Hủy", style: "cancel" },

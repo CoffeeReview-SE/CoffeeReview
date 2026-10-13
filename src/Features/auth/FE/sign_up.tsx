@@ -25,6 +25,7 @@ const RegisterScreen = () => {
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Chuẩn hóa và xác thực dữ liệu đầu vào trước khi tạo tài khoản.
   const handleRegister = async () => {
     const trimmedName = fullName.trim();
     const trimmedEmail = email.trim();
@@ -64,6 +65,7 @@ const RegisterScreen = () => {
     if (isSubmitting) return;
     setIsSubmitting(true);
 
+    // Gửi thông tin hợp lệ tới authService, báo kết quả rồi luôn mở lại nút gửi.
     try {
       await registerUser({
         fullName: trimmedName,

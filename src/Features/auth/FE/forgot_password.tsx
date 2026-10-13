@@ -20,6 +20,7 @@ export default function ForgotPasswordScreen() {
   const [email, setEmail] = useState("");
   const [feedback, setFeedback] = useState("");
 
+  // Kiểm tra email trước; backend gửi email/mã OTP hiện chưa được tích hợp.
   const handleSubmit = () => {
     const normalizedEmail = email.trim();
     if (!normalizedEmail) {

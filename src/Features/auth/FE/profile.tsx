@@ -17,6 +17,7 @@ export default function ProfileScreen() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
+  // Nạp thông tin hồ sơ và đưa người chưa đăng nhập về màn hình đăng nhập.
   useEffect(() => {
     getCurrentUser().then((u) => {
       if (!u) router.replace("/login");
@@ -29,6 +30,7 @@ export default function ProfileScreen() {
     });
   }, []);
   const save = async () => {
+    // Họ tên và email là các trường bắt buộc trước khi cập nhật hồ sơ.
     if (!name.trim() || !email.trim()) {
       Alert.alert("Thiếu thông tin", "Vui lòng nhập họ tên và email.");
       return;

@@ -29,6 +29,7 @@ import {
   type UserProfile,
 } from "../Use-cases/authService";
 
+// Các mục hiển thị ngay trong trang tài khoản, không cần chuyển sang route khác.
 type AccountInlineSection =
   | "profile"
   | "settings"
@@ -91,6 +92,7 @@ export default function AccountScreen() {
   const [activeSection, setActiveSection] =
     useState<AccountInlineSection | null>(null);
 
+  // Tải hồ sơ hiện tại một lần; cờ isMounted tránh cập nhật state sau khi rời màn hình.
   useEffect(() => {
     let isMounted = true;
 
@@ -138,6 +140,7 @@ export default function AccountScreen() {
     return null;
   }
 
+  // Dùng thông tin này để đồng bộ tiêu đề và mô tả với mục đang được chọn.
   const selectedMenuItem = menuItems.find(
     (item) => item.section === activeSection,
   );
@@ -417,6 +420,7 @@ function InlineProfileEditor({
   const [feedback, setFeedback] = useState("");
   const [isSaving, setIsSaving] = useState(false);
 
+  // Chọn ảnh vuông từ thư viện và giới hạn kích thước dữ liệu base64 lưu trong hồ sơ.
   const chooseAvatar = async () => {
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
@@ -444,6 +448,7 @@ function InlineProfileEditor({
   };
 
   const saveProfile = async () => {
+    // Kiểm tra dữ liệu tại giao diện trước khi gửi yêu cầu cập nhật hồ sơ.
     if (!fullName.trim() || !email.trim() || !phone.trim()) {
       setFeedback("Vui lòng nhập đầy đủ họ tên, email và số điện thoại.");
       return;
@@ -632,6 +637,7 @@ function InlineAccountSettings({
   const [deleteConfirmation, setDeleteConfirmation] = useState("");
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
 
+  // Nạp tùy chọn email khuyến mãi theo tài khoản và không cập nhật state khi đã unmount.
   useEffect(() => {
     let isMounted = true;
     getPromoEmailPreference(userId)
@@ -647,6 +653,7 @@ function InlineAccountSettings({
   }, [userId]);
 
   const savePassword = async () => {
+    // Chỉ đổi mật khẩu khi người dùng đã nhập đủ và hai mật khẩu mới trùng nhau.
     if (!currentPassword || !newPassword || !confirmPassword) {
       setFeedback("Vui lòng nhập đủ mật khẩu hiện tại và mật khẩu mới.");
       return;
@@ -674,6 +681,7 @@ function InlineAccountSettings({
   };
 
   const togglePromoEmails = async (enabled: boolean) => {
+    // Cập nhật lạc quan; nếu lưu thất bại thì khôi phục trạng thái trước đó.
     setPromoEmails(enabled);
     try {
       await setPromoEmailPreference(userId, enabled);
@@ -685,6 +693,7 @@ function InlineAccountSettings({
   };
 
   const confirmAccountDeletion = () => {
+    // Yêu cầu xác thực bằng mật khẩu và cụm xác nhận trước thao tác không thể hoàn tác.
     if (!deletePassword || deleteConfirmation !== "XOA TAI KHOAN") {
       setFeedback(
         'Nhập mật khẩu và chính xác cụm "XOA TAI KHOAN" để tiếp tục.',

@@ -14,6 +14,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 
+// Dữ liệu cần hiển thị cho từng đơn hàng trong lịch sử mua sắm.
 type Order = {
   id: string;
   date: string;
@@ -33,6 +34,7 @@ type Customer = {
   history: string[];
 };
 
+// Dữ liệu mẫu dựng sẵn trên giao diện; hiện chưa được lấy từ backend.
 const initialCustomers: Customer[] = [
   {
     id: "KH0001",
@@ -175,6 +177,7 @@ const statusOptions = [
   "Đã khóa",
 ];
 const money = (value: number) => `${value.toLocaleString("vi-VN")} đ`;
+// Chỉ cộng các đơn đã hoàn thành để phản ánh số tiền chi tiêu thành công.
 const successfulSpend = (customer: Customer) =>
   customer.orders
     .filter((order) => order.status === "Hoàn thành")
@@ -249,6 +252,7 @@ function Sidebar({ width }: { width: number }) {
 }
 
 function Badge({ customer }: { customer: Customer }) {
+  // Ưu tiên trạng thái khóa; nếu không khóa thì khách chưa có đơn được phân loại riêng.
   const locked = customer.status === "Đã khóa";
   const noOrders = customer.orders.length === 0;
   return (
@@ -455,6 +459,7 @@ export default function CustomerManagement() {
   const [editPhone, setEditPhone] = useState("");
   const selected =
     customers.find((customer) => customer.id === selectedId) ?? null;
+  // Lọc theo từ khóa trên mã/tên/email/điện thoại kết hợp với trạng thái đã chọn.
   const filtered = useMemo(
     () =>
       customers.filter((customer) => {
@@ -472,9 +477,11 @@ export default function CustomerManagement() {
       }),
     [customers, filter, keyword],
   );
+  // Mỗi trang hiển thị tối đa 5 khách hàng; luôn có ít nhất một trang.
   const pageCount = Math.max(1, Math.ceil(filtered.length / 5));
   const pageCustomers = filtered.slice((page - 1) * 5, page * 5);
 
+  // Cập nhật bất biến danh sách, chỉ thay đổi khách hàng có ID tương ứng.
   function updateCustomer(
     id: string,
     update: (customer: Customer) => Customer,
@@ -491,6 +498,7 @@ export default function CustomerManagement() {
     setEditPhone(selected.phone);
     setDialog("edit");
   }
+  // Lưu các trường liên hệ sau khi kiểm tra dữ liệu bắt buộc.
   function saveEdit() {
     if (!selected || !editName.trim() || !editPhone.trim())
       return Alert.alert(
@@ -504,6 +512,7 @@ export default function CustomerManagement() {
     }));
     setDialog(null);
   }
+  // Đổi trạng thái khóa/mở khóa và ghi lý do thành một sự kiện đầu lịch sử.
   function saveStatus() {
     if (!selected || !reason.trim())
       return Alert.alert(
@@ -526,6 +535,7 @@ export default function CustomerManagement() {
     setDialog(null);
   }
 
+  // Bố cục thay đổi theo độ rộng: danh sách dạng thẻ trên mobile, dạng bảng trên màn hình lớn.
   return (
     <View style={styles.screen}>
       <Sidebar width={sidebarWidth} />

@@ -29,6 +29,7 @@ export default function LoginScreen() {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Chặn dữ liệu rỗng và gửi yêu cầu đăng nhập; sau thành công chuyển tới tài khoản.
   const handleLogin = async () => {
     if (!email.trim() || !password.trim()) {
       Alert.alert(
