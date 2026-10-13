@@ -17,6 +17,7 @@ import Svg, {
   Path,
   Polyline,
 } from "react-native-svg";
+import { Text as SvgText } from "react-native-svg";
 import { router } from "expo-router";
 
 // ===== DỮ LIỆU THỐNG KÊ =====
@@ -103,10 +104,6 @@ const categoryData = [
   { label: "Đồng hồ", value: 8, color: "#8b5cf6" },
   { label: "Khác", value: 7, color: "#94a3b8" },
 ];
-
-// ===== HÀM ĐỊNH DẠNG TIỀN TỆ =====
-const money = (amount: number) =>
-  amount.toLocaleString("vi-VN") + "đ";
 
 // ===== COMPONENT SIDEBAR =====
 // Thay thế thẻ <aside> và <nav> trong HTML.
@@ -259,39 +256,6 @@ function Sidebar({
           resizeMode="contain"
         />
       </View>
-    </View>
-  );
-}
-
-// ===== COMPONENT THANH HEADER =====
-function AdminHeader({ sidebarWidth }: { sidebarWidth: number }) {
-  return (
-    <View
-      style={[
-        styles.header,
-        {
-          marginLeft: sidebarWidth,
-          width: `100%`,
-        },
-      ]}
-    >
-      {/* Tài khoản Admin */}
-      <Pressable
-        style={styles.accountAdmin}
-        onPress={() =>
-          Alert.alert("Tài khoản", "Bạn đang đăng nhập với quyền Admin.")
-        }
-      >
-        <View style={styles.accountIcon}>
-          <Ionicons
-            name="person"
-            size={18}
-            color="#ed263d"
-          />
-        </View>
-
-        <Text style={styles.accountName}>Admin</Text>
-      </Pressable>
     </View>
   );
 }
@@ -487,8 +451,6 @@ function SalesChart({ compact }: { compact: boolean }) {
 }
 
 // ===== COMPONENT HIỂN THỊ NHÃN TRONG SVG =====
-import { Text as SvgText } from "react-native-svg";
-
 function TextSvgLabel({
   x,
   y,

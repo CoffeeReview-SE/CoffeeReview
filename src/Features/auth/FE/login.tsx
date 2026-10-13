@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import {
-  Image,
+  Alert,
   ImageBackground,
   Pressable,
   ScrollView,
@@ -9,7 +9,6 @@ import {
   TextInput,
   View,
   useWindowDimensions,
-  Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";

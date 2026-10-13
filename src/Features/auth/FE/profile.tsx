@@ -13,21 +13,22 @@ import { getCurrentUser, updateCurrentUser, UserProfile } from "../Use-cases/aut
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const [user, setUser] = useState<UserProfile | null>(null);
+  const [, setUser] = useState<UserProfile | null>(null);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   useEffect(() => {
     getCurrentUser().then((u) => {
-      if (!u) router.replace("/login");
-      else {
-        setUser(u);
-        setName(u.fullName);
-        setEmail(u.email);
-        setPhone(u.phone);
+      if (!u) {
+        router.replace("/login");
+        return;
       }
+      setUser(u);
+      setName(u.fullName);
+      setEmail(u.email);
+      setPhone(u.phone);
     });
-  }, []);
+  }, [router]);
   const save = async () => {
     if (!name.trim() || !email.trim()) {
       Alert.alert("Thiếu thông tin", "Vui lòng nhập họ tên và email.");
