@@ -1,0 +1,1 @@
+export { default } from "../src/Features/admin/FE/customer_management";
