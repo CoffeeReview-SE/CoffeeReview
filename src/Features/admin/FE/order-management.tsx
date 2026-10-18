@@ -485,16 +485,21 @@ export default function OrderManagement() {
   function navigateTo(page: string) {
     if (page === "order_management") return;
 
-    if (page === "main_Admin") {
-      router.push("/main_Admin");
+    const routes = {
+      main_Admin: "/main_Admin",
+      product_management: "/product_management",
+      category_management: "/category_management",
+      customer_management: "/customer_management",
+    } as const;
+
+    const route = routes[page as keyof typeof routes];
+
+    if (route) {
+      router.push(route);
       return;
     }
 
-    // TODO: Thay bằng router.push(...) khi các trang đã được tạo.
-    Alert.alert(
-      "Điều hướng",
-      `Bạn đã chọn trang ${page}. Hãy kết nối route tương ứng.`,
-    );
+    Alert.alert("Điều hướng", `Không tìm thấy route cho trang ${page}.`);
   }
 
   return (

@@ -16,6 +16,8 @@ export default function RootLayout() {
         <Stack.Screen name="product_detail" options={{ headerShown: false }} />
         <Stack.Screen name="main_Admin" />
         <Stack.Screen name="order_management" />
+        <Stack.Screen name="product_management" />
+        <Stack.Screen name="category_management" />
       </Stack>
     </ThemeProvider>
   );
