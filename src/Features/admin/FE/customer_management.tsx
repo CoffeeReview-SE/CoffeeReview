@@ -329,29 +329,31 @@ function CustomerRow({
   onPress: () => void;
 }) {
   return (
-    <View style={styles.tableRow}>
-      <View style={[styles.cell, styles.colCustomer, styles.customerIdentity]}>
+    <View style={styles.customerListRow}>
+      <View style={[styles.customerIdentity, styles.colCustomer]}>
         <Avatar name={customer.name} />
         <View style={styles.nameBlock}>
-          <Text style={styles.rowName}>{customer.name}</Text>
+          <Text style={styles.rowName} numberOfLines={1}>
+            {customer.name}
+          </Text>
           <Text style={styles.rowId}>{customer.id}</Text>
         </View>
       </View>
-      <View style={[styles.cell, styles.colContact]}>
-        <Text style={styles.contactEmail}>{customer.email}</Text>
+      <View style={styles.colContact}>
+        <Text style={styles.contactEmail} numberOfLines={1}>
+          {customer.email}
+        </Text>
         <Text style={styles.contactPhone}>{customer.phone}</Text>
       </View>
-      <Text style={[styles.cell, styles.colDate]}>{customer.joined}</Text>
-      <Text style={[styles.cell, styles.colOrders]}>
-        {customer.orders.length} đơn
-      </Text>
-      <Text style={[styles.cell, styles.colSpend, styles.spendText]}>
-        {money(successfulSpend(customer))}
-      </Text>
-      <View style={[styles.cell, styles.colStatus]}>
+      <Text style={styles.colDate}>{customer.joined}</Text>
+      <View style={styles.colPurchase}>
+        <Text style={styles.purchaseOrders}>{customer.orders.length} đơn</Text>
+        <Text style={styles.spendText}>{money(successfulSpend(customer))}</Text>
+      </View>
+      <View style={styles.colStatus}>
         <Badge customer={customer} />
       </View>
-      <View style={[styles.cell, styles.colAction]}>
+      <View style={styles.colAction}>
         <Pressable style={styles.viewButton} onPress={onPress}>
           <Text style={styles.viewText}>Chi tiết</Text>
           <Ionicons name="chevron-forward" size={14} color="#d9273e" />
@@ -539,17 +541,8 @@ export default function CustomerManagement() {
   return (
     <View style={styles.screen}>
       <Sidebar width={sidebarWidth} />
-      <View
-        style={[
-          styles.page,
-          {
-            marginLeft: sidebarWidth,
-            width: Math.max(0, width - sidebarWidth),
-          },
-        ]}
-      >
+      <View style={[styles.page, { marginLeft: sidebarWidth }]}>
         <View style={styles.header}>
-          <Text style={styles.headerContext}>Khu vực quản trị</Text>
           <View style={styles.admin}>
             <View style={styles.adminIcon}>
               <Ionicons name="person" size={17} color="#d9273e" />
@@ -767,11 +760,18 @@ export default function CustomerManagement() {
             </>
           ) : (
             <>
-              <View style={styles.titleBlock}>
-                <Text style={styles.pageTitle}>Quản lý khách hàng</Text>
-                <Text style={styles.pageSubtitle}>
-                  Theo dõi tài khoản, lịch sử mua hàng và tình trạng khách hàng.
-                </Text>
+              <View style={styles.pageHeading}>
+                <View style={styles.headingLeft}>
+                  <View style={styles.headingIcon}>
+                    <Ionicons name="people-outline" size={23} color="#fff" />
+                  </View>
+                  <View style={styles.headingText}>
+                    <Text style={styles.headingTitle}>Quản lý khách hàng</Text>
+                    <Text style={styles.headingDescription}>
+                      Theo dõi tài khoản, lịch sử mua hàng và tình trạng khách hàng.
+                    </Text>
+                  </View>
+                </View>
               </View>
               <View
                 style={[styles.statsGrid, mobile && styles.statsGridMobile]}
@@ -818,17 +818,6 @@ export default function CustomerManagement() {
                   tint="#fff6e6"
                 />
               </View>
-              <View style={styles.listHeading}>
-                <View>
-                  <Text style={styles.sectionTitle}>Danh sách khách hàng</Text>
-                  <Text style={styles.sectionHint}>
-                    Tìm kiếm và xem hồ sơ khách hàng
-                  </Text>
-                </View>
-                <Text style={styles.resultCount}>
-                  {filtered.length} khách hàng
-                </Text>
-              </View>
               <View style={[styles.filters, mobile && styles.filtersMobile]}>
                 <View style={styles.searchBox}>
                   <Ionicons name="search-outline" size={18} color="#758198" />
@@ -856,94 +845,75 @@ export default function CustomerManagement() {
                   <Ionicons name="chevron-down" size={15} color="#667085" />
                 </Pressable>
               </View>
-              {mobile ? (
-                <View style={styles.customerCards}>
-                  {pageCustomers.map((customer) => (
-                    <CustomerCard
-                      key={customer.id}
-                      customer={customer}
-                      onPress={() => setSelectedId(customer.id)}
-                    />
-                  ))}
-                  {!pageCustomers.length && <EmptyList />}
-                </View>
-              ) : (
-                <View style={styles.tablePanel}>
-                  <ScrollView horizontal showsHorizontalScrollIndicator>
-                    <View>
-                      <View style={styles.tableHeader}>
-                        <Text style={[styles.tableHead, styles.colCustomer]}>
-                          Khách hàng
-                        </Text>
-                        <Text style={[styles.tableHead, styles.colContact]}>
-                          Liên hệ
-                        </Text>
-                        <Text style={[styles.tableHead, styles.colDate]}>
-                          Ngày đăng ký
-                        </Text>
-                        <Text style={[styles.tableHead, styles.colOrders]}>
-                          Đơn hàng
-                        </Text>
-                        <Text style={[styles.tableHead, styles.colSpend]}>
-                          Chi tiêu
-                        </Text>
-                        <Text style={[styles.tableHead, styles.colStatus]}>
-                          Trạng thái
-                        </Text>
-                        <Text style={[styles.tableHead, styles.colAction]}>
-                          {" "}
-                        </Text>
-                      </View>
-                      {pageCustomers.map((customer) => (
-                        <CustomerRow
-                          key={customer.id}
-                          customer={customer}
-                          onPress={() => setSelectedId(customer.id)}
-                        />
-                      ))}
-                    </View>
-                  </ScrollView>
-                  {!pageCustomers.length && <EmptyList />}
-                </View>
-              )}
-              <View style={styles.pagination}>
-                <Text style={styles.paginationText}>
-                  Hiển thị {filtered.length ? (page - 1) * 5 + 1 : 0}–
-                  {Math.min(page * 5, filtered.length)} trong {filtered.length}{" "}
-                  khách hàng
-                </Text>
-                <View style={styles.pageControls}>
-                  <Pressable
-                    accessibilityLabel="Trang trước"
-                    disabled={page === 1}
-                    style={styles.pageButton}
-                    onPress={() =>
-                      setPage((current) => Math.max(1, current - 1))
-                    }
-                  >
-                    <Ionicons
-                      name="chevron-back"
-                      size={16}
-                      color={page === 1 ? "#c7ccd4" : "#475467"}
-                    />
-                  </Pressable>
-                  <Text style={styles.pageNumber}>
-                    {page} / {pageCount}
+              <View style={styles.listCard}>
+                <View style={styles.listHeading}>
+                  <Text style={styles.listTitle}>Danh sách khách hàng</Text>
+                  <Text style={styles.resultCount}>
+                    {filtered.length} khách hàng
                   </Text>
-                  <Pressable
-                    accessibilityLabel="Trang sau"
-                    disabled={page >= pageCount}
-                    style={styles.pageButton}
-                    onPress={() =>
-                      setPage((current) => Math.min(pageCount, current + 1))
-                    }
-                  >
-                    <Ionicons
-                      name="chevron-forward"
-                      size={16}
-                      color={page >= pageCount ? "#c7ccd4" : "#475467"}
-                    />
-                  </Pressable>
+                </View>
+                {mobile ? (
+                  <View style={styles.customerCards}>
+                    {pageCustomers.map((customer) => (
+                      <CustomerCard
+                        key={customer.id}
+                        customer={customer}
+                        onPress={() => setSelectedId(customer.id)}
+                      />
+                    ))}
+                    {!pageCustomers.length && <EmptyList />}
+                  </View>
+                ) : (
+                  <View>
+                    {pageCustomers.map((customer) => (
+                      <CustomerRow
+                        key={customer.id}
+                        customer={customer}
+                        onPress={() => setSelectedId(customer.id)}
+                      />
+                    ))}
+                    {!pageCustomers.length && <EmptyList />}
+                  </View>
+                )}
+                <View style={styles.pagination}>
+                  <Text style={styles.paginationText}>
+                    Hiển thị {filtered.length ? (page - 1) * 5 + 1 : 0}–
+                    {Math.min(page * 5, filtered.length)} trong {filtered.length}{" "}
+                    khách hàng
+                  </Text>
+                  <View style={styles.pageControls}>
+                    <Pressable
+                      accessibilityLabel="Trang trước"
+                      disabled={page === 1}
+                      style={styles.pageButton}
+                      onPress={() =>
+                        setPage((current) => Math.max(1, current - 1))
+                      }
+                    >
+                      <Ionicons
+                        name="chevron-back"
+                        size={16}
+                        color={page === 1 ? "#c7ccd4" : "#475467"}
+                      />
+                    </Pressable>
+                    <Text style={styles.pageNumber}>
+                      {page} / {pageCount}
+                    </Text>
+                    <Pressable
+                      accessibilityLabel="Trang sau"
+                      disabled={page >= pageCount}
+                      style={styles.pageButton}
+                      onPress={() =>
+                        setPage((current) => Math.min(pageCount, current + 1))
+                      }
+                    >
+                      <Ionicons
+                        name="chevron-forward"
+                        size={16}
+                        color={page >= pageCount ? "#c7ccd4" : "#475467"}
+                      />
+                    </Pressable>
+                  </View>
                 </View>
               </View>
               <Text style={styles.demoNote}>
@@ -1140,7 +1110,7 @@ function EmptyList() {
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, flexDirection: "row", backgroundColor: "#f6f7f9" },
+  screen: { flex: 1, flexDirection: "row", backgroundColor: "#f8f9fc" },
   sidebar: {
     position: "absolute",
     left: 0,
@@ -1151,29 +1121,28 @@ const styles = StyleSheet.create({
     paddingBottom: 12,
     backgroundColor: "#fff",
     borderRightWidth: 1,
-    borderRightColor: "#eceef1",
+    borderRightColor: "#f0f1f5",
     zIndex: 10,
     elevation: 4,
   },
   brand: {
-    height: 54,
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
     paddingHorizontal: 4,
-    marginBottom: 24,
+    marginBottom: 25,
   },
-  brandImage: { width: 46, height: 46 },
-  brandText: { color: "#c8102e", fontSize: 20, fontWeight: "800" },
+  brandImage: { width: 48, height: 48 },
+  brandText: { color: "#c8102e", fontSize: 21, fontWeight: "800" },
   brandStrong: { color: "#8f101f" },
   menuHeading: {
-    marginTop: 18,
+    marginTop: 19,
     marginBottom: 8,
-    marginLeft: 7,
-    color: "#8490a2",
-    fontSize: 10,
+    marginLeft: 6,
+    color: "#758198",
+    fontSize: 11,
     fontWeight: "700",
-    letterSpacing: 0.5,
+    letterSpacing: 0.3,
   },
   menuLink: {
     minHeight: 43,
@@ -1182,42 +1151,79 @@ const styles = StyleSheet.create({
     gap: 12,
     paddingHorizontal: 12,
     marginBottom: 5,
-    borderRadius: 8,
+    borderRadius: 9,
   },
-  menuActive: { backgroundColor: "#d9273e" },
+  menuActive: {
+    backgroundColor: "#e52332",
+    shadowColor: "#ed263d",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.16,
+    shadowRadius: 5,
+    elevation: 2,
+  },
   menuText: { flex: 1, color: "#354157", fontSize: 12, fontWeight: "500" },
   menuTextActive: { color: "#fff", fontWeight: "600" },
-  promoImage: { alignSelf: "center", width: 170, height: 135, marginTop: 12 },
+  promoImage: { alignSelf: "center", width: 170, height: 150, marginTop: 12 },
   page: { flex: 1, height: "100%" },
   header: {
-    height: 66,
-    paddingHorizontal: 25,
+    height: 70,
+    paddingHorizontal: 20,
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
+    justifyContent: "flex-end",
     backgroundColor: "#fff",
     borderBottomWidth: 1,
-    borderBottomColor: "#eceef1",
+    borderBottomColor: "#edf0f5",
   },
-  headerContext: { color: "#8791a1", fontSize: 12 },
   admin: { flexDirection: "row", alignItems: "center", gap: 9 },
   adminIcon: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#fff0f1",
+    backgroundColor: "#ffe5e9",
   },
-  adminName: { color: "#263248", fontSize: 13, fontWeight: "600" },
+  adminName: { color: "#263248", fontSize: 14, fontWeight: "600" },
   content: { flex: 1 },
   contentInner: {
     width: "100%",
-    maxWidth: 1500,
+    maxWidth: 1250,
     alignSelf: "center",
     padding: 24,
-    paddingBottom: 35,
+    paddingBottom: 40,
   },
+  pageHeading: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    flexWrap: "wrap",
+    gap: 16,
+    marginBottom: 24,
+  },
+  headingLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    flex: 1,
+    minWidth: 220,
+  },
+  headingIcon: {
+    width: 42,
+    height: 42,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#ed3448",
+    borderRadius: 10,
+  },
+  headingText: { flex: 1 },
+  headingTitle: {
+    marginBottom: 6,
+    color: "#172033",
+    fontSize: 23,
+    fontWeight: "700",
+  },
+  headingDescription: { color: "#8791a5", fontSize: 12, lineHeight: 18 },
   pageTitle: {
     color: "#202b3c",
     fontSize: 23,
@@ -1225,27 +1231,26 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   pageSubtitle: { color: "#788396", fontSize: 12 },
-  titleBlock: { marginBottom: 20 },
   statsGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
     gap: 12,
-    marginBottom: 28,
+    marginBottom: 18,
   },
   statsGridMobile: { gap: 9 },
   statCard: {
     flex: 1,
-    flexBasis: 190,
-    minWidth: 150,
-    minHeight: 108,
-    padding: 14,
+    flexBasis: 200,
+    minWidth: 170,
+    minHeight: 96,
+    padding: 16,
     flexDirection: "row",
     alignItems: "flex-start",
     gap: 10,
     backgroundColor: "#fff",
     borderWidth: 1,
-    borderColor: "#edf0f2",
-    borderRadius: 8,
+    borderColor: "#edf0f5",
+    borderRadius: 10,
   },
   statIcon: {
     width: 35,
@@ -1263,34 +1268,40 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
   statDetail: { marginTop: 4, color: "#98a2b3", fontSize: 9 },
+  listCard: {
+    padding: 18,
+    borderRadius: 11,
+    backgroundColor: "#fff",
+    borderWidth: 1,
+    borderColor: "#edf0f5",
+  },
   listHeading: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginBottom: 13,
+    marginBottom: 14,
   },
-  sectionTitle: { color: "#202b3c", fontSize: 16, fontWeight: "700" },
-  sectionHint: { marginTop: 4, color: "#8791a1", fontSize: 10 },
-  resultCount: { color: "#667085", fontSize: 10, fontWeight: "600" },
+  listTitle: { color: "#172033", fontSize: 15, fontWeight: "700" },
+  resultCount: { color: "#667085", fontSize: 11, fontWeight: "600" },
   filters: {
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
-    marginBottom: 13,
+    marginBottom: 16,
   },
-  filtersMobile: { alignItems: "stretch" },
+  filtersMobile: { flexDirection: "column", alignItems: "stretch" },
   searchBox: {
     flex: 1,
     minWidth: 130,
-    minHeight: 42,
-    paddingHorizontal: 11,
+    minHeight: 43,
+    paddingHorizontal: 12,
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
     backgroundColor: "#fff",
     borderWidth: 1,
-    borderColor: "#e3e6eb",
-    borderRadius: 7,
+    borderColor: "#e3e7ee",
+    borderRadius: 8,
   },
   searchInput: {
     flex: 1,
@@ -1302,58 +1313,32 @@ const styles = StyleSheet.create({
   } as any,
   filterSelect: {
     minWidth: 175,
-    minHeight: 42,
-    paddingHorizontal: 11,
+    minHeight: 43,
+    paddingHorizontal: 12,
     flexDirection: "row",
     alignItems: "center",
     gap: 7,
     backgroundColor: "#fff",
     borderWidth: 1,
-    borderColor: "#e3e6eb",
-    borderRadius: 7,
+    borderColor: "#e3e7ee",
+    borderRadius: 8,
   },
   filterText: { flex: 1, color: "#475467", fontSize: 10 },
-  tablePanel: {
-    backgroundColor: "#fff",
-    borderWidth: 1,
-    borderColor: "#eceef1",
-    borderRadius: 8,
-    overflow: "hidden",
-  },
-  tableHeader: {
-    minHeight: 42,
+  customerListRow: {
+    minHeight: 72,
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#fafbfc",
-    borderBottomWidth: 1,
-    borderBottomColor: "#eceef1",
+    gap: 12,
+    paddingVertical: 12,
+    borderTopWidth: 1,
+    borderTopColor: "#f0f2f6",
   },
-  tableHead: {
-    paddingHorizontal: 11,
-    color: "#768195",
-    fontSize: 9,
-    fontWeight: "700",
-  },
-  tableRow: {
-    minHeight: 65,
-    flexDirection: "row",
-    alignItems: "center",
-    borderBottomWidth: 1,
-    borderBottomColor: "#f0f1f3",
-  },
-  cell: {
-    paddingHorizontal: 11,
-    justifyContent: "center",
-    color: "#475467",
-    fontSize: 10,
-  },
-  colCustomer: { width: 207 },
-  colContact: { width: 190 },
-  colDate: { width: 110 },
-  colOrders: { width: 85 },
-  colSpend: { width: 120 },
-  colStatus: { width: 128 },
-  colAction: { width: 92 },
+  colCustomer: { flex: 2, minWidth: 140 },
+  colContact: { flex: 1.5, minWidth: 125 },
+  colDate: { width: 78, color: "#647087", fontSize: 10 },
+  colPurchase: { width: 96, gap: 4 },
+  colStatus: { width: 110 },
+  colAction: { width: 62 },
   customerIdentity: { flexDirection: "row", alignItems: "center", gap: 9 },
   avatar: {
     width: 33,
@@ -1365,13 +1350,14 @@ const styles = StyleSheet.create({
   },
   avatarText: { color: "#c62a3d", fontSize: 13, fontWeight: "700" },
   nameBlock: { flex: 1, minWidth: 0 },
-  rowName: { color: "#273346", fontSize: 10, fontWeight: "600" },
+  rowName: { color: "#253047", fontSize: 12, fontWeight: "600" },
   rowId: { marginTop: 4, color: "#929bab", fontSize: 9 },
   contactEmail: { color: "#475467", fontSize: 9 },
   contactPhone: { marginTop: 4, color: "#929bab", fontSize: 9 },
-  spendText: { color: "#273346", fontWeight: "600" },
+  purchaseOrders: { color: "#647087", fontSize: 10 },
+  spendText: { color: "#253047", fontSize: 10, fontWeight: "600" },
   viewButton: { flexDirection: "row", alignItems: "center", gap: 3 },
-  viewText: { color: "#c9273d", fontSize: 9, fontWeight: "600" },
+  viewText: { color: "#c9273d", fontSize: 10, fontWeight: "600" },
   badge: {
     alignSelf: "flex-start",
     flexDirection: "row",
