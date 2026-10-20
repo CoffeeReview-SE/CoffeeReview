@@ -47,7 +47,7 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "server": "node --env-file=.env backend/server.mjs",
+    "server": "node --env-file=backend/.env backend/server.mjs",
     "lint": "expo lint"
   },
   "private": true,

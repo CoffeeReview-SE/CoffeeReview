@@ -1,11 +1,13 @@
 import { Ionicons } from "@expo/vector-icons";
+import Constants from "expo-constants";
 import { router } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import { ActivityIndicator, FlatList, KeyboardAvoidingView, Linking, Platform, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 
 type Source = { title: string; url: string };
 type Message = { id: string; role: "user" | "assistant"; content: string; sources?: Source[] };
-const apiUrl = process.env.EXPO_PUBLIC_CHAT_API_URL || "http://localhost:3333/api/chat";
+const metroHost = Constants.expoConfig?.hostUri?.split(":")[0] || "localhost";
+const apiUrl = process.env.EXPO_PUBLIC_CHAT_API_URL || `http://${metroHost}:3333/api/chat`;
 const suggestions = ["Thông tin iPhone 16", "So sánh iPhone và Samsung mới nhất", "Tư vấn laptop cho sinh viên"];
 
 export default function ChatScreen() {

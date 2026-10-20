@@ -133,12 +133,18 @@ const server = createServer(async (req, res) => {
 
     return send(res, 200, { answer, sources });
   } catch (error) {
-    console.error("Chat request failed", error?.name || "UnknownError");
+    const causeCode = error?.cause?.code;
+    console.error("Chat request failed", {
+      name: error?.name || "UnknownError",
+      code: typeof causeCode === "string" ? causeCode : undefined,
+    });
     return send(res, 500, {
       error:
         error?.name === "TimeoutError"
           ? "Gemini phản hồi quá lâu. Hãy thử lại."
-          : "Không thể xử lý câu hỏi lúc này. Hãy kiểm tra backend và thử lại.",
+          : error?.name === "TypeError"
+            ? `Backend không kết nối được tới Google Gemini${typeof causeCode === "string" ? ` (${causeCode})` : ""}. Hãy kiểm tra quyền truy cập internet của máy chạy backend.`
+            : "Backend gặp lỗi khi gọi Gemini. Hãy xem log backend để biết chi tiết.",
     });
   }
 });
