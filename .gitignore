@@ -9,3 +9,7 @@ node_modules
 
 expo-env.d.ts
 # @end expo-cli
+.env
+.env.*
+!.env.example
+.expo/

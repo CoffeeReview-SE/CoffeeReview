@@ -82,6 +82,10 @@ function PhoneLayout() {
         {/* Customer icons */}
         <View style={styles.phoneCustomerIcons}>
           <LanguageSelector />
+          <HoverButton style={styles.phoneIconItem} onPress={() => router.push("/chat")}>
+            <View style={styles.phoneIconButton}><Ionicons name="chatbubble-ellipses-outline" size={22} color="#ffffff" /></View>
+            <Text style={styles.phoneIconText}>Trợ lý AI</Text>
+          </HoverButton>
           {/* Giỏ hàng */}
           <HoverButton
             style={styles.phoneIconItem}
@@ -370,6 +374,10 @@ function DesktopLayout() {
         {/* Customer icons */}
         <View style={styles.customerIcons}>
           <LanguageSelector />
+          <HoverButton style={styles.iconItem} onPress={() => router.push("/chat")}>
+            <View style={styles.iconButton}><Ionicons name="chatbubble-ellipses-outline" size={22} color="#ffffff" /></View>
+            <Text style={styles.iconText}>Trợ lý AI</Text>
+          </HoverButton>
           {/* Giỏ hàng */}
           <HoverButton
             style={styles.iconItem}
