@@ -210,9 +210,10 @@ export default function CartScreen() {
               style={isMobile ? styles.phonePanelHeader : styles.panelHeader}
             >
               <View style={styles.panelTitleGroup}>
-                <Text style={styles.panelTitle}>Sản phẩm trong giỏ</Text>
+                <Text style={styles.panelTitle}>{t("Sản phẩm trong giỏ")}</Text>
                 <Text style={styles.panelSubtitle}>
-                  {products.length} sản phẩm · Đã chọn {selectedProducts.length}
+                  {products.length} {t("sản phẩm")} · {t("Đã chọn")}{" "}
+                  {selectedProducts.length}
                 </Text>
               </View>
               {products.length > 0 && (
@@ -238,8 +239,8 @@ export default function CartScreen() {
                   />
                   <Text style={styles.selectAllText}>
                     {selectedIds.length === products.length
-                      ? "Bỏ chọn tất cả"
-                      : "Chọn tất cả"}
+                      ? t("Bỏ chọn tất cả")
+                      : t("Chọn tất cả")}
                   </Text>
                 </HoverButton>
               )}
@@ -293,7 +294,7 @@ export default function CartScreen() {
                           <Pressable
                             onPress={() => changeQuantity(product.id, -1)}
                             style={styles.quantityButton}
-                            accessibilityLabel="Giảm số lượng"
+                            accessibilityLabel={t("Giảm số lượng")}
                           >
                             <Ionicons name="remove" size={16} color="#444" />
                           </Pressable>
@@ -303,7 +304,7 @@ export default function CartScreen() {
                           <Pressable
                             onPress={() => changeQuantity(product.id, 1)}
                             style={styles.quantityButton}
-                            accessibilityLabel="Tăng số lượng"
+                            accessibilityLabel={t("Tăng số lượng")}
                           >
                             <Ionicons name="add" size={16} color="#444" />
                           </Pressable>
@@ -319,7 +320,7 @@ export default function CartScreen() {
                             color="#c62828"
                           />
                           {!isMobile && (
-                            <Text style={styles.removeText}>Xóa</Text>
+                            <Text style={styles.removeText}>{t("Xóa")}</Text>
                           )}
                         </Pressable>
                       </View>
@@ -444,7 +445,7 @@ export default function CartScreen() {
           <Text style={styles.toastText}>{notice}</Text>
           <Pressable
             onPress={() => setNotice("")}
-            accessibilityLabel="Đóng thông báo"
+            accessibilityLabel={t("Đóng thông báo")}
           >
             <Ionicons name="close" size={18} color="#666" />
           </Pressable>

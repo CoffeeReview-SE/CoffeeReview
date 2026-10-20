@@ -35,7 +35,7 @@ export default function LoginScreen() {
     if (!email.trim() || !password.trim()) {
       Alert.alert(
         "Thiếu thông tin",
-        "Vui lòng nhập email/số điện thoại và mật khẩu.",
+        t("Vui lòng nhập email/số điện thoại và mật khẩu."),
       );
       return;
     }
@@ -46,10 +46,10 @@ export default function LoginScreen() {
       router.replace("/account");
     } catch (error) {
       Alert.alert(
-        "Đăng nhập thất bại",
+        t("Đăng nhập thất bại"),
         error instanceof Error
           ? error.message
-          : "Đã xảy ra lỗi. Vui lòng thử lại.",
+          : `${t("Đã xảy ra lỗi.")} ${t("Vui lòng thử lại.")}`,
       );
     } finally {
       setIsSubmitting(false);
@@ -164,7 +164,7 @@ export default function LoginScreen() {
             />
             <Pressable
               onPress={() => setShowPassword(!showPassword)}
-              accessibilityLabel="Hiện hoặc ẩn mật khẩu"
+              accessibilityLabel={t("Hiện hoặc ẩn mật khẩu")}
             >
               <Ionicons
                 name={showPassword ? "eye-off-outline" : "eye-outline"}
@@ -212,7 +212,7 @@ export default function LoginScreen() {
             <Pressable
               style={styles.socialButton}
               onPress={() =>
-                Alert.alert("Thông báo", "Đăng nhập Google chưa được kết nối.")
+                Alert.alert(t("Thông báo"), t("Đăng nhập Google chưa được kết nối."))
               }
             >
               <Text style={styles.google}>G</Text>
@@ -222,7 +222,7 @@ export default function LoginScreen() {
               onPress={() =>
                 Alert.alert(
                   "Thông báo",
-                  "Đăng nhập Facebook chưa được kết nối.",
+                  t("Đăng nhập Facebook chưa được kết nối."),
                 )
               }
             >
@@ -231,7 +231,7 @@ export default function LoginScreen() {
             <Pressable
               style={styles.socialButton}
               onPress={() =>
-                Alert.alert("Thông báo", "Đăng nhập Apple chưa được kết nối.")
+                Alert.alert(t("Thông báo"), t("Đăng nhập Apple chưa được kết nối."))
               }
             >
               <Ionicons name="logo-apple" size={22} color="#111" />

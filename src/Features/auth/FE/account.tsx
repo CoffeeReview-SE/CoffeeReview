@@ -162,16 +162,6 @@ export default function AccountScreen() {
         {!isMobile && (
           <Text style={styles.headerCaption}>{t("Tài khoản của tôi")}</Text>
         )}
-<<<<<<< HEAD
-        <LanguageSelector />
-        <Pressable
-          style={styles.homeButton}
-          onPress={() => router.replace("/")}
-        >
-          <Ionicons name="home-outline" size={18} color="#fff" />
-          <Text style={styles.homeText}>{t("Trang chủ")}</Text>
-        </Pressable>
-=======
         <View style={styles.headerActions}>
           <LanguageSelector />
           <Pressable
@@ -179,10 +169,9 @@ export default function AccountScreen() {
             onPress={() => router.replace("/")}
           >
             <Ionicons name="home-outline" size={18} color="#fff" />
-            <Text style={styles.homeText}>Trang chủ</Text>
+            <Text style={styles.homeText}>{t("Trang chủ")}</Text>
           </Pressable>
         </View>
->>>>>>> 9377ca4f2f967cae383ec1dd23e0180bdbb9d34f
       </View>
 
       <View style={[styles.layout, isMobile && styles.layoutMobile]}>
@@ -203,7 +192,7 @@ export default function AccountScreen() {
               <Text style={styles.userEmail}>{user.email}</Text>
             </View>
             {[
-              "Tổng quan",
+              t("Tổng quan"),
               ...menuItems.map((item) => item.label),
             ].map((label, index) => (
               <Pressable
@@ -226,8 +215,8 @@ export default function AccountScreen() {
                   if (item?.section) return setActiveSection(item.section);
 
                   Alert.alert(
-                    label,
-                    "Mục này sẽ được hoàn thiện ở bước tiếp theo.",
+                    t(label),
+                    t("Mục này sẽ được hoàn thiện ở bước tiếp theo."),
                   );
                 }}
               >
@@ -249,7 +238,7 @@ export default function AccountScreen() {
                       styles.sideTextActive,
                   ]}
                 >
-                  {label}
+                  {t(label)}
                 </Text>
               </Pressable>
             ))}
@@ -273,14 +262,14 @@ export default function AccountScreen() {
             />
             <Text style={styles.pageTitle}>
               {activeSection === "profile"
-                ? "Chỉnh sửa thông tin cá nhân"
-                : (selectedMenuItem?.label ?? "Tài khoản của tôi")}
+                ? t("Chỉnh sửa thông tin cá nhân")
+                : t(selectedMenuItem?.label ?? "Tài khoản của tôi")}
             </Text>
           </View>
           <Text style={styles.pageSubtitle}>
             {activeSection === "profile"
-              ? "Cập nhật họ tên, email và số điện thoại của bạn."
-              : (selectedMenuItem?.detail ??
+              ? t("Cập nhật họ tên, email và số điện thoại của bạn.")
+              : t(selectedMenuItem?.detail ??
                 "Quản lý thông tin cá nhân và hoạt động mua sắm của bạn.")}
           </Text>
 
@@ -305,10 +294,10 @@ export default function AccountScreen() {
                   </View>
                   <View style={{ flex: 1 }}>
                     <Text style={styles.greeting}>
-                      Xin chào, {user.fullName}!
+                      {t("Xin chào")}, {user.fullName}!
                     </Text>
                     <Text style={styles.muted}>
-                      Chào mừng bạn quay lại BVP Shop.
+                      {t("Chào mừng bạn quay lại BVP Shop.")}
                     </Text>
                     <Text style={styles.emailText}>{user.email}</Text>
                   </View>
@@ -327,21 +316,21 @@ export default function AccountScreen() {
               >
                 <StatCard
                   icon="receipt-outline"
-                  title="Đơn hàng"
+                  title={t("Đơn hàng")}
                   value="3"
-                  note="Tổng đơn hàng"
+                  note={t("Tổng đơn hàng")}
                 />
                 <StatCard
                   icon="heart-outline"
-                  title="Yêu thích"
+                  title={t("Yêu thích")}
                   value="0"
-                  note="Sản phẩm đã lưu"
+                  note={t("Sản phẩm đã lưu")}
                 />
                 <StatCard
                   icon="wallet-outline"
-                  title="Ví của tôi"
+                  title={t("Ví của tôi")}
                   value="0đ"
-                  note="Số dư hiện tại"
+                  note={t("Số dư hiện tại")}
                 />
               </View>
 
@@ -354,10 +343,10 @@ export default function AccountScreen() {
                       color="#c62828"
                     />
                   </View>
-                  <Text style={styles.sectionTitle}>Quản lý tài khoản</Text>
+                  <Text style={styles.sectionTitle}>{t("Quản lý tài khoản")}</Text>
                 </View>
                 <Text style={styles.sectionCaption}>
-                  Các tiện ích dành cho bạn
+                  {t("Các tiện ích dành cho bạn")}
                 </Text>
               </View>
 
@@ -378,8 +367,8 @@ export default function AccountScreen() {
                       <Ionicons name={item.icon} size={21} color="#d32f2f" />
                     </View>
                     <View style={styles.menuCopy}>
-                      <Text style={styles.menuTitle}>{item.label}</Text>
-                      <Text style={styles.menuDetail}>{item.detail}</Text>
+                      <Text style={styles.menuTitle}>{t(item.label)}</Text>
+                      <Text style={styles.menuDetail}>{t(item.detail)}</Text>
                     </View>
                     <Ionicons name="chevron-forward" size={18} color="#999" />
                   </Pressable>
@@ -393,7 +382,7 @@ export default function AccountScreen() {
                 onPress={() => setActiveSection(null)}
               >
                 <Ionicons name="arrow-back" size={17} color="#d32f2f" />
-                <Text style={styles.inlineBackText}>Tổng quan tài khoản</Text>
+                <Text style={styles.inlineBackText}>{t("Tổng quan tài khoản")}</Text>
               </Pressable>
               {activeSection === "addresses" && (
                 <InlineAddressSection userId={user.id} />
@@ -413,16 +402,16 @@ export default function AccountScreen() {
               {activeSection === "favorites" && (
                 <InlineEmptySection
                   icon="heart-outline"
-                  title="Chưa có sản phẩm yêu thích"
-                  description="Sản phẩm bạn lưu sẽ xuất hiện tại đây."
+                  title={t("Chưa có sản phẩm yêu thích")}
+                  description={t("Sản phẩm bạn lưu sẽ xuất hiện tại đây.")}
                 />
               )}
               {activeSection === "wallet" && <InlineWalletSection />}
               {activeSection === "coupons" && (
                 <InlineEmptySection
                   icon="pricetag-outline"
-                  title="Chưa có mã giảm giá"
-                  description="Mã ưu đãi khả dụng sẽ được hiển thị tại đây."
+                  title={t("Chưa có mã giảm giá")}
+                  description={t("Mã ưu đãi khả dụng sẽ được hiển thị tại đây.")}
                 />
               )}
             </View>
@@ -431,7 +420,7 @@ export default function AccountScreen() {
           {isMobile && (
             <Pressable style={styles.mobileLogout} onPress={handleLogout}>
               <Ionicons name="log-out-outline" size={18} color="#d32f2f" />
-              <Text style={styles.logoutText}>Đăng xuất</Text>
+              <Text style={styles.logoutText}>{t("Đăng xuất")}</Text>
             </Pressable>
           )}
         </View>

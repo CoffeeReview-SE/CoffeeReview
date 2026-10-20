@@ -133,22 +133,22 @@ export default function ProductDetail() {
     const colors = [
         {
             id: 1,
-            name: "Trắng",
+            name: t("Trắng"),
             color: "#FFFFFF",
         },
         {
             id: 2,
-            name: "Đen",
+            name: t("Đen"),
             color: "#000000",
         },
         {
             id: 3,
-            name: "Xanh",
+            name: t("Xanh"),
             color: "#0000FF",
         },
         {
             id: 4,
-            name: "Tím",
+            name: t("Tím"),
             color: "#800080",
         },
     ];
@@ -417,7 +417,7 @@ export default function ProductDetail() {
                                 styles.productNameMobile,
                             ]}
                         >
-                            iPhone 16e 128GB
+                            {t("iPhone 16e 128GB")}
                         </Text>
 
                         {/* GIÁ */}
@@ -448,7 +448,7 @@ export default function ProductDetail() {
                                     styles.infoTextMobile,
                                 ]}
                             >
-                                Màn hình 6.1{'"'}
+                                {t('Màn hình 6.1"')}
                             </Text>
 
                             <Text
@@ -623,7 +623,7 @@ export default function ProductDetail() {
                                         styles.buttonTextMobile,
                                     ]}
                                 >
-                                    MUA NGAY
+                                    {t("MUA NGAY")}
                                 </Text>
                             </Pressable>
 
@@ -654,7 +654,7 @@ export default function ProductDetail() {
                                         styles.buttonTextMobile,
                                     ]}
                                 >
-                                    🛒 THÊM VÀO GIỎ
+                                    {t("🛒 THÊM VÀO GIỎ")}
                                 </Text>
                             </Pressable>
 

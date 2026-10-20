@@ -52,10 +52,6 @@ export function LanguageSelector() {
           style={styles.backdrop}
           onPress={() => setIsOpen(false)}
         >
-<<<<<<< HEAD
-          <Pressable style={styles.menu} onPress={(event) => event.stopPropagation()}>
-            <Text style={styles.menuTitle}>{t("Ngôn ngữ")}</Text>
-=======
           <Pressable
             style={styles.menu}
             onPress={(event) => event.stopPropagation()}
@@ -65,12 +61,13 @@ export function LanguageSelector() {
                 <Ionicons name="globe-outline" size={19} color="#c62828" />
               </View>
               <View>
-                <Text style={styles.menuTitle}>Ngôn ngữ</Text>
-                <Text style={styles.menuSubtitle}>Chọn ngôn ngữ hiển thị</Text>
+                <Text style={styles.menuTitle}>{t("Ngôn ngữ")}</Text>
+                <Text style={styles.menuSubtitle}>
+                  {t("Chọn ngôn ngữ hiển thị")}
+                </Text>
               </View>
             </View>
             <View style={styles.divider} />
->>>>>>> 9377ca4f2f967cae383ec1dd23e0180bdbb9d34f
             {options.map((option) => {
               const selected = option.value === language;
               return (
@@ -88,16 +85,6 @@ export function LanguageSelector() {
                     pressed && styles.optionPressed,
                   ]}
                 >
-<<<<<<< HEAD
-                  <Text style={[styles.optionText, selected && styles.optionTextSelected]}>
-                    {language === "en" && option.value === "vi"
-                      ? t("Tiếng Việt")
-                      : option.label}
-                  </Text>
-                  {selected && (
-                    <Ionicons name="checkmark" size={18} color="#d32f2f" />
-                  )}
-=======
                   <View style={styles.optionCopy}>
                     <Text
                       style={[
@@ -126,7 +113,6 @@ export function LanguageSelector() {
                       <Ionicons name="checkmark" size={13} color="#ffffff" />
                     )}
                   </View>
->>>>>>> 9377ca4f2f967cae383ec1dd23e0180bdbb9d34f
                 </Pressable>
               );
             })}

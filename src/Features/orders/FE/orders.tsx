@@ -128,7 +128,7 @@ export default function OrdersScreen() {
             <Text style={styles.logoText}>{t("BVP Shop")}</Text>
             {!isMobile && (
               <Text style={styles.headerSubtitle}>
-                Mua sắm dễ dàng · Giao hàng tận nơi
+                  {t("Mua sắm dễ dàng · Giao hàng tận nơi")}
               </Text>
             )}
           </View>
@@ -181,7 +181,7 @@ export default function OrdersScreen() {
               {t("Đơn hàng của tôi")}
             </Text>
             <Text style={styles.pageSubtitle}>
-              Theo dõi và quản lý các đơn hàng của bạn
+              {t("Theo dõi và quản lý các đơn hàng của bạn")}
             </Text>
           </View>
         </View>
@@ -189,19 +189,19 @@ export default function OrdersScreen() {
         <View style={styles.summaryRow}>
           <SummaryCard
             icon="receipt-outline"
-            label="Tổng đơn hàng"
+            label={t("Tổng đơn hàng")}
             value={`${orders.length}`}
             isMobile={isMobile}
           />
           <SummaryCard
             icon="time-outline"
-            label="Chờ xác nhận"
+            label={t("Chờ xác nhận")}
             value={`${orders.filter((o) => o.status === "Chờ xác nhận").length}`}
             isMobile={isMobile}
           />
           <SummaryCard
             icon="bicycle-outline"
-            label="Đang giao"
+            label={t("Đang giao")}
             value={`${orders.filter((o) => o.status === "Đang giao").length}`}
             isMobile={isMobile}
           />
@@ -212,7 +212,9 @@ export default function OrdersScreen() {
             <View>
               <Text style={styles.panelTitle}>{t("Danh sách đơn hàng")}</Text>
               <Text style={styles.panelSubtitle}>
-                Bạn có {filteredOrders.length} đơn hàng phù hợp
+                {t("Bạn có ")}
+                {filteredOrders.length}
+                {t(" đơn hàng phù hợp")}
               </Text>
             </View>
             <View style={styles.searchBar}>
@@ -249,7 +251,7 @@ export default function OrdersScreen() {
                   <Text
                     style={[styles.tabText, selected && styles.tabTextActive]}
                   >
-                    {tab}
+                    {t(tab)}
                   </Text>
                   {tab === "Tất cả" && (
                     <Text
@@ -275,7 +277,7 @@ export default function OrdersScreen() {
                 <Ionicons name="file-tray-outline" size={44} color="#bbb" />
                 <Text style={styles.emptyTitle}>{t("Không tìm thấy đơn hàng")}</Text>
                 <Text style={styles.emptyDescription}>
-                  Thử thay đổi từ khóa hoặc trạng thái lọc.
+                  {t("Thử thay đổi từ khóa hoặc trạng thái lọc.")}
                 </Text>
                 <HoverButton
                   style={styles.resetButton}
@@ -292,7 +294,7 @@ export default function OrdersScreen() {
           </View>
         </View>
         <Text style={styles.footerNote}>
-          BVP Shop · Cảm ơn bạn đã mua sắm cùng chúng tôi!
+          {t("BVP Shop · Cảm ơn bạn đã mua sắm cùng chúng tôi!")}
         </Text>
       </ScrollView>
     </View>
@@ -362,7 +364,10 @@ function OrderCard({ order, isMobile }: { order: Order; isMobile: boolean }) {
           </View>
           <View style={styles.orderIdCopy}>
             <Text style={styles.orderId}>{order.id}</Text>
-            <Text style={styles.orderDate}>Đặt ngày {order.date}</Text>
+            <Text style={styles.orderDate}>
+              {t("Đặt ngày ")}
+              {order.date}
+            </Text>
           </View>
         </View>
         <View style={[styles.statusBadge, statusStyle]}>
@@ -391,7 +396,7 @@ function OrderCard({ order, isMobile }: { order: Order; isMobile: boolean }) {
                     : styles.statusTextPending,
             ]}
           >
-            {order.status}
+            {t(order.status)}
           </Text>
         </View>
       </View>
@@ -403,7 +408,7 @@ function OrderCard({ order, isMobile }: { order: Order; isMobile: boolean }) {
           </View>
           <View style={styles.productCopy}>
             <Text style={styles.productSummaryTitle}>{t("Sản phẩm trong đơn")}</Text>
-            <Text style={styles.productSummaryText}>{order.items}</Text>
+            <Text style={styles.productSummaryText}>{t(order.items)}</Text>
           </View>
         </View>
         <View style={styles.orderTotalBlock}>
@@ -414,21 +419,29 @@ function OrderCard({ order, isMobile }: { order: Order; isMobile: boolean }) {
       {expanded && (
         <View style={styles.expandedDetails}>
           <Text style={styles.expandedTitle}>{t("Thông tin đơn hàng")}</Text>
-          <Text style={styles.expandedText}>Mã đơn: {order.id}</Text>
-          <Text style={styles.expandedText}>Ngày đặt: {order.date}</Text>
           <Text style={styles.expandedText}>
-            Trạng thái hiện tại: {order.status}
+            {t("Mã đơn: ")}
+            {order.id}
           </Text>
           <Text style={styles.expandedText}>
-            Địa chỉ giao hàng và thông tin vận chuyển sẽ được hiển thị khi kết
-            nối dữ liệu đơn hàng.
+            {t("Ngày đặt: ")}
+            {order.date}
+          </Text>
+          <Text style={styles.expandedText}>
+            {t("Trạng thái hiện tại: ")}
+            {t(order.status)}
+          </Text>
+          <Text style={styles.expandedText}>
+            {t(
+              "Địa chỉ giao hàng và thông tin vận chuyển sẽ được hiển thị khi kết nối dữ liệu đơn hàng.",
+            )}
           </Text>
         </View>
       )}
       <View style={styles.orderBottomRow}>
         <Text style={styles.orderBottomHint}>
           <Ionicons name="shield-checkmark-outline" size={14} color="#777" />{" "}
-          Giao dịch an toàn
+          {t("Giao dịch an toàn")}
         </Text>
         <View style={styles.orderButtons}>
           <HoverButton
@@ -437,7 +450,7 @@ function OrderCard({ order, isMobile }: { order: Order; isMobile: boolean }) {
             hoverStyle={styles.detailButtonHover}
           >
             <Text style={styles.detailButtonText}>
-              {expanded ? "Thu gọn" : "Chi tiết"}
+              {expanded ? t("Thu gọn") : t("Chi tiết")}
             </Text>
             <Ionicons
               name={expanded ? "chevron-up" : "chevron-forward"}

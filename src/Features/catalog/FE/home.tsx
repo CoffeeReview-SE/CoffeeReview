@@ -164,12 +164,8 @@ function PhoneLayout() {
         {/* Search bar */}
         <View style={styles.phoneSearchBar}>
           <TextInput
-<<<<<<< HEAD
-            placeholder={t("Tìm kiếm sản phẩm")}
-=======
             testID="home-phone-search-input"
-            placeholder="Tìm kiếm sản phẩm"
->>>>>>> 9377ca4f2f967cae383ec1dd23e0180bdbb9d34f
+            placeholder={t("Tìm kiếm sản phẩm")}
             placeholderTextColor="#888"
             underlineColorAndroid="transparent"
             style={styles.phoneSearchInput}
@@ -356,12 +352,8 @@ function DesktopLayout() {
         {/* search bar */}
         <View style={styles.searchBar}>
           <TextInput
-<<<<<<< HEAD
-            placeholder={t("Tìm kiếm sản phẩm")}
-=======
             testID="home-search-input"
-            placeholder="Tìm kiếm sản phẩm"
->>>>>>> 9377ca4f2f967cae383ec1dd23e0180bdbb9d34f
+            placeholder={t("Tìm kiếm sản phẩm")}
             placeholderTextColor="#888"
             underlineColorAndroid="transparent"
             style={styles.searchInput}

@@ -114,7 +114,7 @@ const RegisterScreen = () => {
         >
           <View style={[styles.login, isMobile && styles.loginMobile]}>
             <Text style={[styles.title, isMobile && styles.titleMobile]}>
-              Đăng ký
+              {t("Đăng ký")}
             </Text>
 
             <Text style={styles.label}>Email</Text>
@@ -122,7 +122,7 @@ const RegisterScreen = () => {
               value={email}
               onChangeText={setEmail}
               style={[styles.input, isMobile && styles.inputMobile]}
-              placeholder="Nhập email"
+              placeholder={t("Nhập email")}
               keyboardType="email-address"
               autoCapitalize="none"
               autoCorrect={false}
@@ -166,7 +166,7 @@ const RegisterScreen = () => {
                 ]}
               >
                 <Text style={styles.buttonText}>
-                  {isSubmitting ? "Đang đăng ký..." : "Đăng ký"}
+                  {isSubmitting ? t("Đang đăng ký...") : t("Đăng ký")}
                 </Text>
               </Pressable>
             </View>

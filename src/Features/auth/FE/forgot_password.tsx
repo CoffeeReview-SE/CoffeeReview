@@ -80,7 +80,7 @@ export default function ForgotPasswordScreen() {
               keyboardType="email-address"
               autoCapitalize="none"
               autoCorrect={false}
-              accessibilityLabel="Email đã đăng ký"
+              accessibilityLabel={t("Email đã đăng ký")}
             />
 
             <Pressable

@@ -62,7 +62,7 @@ export default function ProfileScreen() {
           style={s.input}
           value={name}
           onChangeText={setName}
-          placeholder="Nguyễn Văn A"
+          placeholder={t("Nhập họ và tên")}
         />
         <Text style={s.label}>Email</Text>
         <TextInput
@@ -71,7 +71,7 @@ export default function ProfileScreen() {
           onChangeText={setEmail}
           keyboardType="email-address"
           autoCapitalize="none"
-          placeholder="email@example.com"
+          placeholder={t("Nhập email")}
         />
         <Text style={s.label}>{t("Số điện thoại")}</Text>
         <TextInput
