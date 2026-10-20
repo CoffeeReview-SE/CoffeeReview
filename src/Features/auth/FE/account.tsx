@@ -160,14 +160,16 @@ export default function AccountScreen() {
         {!isMobile && (
           <Text style={styles.headerCaption}>Tài khoản của tôi</Text>
         )}
-        <LanguageSelector />
-        <Pressable
-          style={styles.homeButton}
-          onPress={() => router.replace("/")}
-        >
-          <Ionicons name="home-outline" size={18} color="#fff" />
-          <Text style={styles.homeText}>Trang chủ</Text>
-        </Pressable>
+        <View style={styles.headerActions}>
+          <LanguageSelector />
+          <Pressable
+            style={styles.homeButton}
+            onPress={() => router.replace("/")}
+          >
+            <Ionicons name="home-outline" size={18} color="#fff" />
+            <Text style={styles.homeText}>Trang chủ</Text>
+          </Pressable>
+        </View>
       </View>
 
       <View style={[styles.layout, isMobile && styles.layoutMobile]}>
@@ -246,11 +248,22 @@ export default function AccountScreen() {
         )}
 
         <View style={styles.main}>
-          <Text style={styles.pageTitle}>
-            {activeSection === "profile"
-              ? "Chỉnh sửa thông tin cá nhân"
-              : (selectedMenuItem?.label ?? "Tài khoản của tôi")}
-          </Text>
+          <View style={styles.pageTitleRow}>
+            <Ionicons
+              name={
+                activeSection === "profile"
+                  ? "person-circle-outline"
+                  : (selectedMenuItem?.icon ?? "person-circle-outline")
+              }
+              size={27}
+              color="#d32f2f"
+            />
+            <Text style={styles.pageTitle}>
+              {activeSection === "profile"
+                ? "Chỉnh sửa thông tin cá nhân"
+                : (selectedMenuItem?.label ?? "Tài khoản của tôi")}
+            </Text>
+          </View>
           <Text style={styles.pageSubtitle}>
             {activeSection === "profile"
               ? "Cập nhật họ tên, email và số điện thoại của bạn."
@@ -320,7 +333,16 @@ export default function AccountScreen() {
               </View>
 
               <View style={styles.sectionHeader}>
-                <Text style={styles.sectionTitle}>Quản lý tài khoản</Text>
+                <View style={styles.sectionTitleRow}>
+                  <View style={styles.sectionTitleIcon}>
+                    <Ionicons
+                      name="grid-outline"
+                      size={17}
+                      color="#c62828"
+                    />
+                  </View>
+                  <Text style={styles.sectionTitle}>Quản lý tài khoản</Text>
+                </View>
                 <Text style={styles.sectionCaption}>
                   Các tiện ích dành cho bạn
                 </Text>
@@ -1207,6 +1229,11 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   headerMobile: { paddingHorizontal: 16, minHeight: 64 },
+  headerActions: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 8,
+  },
   brand: { flexDirection: "row", alignItems: "center", gap: 9 },
   logo: { width: 38, height: 38, borderRadius: 8 },
   brandText: { color: "#fff", fontSize: 20, fontWeight: "800" },
@@ -1215,7 +1242,11 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
-    padding: 8,
+    minHeight: 40,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    borderRadius: 12,
+    backgroundColor: "rgba(255,255,255,0.12)",
   },
   homeText: { color: "#fff", fontSize: 14, fontWeight: "600" },
   layout: {
@@ -1277,6 +1308,11 @@ const styles = StyleSheet.create({
   },
   logoutText: { color: "#d32f2f", fontSize: 13, fontWeight: "700" },
   main: { flex: 1, minWidth: 0 },
+  pageTitleRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 9,
+  },
   pageTitle: { fontSize: 27, fontWeight: "800", color: "#222" },
   pageSubtitle: { color: "#777", fontSize: 13, marginTop: 6, marginBottom: 20 },
   profileCard: {
@@ -1337,6 +1373,19 @@ const styles = StyleSheet.create({
   statValue: { fontSize: 25, fontWeight: "800", color: "#222", marginTop: 16 },
   statNote: { color: "#888", fontSize: 11, marginTop: 3 },
   sectionHeader: { marginTop: 26, marginBottom: 12 },
+  sectionTitleRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 9,
+  },
+  sectionTitleIcon: {
+    alignItems: "center",
+    backgroundColor: "#fff0f0",
+    borderRadius: 9,
+    height: 30,
+    justifyContent: "center",
+    width: 30,
+  },
   sectionTitle: { fontSize: 18, color: "#222", fontWeight: "800" },
   sectionCaption: { color: "#888", fontSize: 12, marginTop: 4 },
   inlineSectionWrap: { gap: 14 },
