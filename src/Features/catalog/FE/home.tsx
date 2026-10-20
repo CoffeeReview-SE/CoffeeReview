@@ -12,6 +12,7 @@ import {
 } from "react-native";
 
 import { Ionicons } from "@expo/vector-icons";
+import { LanguageSelector } from "@/Core/components/language-selector";
 
 /* ================================================= */
 /*                 HOVER BUTTON                      */
@@ -78,6 +79,7 @@ function PhoneLayout() {
 
         {/* Customer icons */}
         <View style={styles.phoneCustomerIcons}>
+          <LanguageSelector />
           {/* Giỏ hàng */}
           <HoverButton
             style={styles.phoneIconItem}
@@ -360,6 +362,7 @@ function DesktopLayout() {
 
         {/* Customer icons */}
         <View style={styles.customerIcons}>
+          <LanguageSelector />
           {/* Giỏ hàng */}
           <HoverButton
             style={styles.iconItem}

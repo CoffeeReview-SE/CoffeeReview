@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import { LanguageSelector } from "@/Core/components/language-selector";
 
 /* ================================================= */
 /*                  HOVER BUTTON                     */
@@ -151,6 +152,7 @@ export default function CartScreen() {
 
         {/* Không hiển thị nút về trang chủ; bấm logo hoặc tên shop để về trang chủ */}
         <View style={styles.headerActions}>
+          <LanguageSelector />
           {!isMobile && (
             <HoverButton
               style={styles.headerAction}

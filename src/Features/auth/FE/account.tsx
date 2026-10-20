@@ -14,6 +14,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
+import { LanguageSelector } from "@/Core/components/language-selector";
 import {
   changeCurrentPassword,
   deleteAddress,
@@ -159,6 +160,7 @@ export default function AccountScreen() {
         {!isMobile && (
           <Text style={styles.headerCaption}>Tài khoản của tôi</Text>
         )}
+        <LanguageSelector />
         <Pressable
           style={styles.homeButton}
           onPress={() => router.replace("/")}
