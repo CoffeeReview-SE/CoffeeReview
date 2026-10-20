@@ -11,6 +11,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import { LanguageSelector } from "@/Core/components/language-selector";
 
 /* ================================================= */
 /*                 HOVER BUTTON                      */
@@ -132,6 +133,7 @@ export default function OrdersScreen() {
         </HoverButton>
 
         <View style={styles.headerActions}>
+          <LanguageSelector />
           {!isMobile && (
             <HoverButton
               style={styles.headerAction}

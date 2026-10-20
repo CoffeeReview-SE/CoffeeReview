@@ -13,6 +13,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 import { useRouter } from "expo-router";
+import { LanguageSelector } from "@/Core/components/language-selector";
 
 /* ================================================= */
 /*                 HOVER BUTTON                      */
@@ -262,6 +263,7 @@ export default function ProductDetail() {
                         styles.customerIconsMobile,
                     ]}
                 >
+                    <LanguageSelector />
                     {/* Giỏ hàng */}
 
                     <HeaderButton
