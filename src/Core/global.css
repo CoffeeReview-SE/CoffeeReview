@@ -19,3 +19,12 @@ input[data-testid="login-password"]:focus {
   outline: 0 !important;
   box-shadow: none !important;
 }
+
+input[data-testid="home-search-input"],
+input[data-testid="home-search-input"]:focus,
+input[data-testid="home-phone-search-input"],
+input[data-testid="home-phone-search-input"]:focus {
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+}

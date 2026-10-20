@@ -20,6 +20,8 @@ export default function RootLayout() {
           <Stack.Screen name="order_management" />
           <Stack.Screen name="product_management" />
           <Stack.Screen name="category_management" />
+          <Stack.Screen name="stock_inventory" />
+          <Stack.Screen name="stock_movements" />
         </Stack>
       </ThemeProvider>
     </LanguageProvider>

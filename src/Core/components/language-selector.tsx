@@ -5,6 +5,7 @@ import {
   Pressable,
   StyleSheet,
   Text,
+  View,
 } from "react-native";
 
 import {
@@ -33,9 +34,11 @@ export function LanguageSelector() {
           pressed && styles.triggerPressed,
         ]}
       >
-        <Ionicons name="globe-outline" size={17} color="#ffffff" />
-        <Text style={styles.triggerText}>{language.toUpperCase()}</Text>
-        <Ionicons name="chevron-down" size={14} color="#ffffff" />
+        <Ionicons name="globe-outline" size={17} color="#c62828" />
+        <Text style={styles.triggerText}>
+          {language.toUpperCase()}
+        </Text>
+        <Ionicons name="chevron-down" size={14} color="#c62828" />
       </Pressable>
 
       <Modal
@@ -49,8 +52,25 @@ export function LanguageSelector() {
           style={styles.backdrop}
           onPress={() => setIsOpen(false)}
         >
+<<<<<<< HEAD
           <Pressable style={styles.menu} onPress={(event) => event.stopPropagation()}>
             <Text style={styles.menuTitle}>{t("Ngôn ngữ")}</Text>
+=======
+          <Pressable
+            style={styles.menu}
+            onPress={(event) => event.stopPropagation()}
+          >
+            <View style={styles.menuHeading}>
+              <View style={styles.menuIcon}>
+                <Ionicons name="globe-outline" size={19} color="#c62828" />
+              </View>
+              <View>
+                <Text style={styles.menuTitle}>Ngôn ngữ</Text>
+                <Text style={styles.menuSubtitle}>Chọn ngôn ngữ hiển thị</Text>
+              </View>
+            </View>
+            <View style={styles.divider} />
+>>>>>>> 9377ca4f2f967cae383ec1dd23e0180bdbb9d34f
             {options.map((option) => {
               const selected = option.value === language;
               return (
@@ -68,6 +88,7 @@ export function LanguageSelector() {
                     pressed && styles.optionPressed,
                   ]}
                 >
+<<<<<<< HEAD
                   <Text style={[styles.optionText, selected && styles.optionTextSelected]}>
                     {language === "en" && option.value === "vi"
                       ? t("Tiếng Việt")
@@ -76,6 +97,36 @@ export function LanguageSelector() {
                   {selected && (
                     <Ionicons name="checkmark" size={18} color="#d32f2f" />
                   )}
+=======
+                  <View style={styles.optionCopy}>
+                    <Text
+                      style={[
+                        styles.optionCode,
+                        selected && styles.optionCodeSelected,
+                      ]}
+                    >
+                      {option.value.toUpperCase()}
+                    </Text>
+                    <Text
+                      style={[
+                        styles.optionText,
+                        selected && styles.optionTextSelected,
+                      ]}
+                    >
+                      {option.label}
+                    </Text>
+                  </View>
+                  <View
+                    style={[
+                      styles.checkCircle,
+                      selected && styles.checkCircleSelected,
+                    ]}
+                  >
+                    {selected && (
+                      <Ionicons name="checkmark" size={13} color="#ffffff" />
+                    )}
+                  </View>
+>>>>>>> 9377ca4f2f967cae383ec1dd23e0180bdbb9d34f
                 </Pressable>
               );
             })}
@@ -89,58 +140,125 @@ export function LanguageSelector() {
 const styles = StyleSheet.create({
   trigger: {
     alignItems: "center",
-    borderRadius: 10,
+    backgroundColor: "#ffffff",
+    borderColor: "rgba(255,255,255,0.72)",
+    borderWidth: 1,
+    borderRadius: 12,
+    elevation: 2,
     flexDirection: "row",
-    gap: 4,
-    paddingHorizontal: 8,
-    paddingVertical: 7,
+    gap: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    shadowColor: "#6f1010",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.16,
+    shadowRadius: 4,
   },
   triggerPressed: {
-    backgroundColor: "rgba(255,255,255,0.16)",
+    backgroundColor: "#fff5f5",
   },
   triggerText: {
-    color: "#ffffff",
+    color: "#a61f1f",
     fontSize: 12,
     fontWeight: "700",
   },
   backdrop: {
     alignItems: "flex-end",
-    backgroundColor: "rgba(0,0,0,0.18)",
+    backgroundColor: "rgba(22, 27, 36, 0.32)",
     flex: 1,
-    paddingRight: 18,
-    paddingTop: 82,
+    justifyContent: "flex-start",
+    paddingHorizontal: 16,
+    paddingTop: 76,
   },
   menu: {
     backgroundColor: "#ffffff",
-    borderRadius: 10,
-    elevation: 8,
-    minWidth: 170,
-    padding: 8,
+    borderColor: "#f0eeee",
+    borderRadius: 16,
+    borderWidth: 1,
+    elevation: 12,
+    minWidth: 224,
+    padding: 12,
     shadowColor: "#000000",
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.16,
+    shadowRadius: 14,
+  },
+  menuHeading: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 10,
+    paddingHorizontal: 4,
+    paddingVertical: 3,
+  },
+  menuIcon: {
+    alignItems: "center",
+    backgroundColor: "#fff1f1",
+    borderRadius: 12,
+    height: 38,
+    justifyContent: "center",
+    width: 38,
   },
   menuTitle: {
-    color: "#666666",
-    fontSize: 12,
-    fontWeight: "600",
-    paddingHorizontal: 10,
-    paddingVertical: 7,
+    color: "#222222",
+    fontSize: 14,
+    fontWeight: "700",
+  },
+  menuSubtitle: {
+    color: "#858585",
+    fontSize: 11,
+    marginTop: 2,
+  },
+  divider: {
+    backgroundColor: "#eeeeee",
+    height: 1,
+    marginVertical: 10,
   },
   option: {
     alignItems: "center",
-    borderRadius: 7,
+    borderRadius: 10,
     flexDirection: "row",
     justifyContent: "space-between",
-    paddingHorizontal: 10,
-    paddingVertical: 10,
+    minHeight: 48,
+    paddingHorizontal: 9,
+    paddingVertical: 7,
   },
   optionSelected: {
-    backgroundColor: "#fff1f1",
+    backgroundColor: "#fff5f5",
   },
   optionPressed: {
-    opacity: 0.7,
+    opacity: 0.72,
+  },
+  optionCopy: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 10,
+  },
+  optionCode: {
+    backgroundColor: "#f4f5f7",
+    borderRadius: 7,
+    color: "#687080",
+    fontSize: 10,
+    fontWeight: "700",
+    overflow: "hidden",
+    paddingHorizontal: 6,
+    paddingVertical: 4,
+  },
+  optionCodeSelected: {
+    backgroundColor: "#ffe5e5",
+    color: "#c62828",
+  },
+  checkCircle: {
+    alignItems: "center",
+    borderColor: "#d9dce1",
+    borderRadius: 9,
+    borderWidth: 1,
+    height: 18,
+    justifyContent: "center",
+    width: 18,
+  },
+  checkCircleSelected: {
+    backgroundColor: "#c62828",
+    borderColor: "#c62828",
   },
   optionText: {
     color: "#333333",
