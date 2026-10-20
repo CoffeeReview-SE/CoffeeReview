@@ -162,8 +162,10 @@ function PhoneLayout() {
         {/* Search bar */}
         <View style={styles.phoneSearchBar}>
           <TextInput
+            testID="home-phone-search-input"
             placeholder="Tìm kiếm sản phẩm"
             placeholderTextColor="#888"
+            underlineColorAndroid="transparent"
             style={styles.phoneSearchInput}
           />
 
@@ -347,8 +349,10 @@ function DesktopLayout() {
         {/* search bar */}
         <View style={styles.searchBar}>
           <TextInput
+            testID="home-search-input"
             placeholder="Tìm kiếm sản phẩm"
             placeholderTextColor="#888"
+            underlineColorAndroid="transparent"
             style={styles.searchInput}
           />
 
@@ -660,6 +664,9 @@ const styles = StyleSheet.create({
     flex: 1,
 
     height: "100%",
+
+    borderWidth: 0,
+    borderColor: "transparent",
 
     paddingHorizontal: 15,
 
@@ -1199,6 +1206,9 @@ const styles = StyleSheet.create({
     flex: 1,
 
     height: "100%",
+
+    borderWidth: 0,
+    borderColor: "transparent",
 
     paddingHorizontal: 12,
 
