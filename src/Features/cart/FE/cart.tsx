@@ -11,6 +11,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { LanguageSelector } from "@/Core/components/language-selector";
+import { useLanguage } from "@/Core/contexts/language-context";
 
 /* ================================================= */
 /*                  HOVER BUTTON                     */
@@ -83,6 +84,7 @@ export default function CartScreen() {
   const { width } = useWindowDimensions();
   const isMobile = width < 600;
   const router = useRouter();
+  const { t } = useLanguage();
   const [products, setProducts] =
     React.useState<CartProduct[]>(initialProducts);
   const [selectedIds, setSelectedIds] = React.useState<string[]>(
@@ -141,10 +143,10 @@ export default function CartScreen() {
             resizeMode="cover"
           />
           <View style={styles.brandCopy}>
-            <Text style={styles.logoText}>BVP Shop</Text>
+            <Text style={styles.logoText}>{t("BVP Shop")}</Text>
             {!isMobile && (
               <Text style={styles.headerSubtitle}>
-                Mua sắm dễ dàng · Giao hàng tận nơi
+                {t("Mua sắm dễ dàng · Giao hàng tận nơi")}
               </Text>
             )}
           </View>
@@ -160,7 +162,7 @@ export default function CartScreen() {
               onPress={() => router.push("/orders")}
             >
               <Ionicons name="receipt-outline" size={23} color="#ffffff" />
-              <Text style={styles.headerActionText}>Đơn hàng</Text>
+              <Text style={styles.headerActionText}>{t("Đơn hàng")}</Text>
             </HoverButton>
           )}
           <HoverButton
@@ -172,7 +174,7 @@ export default function CartScreen() {
           >
             <Ionicons name="person-outline" size={23} color="#ffffff" />
             {!isMobile && (
-              <Text style={styles.headerActionText}>Tài khoản</Text>
+              <Text style={styles.headerActionText}>{t("Tài khoản")}</Text>
             )}
           </HoverButton>
         </View>
@@ -194,7 +196,7 @@ export default function CartScreen() {
           </View>
           <View style={styles.headingCopy}>
             <Text style={isMobile ? styles.phonePageTitle : styles.pageTitle}>
-              Giỏ hàng của tôi
+              {t("Giỏ hàng của tôi")}
             </Text>
             <Text style={styles.pageSubtitle}>
               Kiểm tra sản phẩm và thông tin trước khi đặt hàng
@@ -332,7 +334,7 @@ export default function CartScreen() {
                 <View style={styles.emptyIcon}>
                   <Ionicons name="cart-outline" size={42} color="#aaa" />
                 </View>
-                <Text style={styles.emptyTitle}>Giỏ hàng đang trống</Text>
+                <Text style={styles.emptyTitle}>{t("Giỏ hàng đang trống")}</Text>
                 <Text style={styles.emptyDescription}>
                   Hãy khám phá các sản phẩm và thêm món đồ bạn yêu thích vào giỏ
                   hàng.
@@ -347,7 +349,7 @@ export default function CartScreen() {
                     size={17}
                     color="#ffffff"
                   />
-                  <Text style={styles.primaryButtonText}>Tiếp tục mua sắm</Text>
+                  <Text style={styles.primaryButtonText}>{t("Tiếp tục mua sắm")}</Text>
                 </HoverButton>
               </View>
             )}
@@ -366,7 +368,7 @@ export default function CartScreen() {
           </View>
 
           <View style={styles.summaryPanel}>
-            <Text style={styles.summaryTitle}>Tóm tắt đơn hàng</Text>
+            <Text style={styles.summaryTitle}>{t("Tóm tắt đơn hàng")}</Text>
             <View style={styles.summaryLine}>
               <Text style={styles.summaryLabel}>
                 Tạm tính (
@@ -377,12 +379,12 @@ export default function CartScreen() {
             </View>
             {savings > 0 && (
               <View style={styles.summaryLine}>
-                <Text style={styles.savingsLabel}>Ưu đãi sản phẩm</Text>
+                <Text style={styles.savingsLabel}>{t("Ưu đãi sản phẩm")}</Text>
                 <Text style={styles.savingsValue}>-{formatPrice(savings)}</Text>
               </View>
             )}
             <View style={styles.summaryLine}>
-              <Text style={styles.summaryLabel}>Phí giao hàng</Text>
+              <Text style={styles.summaryLabel}>{t("Phí giao hàng")}</Text>
               <Text
                 style={
                   shipping === 0 ? styles.freeShipping : styles.summaryValue
@@ -393,14 +395,14 @@ export default function CartScreen() {
             </View>
             <View style={styles.summaryDivider} />
             <View style={styles.totalLine}>
-              <Text style={styles.totalLabel}>Tổng cộng</Text>
+              <Text style={styles.totalLabel}>{t("Tổng cộng")}</Text>
               <Text style={styles.totalValue}>{formatPrice(total)}</Text>
             </View>
-            <Text style={styles.vatNote}>Đã bao gồm VAT (nếu có)</Text>
+            <Text style={styles.vatNote}>{t("Đã bao gồm VAT (nếu có)")}</Text>
             <View style={styles.deliveryNotice}>
               <Ionicons name="car-outline" size={20} color="red" />
               <View style={styles.deliveryCopy}>
-                <Text style={styles.deliveryTitle}>Miễn phí giao hàng</Text>
+                <Text style={styles.deliveryTitle}>{t("Miễn phí giao hàng")}</Text>
                 <Text style={styles.deliveryDescription}>
                   Cho đơn hàng từ 5.000.000đ
                 </Text>
@@ -415,7 +417,7 @@ export default function CartScreen() {
               disabled={selectedProducts.length === 0}
               onPress={() => setShowCheckoutModal(true)}
             >
-              <Text style={styles.checkoutButtonText}>Tiến hành đặt hàng</Text>
+              <Text style={styles.checkoutButtonText}>{t("Tiến hành đặt hàng")}</Text>
               <Ionicons name="arrow-forward" size={18} color="#ffffff" />
             </HoverButton>
             <View style={styles.secureNote}>
@@ -469,7 +471,7 @@ export default function CartScreen() {
                 style={styles.modalCancelButton}
                 onPress={() => setPendingDelete(null)}
               >
-                <Text style={styles.modalCancelText}>Hủy</Text>
+                <Text style={styles.modalCancelText}>{t("Hủy")}</Text>
               </Pressable>
               <Pressable
                 style={styles.modalDeleteButton}
@@ -479,7 +481,7 @@ export default function CartScreen() {
                   setNotice("Đã xóa sản phẩm khỏi giỏ hàng");
                 }}
               >
-                <Text style={styles.modalDeleteText}>Xóa sản phẩm</Text>
+                <Text style={styles.modalDeleteText}>{t("Xóa sản phẩm")}</Text>
               </Pressable>
             </View>
           </View>
@@ -508,7 +510,7 @@ export default function CartScreen() {
                 style={styles.modalCancelButton}
                 onPress={() => setShowCheckoutModal(false)}
               >
-                <Text style={styles.modalCancelText}>Đóng</Text>
+                <Text style={styles.modalCancelText}>{t("Đóng")}</Text>
               </Pressable>
               <Pressable
                 style={styles.modalDeleteButton}
@@ -517,7 +519,7 @@ export default function CartScreen() {
                   setNotice("Thông tin đơn hàng đã sẵn sàng để kết nối API");
                 }}
               >
-                <Text style={styles.modalDeleteText}>Đã hiểu</Text>
+                <Text style={styles.modalDeleteText}>{t("Đã hiểu")}</Text>
               </Pressable>
             </View>
           </View>

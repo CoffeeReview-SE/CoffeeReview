@@ -17,6 +17,7 @@ import {
   getCurrentUser,
   saveAddress,
 } from "../Use-cases/authService";
+import { useLanguage } from "@/Core/contexts/language-context";
 
 // Tạo biểu mẫu địa chỉ rỗng; ID thật được gán khi bắt đầu thêm địa chỉ mới.
 const empty = (): Address => ({
@@ -31,6 +32,7 @@ const empty = (): Address => ({
 });
 export default function AddressesScreen() {
   const router = useRouter();
+  const { t } = useLanguage();
   const [items, setItems] = useState<Address[]>([]);
   const [userId, setUserId] = useState<string | null>(null);
   const [form, setForm] = useState<Address | null>(null);
@@ -89,15 +91,15 @@ export default function AddressesScreen() {
   return (
     <ScrollView style={s.page} contentContainerStyle={s.content}>
       <Pressable onPress={() => router.push("/account")}>
-        <Text style={s.back}>‹ Quay lại tài khoản</Text>
+        <Text style={s.back}>‹ {t("Quay lại tài khoản")}</Text>
       </Pressable>
       <View style={s.heading}>
         <View style={{ flex: 1 }}>
-          <Text style={s.title}>Địa chỉ giao hàng</Text>
-          <Text style={s.hint}>Quản lý nơi nhận đơn hàng của bạn.</Text>
+          <Text style={s.title}>{t("Địa chỉ giao hàng")}</Text>
+          <Text style={s.hint}>{t("Quản lý nơi nhận đơn hàng của bạn.")}</Text>
         </View>
         <Pressable style={s.add} onPress={() => edit()}>
-          <Text style={s.addText}>+ Thêm địa chỉ</Text>
+          <Text style={s.addText}>{t("+ Thêm địa chỉ")}</Text>
         </Pressable>
       </View>
       {form && (
@@ -136,7 +138,7 @@ export default function AddressesScreen() {
             </View>
           ))}
           <View style={s.defaultRow}>
-            <Text style={s.label}>Đặt làm địa chỉ mặc định</Text>
+            <Text style={s.label}>{t("Đặt làm địa chỉ mặc định")}</Text>
             <Switch
               value={form.isDefault}
               onValueChange={(v) => field("isDefault", v)}
@@ -172,10 +174,10 @@ export default function AddressesScreen() {
           </Text>
           <View style={s.actions}>
             <Pressable onPress={() => edit(a)}>
-              <Text style={s.link}>Chỉnh sửa</Text>
+              <Text style={s.link}>{t("Chỉnh sửa")}</Text>
             </Pressable>
             <Pressable onPress={() => remove(a.id)}>
-              <Text style={s.delete}>Xóa</Text>
+              <Text style={s.delete}>{t("Xóa")}</Text>
             </Pressable>
             {!a.isDefault && (
               <Pressable
@@ -188,7 +190,7 @@ export default function AddressesScreen() {
                   )
                 }
               >
-                <Text style={s.link}>Đặt mặc định</Text>
+                <Text style={s.link}>{t("Đặt mặc định")}</Text>
               </Pressable>
             )}
           </View>

@@ -12,6 +12,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { LanguageSelector } from "@/Core/components/language-selector";
+import { useLanguage } from "@/Core/contexts/language-context";
 
 /* ================================================= */
 /*                 HOVER BUTTON                      */
@@ -94,6 +95,7 @@ const tabs: OrderStatus[] = [
 
 export default function OrdersScreen() {
   const router = useRouter();
+  const { t } = useLanguage();
   const { width } = useWindowDimensions();
   const isMobile = width < 600;
   const [activeTab, setActiveTab] = React.useState<OrderStatus>("Tất cả");
@@ -123,7 +125,7 @@ export default function OrdersScreen() {
             resizeMode="cover"
           />
           <View>
-            <Text style={styles.logoText}>BVP Shop</Text>
+            <Text style={styles.logoText}>{t("BVP Shop")}</Text>
             {!isMobile && (
               <Text style={styles.headerSubtitle}>
                 Mua sắm dễ dàng · Giao hàng tận nơi
@@ -141,7 +143,7 @@ export default function OrdersScreen() {
               onPress={() => router.push("/cart")}
             >
               <Ionicons name="cart-outline" size={23} color="#ffffff" />
-              <Text style={styles.headerActionText}>Giỏ hàng</Text>
+              <Text style={styles.headerActionText}>{t("Giỏ hàng")}</Text>
             </HoverButton>
           )}
           <HoverButton
@@ -153,7 +155,7 @@ export default function OrdersScreen() {
           >
             <Ionicons name="person-outline" size={23} color="#ffffff" />
             {!isMobile && (
-              <Text style={styles.headerActionText}>Tài khoản</Text>
+              <Text style={styles.headerActionText}>{t("Tài khoản")}</Text>
             )}
           </HoverButton>
         </View>
@@ -176,7 +178,7 @@ export default function OrdersScreen() {
           </View>
           <View style={styles.headingCopy}>
             <Text style={isMobile ? styles.phonePageTitle : styles.pageTitle}>
-              Đơn hàng của tôi
+              {t("Đơn hàng của tôi")}
             </Text>
             <Text style={styles.pageSubtitle}>
               Theo dõi và quản lý các đơn hàng của bạn
@@ -208,7 +210,7 @@ export default function OrdersScreen() {
         <View style={styles.ordersPanel}>
           <View style={isMobile ? styles.phonePanelHeader : styles.panelHeader}>
             <View>
-              <Text style={styles.panelTitle}>Danh sách đơn hàng</Text>
+              <Text style={styles.panelTitle}>{t("Danh sách đơn hàng")}</Text>
               <Text style={styles.panelSubtitle}>
                 Bạn có {filteredOrders.length} đơn hàng phù hợp
               </Text>
@@ -218,7 +220,7 @@ export default function OrdersScreen() {
               <TextInput
                 value={search}
                 onChangeText={setSearch}
-                placeholder="Tìm mã đơn hàng..."
+                placeholder={t("Tìm mã đơn hàng...")}
                 placeholderTextColor="#888"
                 style={styles.searchInput}
               />
@@ -271,7 +273,7 @@ export default function OrdersScreen() {
             {filteredOrders.length === 0 && (
               <View style={styles.emptyState}>
                 <Ionicons name="file-tray-outline" size={44} color="#bbb" />
-                <Text style={styles.emptyTitle}>Không tìm thấy đơn hàng</Text>
+                <Text style={styles.emptyTitle}>{t("Không tìm thấy đơn hàng")}</Text>
                 <Text style={styles.emptyDescription}>
                   Thử thay đổi từ khóa hoặc trạng thái lọc.
                 </Text>
@@ -283,7 +285,7 @@ export default function OrdersScreen() {
                     setActiveTab("Tất cả");
                   }}
                 >
-                  <Text style={styles.resetButtonText}>Xóa bộ lọc</Text>
+                  <Text style={styles.resetButtonText}>{t("Xóa bộ lọc")}</Text>
                 </HoverButton>
               </View>
             )}
@@ -332,6 +334,7 @@ function SummaryCard({
 /* ================================================= */
 
 function OrderCard({ order, isMobile }: { order: Order; isMobile: boolean }) {
+  const { t } = useLanguage();
   const [expanded, setExpanded] = React.useState(false);
   const statusStyle =
     order.status === "Hoàn thành"
@@ -399,18 +402,18 @@ function OrderCard({ order, isMobile }: { order: Order; isMobile: boolean }) {
             <Ionicons name="hardware-chip-outline" size={26} color="#777" />
           </View>
           <View style={styles.productCopy}>
-            <Text style={styles.productSummaryTitle}>Sản phẩm trong đơn</Text>
+            <Text style={styles.productSummaryTitle}>{t("Sản phẩm trong đơn")}</Text>
             <Text style={styles.productSummaryText}>{order.items}</Text>
           </View>
         </View>
         <View style={styles.orderTotalBlock}>
-          <Text style={styles.totalLabel}>Tổng thanh toán</Text>
+          <Text style={styles.totalLabel}>{t("Tổng thanh toán")}</Text>
           <Text style={styles.orderTotal}>{order.total}</Text>
         </View>
       </View>
       {expanded && (
         <View style={styles.expandedDetails}>
-          <Text style={styles.expandedTitle}>Thông tin đơn hàng</Text>
+          <Text style={styles.expandedTitle}>{t("Thông tin đơn hàng")}</Text>
           <Text style={styles.expandedText}>Mã đơn: {order.id}</Text>
           <Text style={styles.expandedText}>Ngày đặt: {order.date}</Text>
           <Text style={styles.expandedText}>
@@ -448,7 +451,7 @@ function OrderCard({ order, isMobile }: { order: Order; isMobile: boolean }) {
               hoverStyle={styles.buttonHover}
             >
               <Ionicons name="refresh-outline" size={15} color="#ffffff" />
-              <Text style={styles.buyAgainText}>Mua lại</Text>
+              <Text style={styles.buyAgainText}>{t("Mua lại")}</Text>
             </HoverButton>
           )}
         </View>

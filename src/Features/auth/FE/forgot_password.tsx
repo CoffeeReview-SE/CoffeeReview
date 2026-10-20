@@ -12,9 +12,11 @@ import {
   useWindowDimensions,
 } from "react-native";
 import { useRouter } from "expo-router";
+import { useLanguage } from "@/Core/contexts/language-context";
 
 export default function ForgotPasswordScreen() {
   const router = useRouter();
+  const { t } = useLanguage();
   const { width } = useWindowDimensions();
   const isMobile = width < 600;
   const [email, setEmail] = useState("");
@@ -73,7 +75,7 @@ export default function ForgotPasswordScreen() {
                 setFeedback("");
               }}
               style={[styles.input, isMobile && styles.inputMobile]}
-              placeholder="Nhập email đã đăng ký"
+              placeholder={t("Nhập email đã đăng ký")}
               placeholderTextColor="#999"
               keyboardType="email-address"
               autoCapitalize="none"
@@ -85,7 +87,7 @@ export default function ForgotPasswordScreen() {
               onPress={handleSubmit}
               style={[styles.button, isMobile && styles.buttonMobile]}
             >
-              <Text style={styles.buttonText}>Gửi mã OTP</Text>
+              <Text style={styles.buttonText}>{t("Gửi mã OTP")}</Text>
             </Pressable>
 
             {!!feedback && (
@@ -99,7 +101,7 @@ export default function ForgotPasswordScreen() {
               onPress={() => router.replace("/login")}
               style={styles.backButton}
             >
-              <Text style={styles.backText}>Quay lại đăng nhập</Text>
+              <Text style={styles.backText}>{t("Quay lại đăng nhập")}</Text>
             </Pressable>
           </View>
         </ScrollView>

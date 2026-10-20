@@ -15,6 +15,7 @@ import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
 import { LanguageSelector } from "@/Core/components/language-selector";
+import { useLanguage } from "@/Core/contexts/language-context";
 import {
   changeCurrentPassword,
   deleteAddress,
@@ -86,6 +87,7 @@ const menuItems = [
 
 export default function AccountScreen() {
   const router = useRouter();
+  const { t } = useLanguage();
   const { width } = useWindowDimensions();
   const isMobile = width < 700;
   const [user, setUser] = useState<UserProfile | null>(null);
@@ -155,10 +157,10 @@ export default function AccountScreen() {
             style={styles.logo}
             resizeMode="contain"
           />
-          <Text style={styles.brandText}>BVP Shop</Text>
+          <Text style={styles.brandText}>{t("BVP Shop")}</Text>
         </Pressable>
         {!isMobile && (
-          <Text style={styles.headerCaption}>Tài khoản của tôi</Text>
+          <Text style={styles.headerCaption}>{t("Tài khoản của tôi")}</Text>
         )}
         <LanguageSelector />
         <Pressable
@@ -166,7 +168,7 @@ export default function AccountScreen() {
           onPress={() => router.replace("/")}
         >
           <Ionicons name="home-outline" size={18} color="#fff" />
-          <Text style={styles.homeText}>Trang chủ</Text>
+          <Text style={styles.homeText}>{t("Trang chủ")}</Text>
         </Pressable>
       </View>
 
@@ -240,7 +242,7 @@ export default function AccountScreen() {
             ))}
             <Pressable style={styles.logoutButton} onPress={handleLogout}>
               <Ionicons name="log-out-outline" size={18} color="#d32f2f" />
-              <Text style={styles.logoutText}>Đăng xuất</Text>
+              <Text style={styles.logoutText}>{t("Đăng xuất")}</Text>
             </Pressable>
           </View>
         )}
@@ -292,7 +294,7 @@ export default function AccountScreen() {
                   onPress={() => setActiveSection("profile")}
                 >
                   <Ionicons name="create-outline" size={16} color="#d32f2f" />
-                  <Text style={styles.editText}>Chỉnh sửa</Text>
+                  <Text style={styles.editText}>{t("Chỉnh sửa")}</Text>
                 </Pressable>
               </View>
 
@@ -892,6 +894,7 @@ function VerificationStatus({
 }
 
 function InlineAddressSection({ userId }: { userId: string }) {
+  const { t } = useLanguage();
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [form, setForm] = useState<Address | null>(null);
   const [feedback, setFeedback] = useState("");
@@ -1056,7 +1059,7 @@ function InlineAddressSection({ userId }: { userId: string }) {
                 setFeedback("");
               }}
             >
-              <Text style={styles.inlineSecondaryButtonText}>Hủy</Text>
+              <Text style={styles.inlineSecondaryButtonText}>{t("Hủy")}</Text>
             </Pressable>
             <Pressable
               style={styles.inlinePrimaryButton}
@@ -1093,12 +1096,12 @@ function InlineAddressSection({ userId }: { userId: string }) {
                 </Text>
               </View>
               {address.isDefault && (
-                <Text style={styles.inlineDefaultBadge}>Mặc định</Text>
+                <Text style={styles.inlineDefaultBadge}>{t("Mặc định")}</Text>
               )}
             </View>
             <View style={styles.inlineActions}>
               <Pressable onPress={() => setForm({ ...address })}>
-                <Text style={styles.inlineLink}>Chỉnh sửa</Text>
+                <Text style={styles.inlineLink}>{t("Chỉnh sửa")}</Text>
               </Pressable>
               {!address.isDefault && (
                 <Pressable
@@ -1115,11 +1118,11 @@ function InlineAddressSection({ userId }: { userId: string }) {
                     }
                   }}
                 >
-                  <Text style={styles.inlineLink}>Đặt mặc định</Text>
+                  <Text style={styles.inlineLink}>{t("Đặt mặc định")}</Text>
                 </Pressable>
               )}
               <Pressable onPress={() => confirmDelete(address)}>
-                <Text style={styles.inlineDelete}>Xóa</Text>
+                <Text style={styles.inlineDelete}>{t("Xóa")}</Text>
               </Pressable>
             </View>
           </View>

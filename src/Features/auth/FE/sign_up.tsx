@@ -13,10 +13,12 @@ import {
   useWindowDimensions,
 } from "react-native";
 import { useRouter } from "expo-router";
+import { useLanguage } from "@/Core/contexts/language-context";
 import { registerUser } from "../Use-cases/authService";
 
 const RegisterScreen = () => {
   const router = useRouter();
+  const { t } = useLanguage();
   const { width } = useWindowDimensions();
   const isMobile = width < 600;
   const [fullName, setFullName] = useState("");
@@ -126,30 +128,30 @@ const RegisterScreen = () => {
               autoCorrect={false}
             />
 
-            <Text style={styles.label}>Họ và tên</Text>
+            <Text style={styles.label}>{t("Họ và tên")}</Text>
             <TextInput
               value={fullName}
               onChangeText={setFullName}
               style={[styles.input, isMobile && styles.inputMobile]}
-              placeholder="Nhập họ và tên"
+              placeholder={t("Nhập họ và tên")}
               autoCapitalize="words"
             />
 
-            <Text style={styles.label}>Số điện thoại</Text>
+            <Text style={styles.label}>{t("Số điện thoại")}</Text>
             <TextInput
               value={phone}
               onChangeText={setPhone}
               style={[styles.input, isMobile && styles.inputMobile]}
-              placeholder="Nhập số điện thoại"
+              placeholder={t("Nhập số điện thoại")}
               keyboardType="phone-pad"
             />
 
-            <Text style={styles.label}>Mật khẩu</Text>
+            <Text style={styles.label}>{t("Mật khẩu")}</Text>
             <TextInput
               value={password}
               onChangeText={setPassword}
               style={[styles.input, isMobile && styles.inputMobile]}
-              placeholder="Nhập mật khẩu"
+              placeholder={t("Nhập mật khẩu")}
               secureTextEntry
             />
 

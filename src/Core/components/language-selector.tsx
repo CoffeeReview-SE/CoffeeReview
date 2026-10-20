@@ -18,13 +18,13 @@ const options: { value: Language; label: string }[] = [
 ];
 
 export function LanguageSelector() {
-  const { language, setLanguage } = useLanguage();
+  const { language, setLanguage, t } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
 
   return (
     <>
       <Pressable
-        accessibilityLabel="Chọn ngôn ngữ"
+        accessibilityLabel={t("Chọn ngôn ngữ")}
         accessibilityRole="button"
         hitSlop={6}
         onPress={() => setIsOpen(true)}
@@ -45,12 +45,12 @@ export function LanguageSelector() {
         onRequestClose={() => setIsOpen(false)}
       >
         <Pressable
-          accessibilityLabel="Đóng danh sách ngôn ngữ"
+          accessibilityLabel={t("Đóng danh sách ngôn ngữ")}
           style={styles.backdrop}
           onPress={() => setIsOpen(false)}
         >
           <Pressable style={styles.menu} onPress={(event) => event.stopPropagation()}>
-            <Text style={styles.menuTitle}>Ngôn ngữ</Text>
+            <Text style={styles.menuTitle}>{t("Ngôn ngữ")}</Text>
             {options.map((option) => {
               const selected = option.value === language;
               return (
@@ -69,7 +69,9 @@ export function LanguageSelector() {
                   ]}
                 >
                   <Text style={[styles.optionText, selected && styles.optionTextSelected]}>
-                    {option.label}
+                    {language === "en" && option.value === "vi"
+                      ? t("Tiếng Việt")
+                      : option.label}
                   </Text>
                   {selected && (
                     <Ionicons name="checkmark" size={18} color="#d32f2f" />

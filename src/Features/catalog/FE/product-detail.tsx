@@ -14,6 +14,7 @@ import { Ionicons } from "@expo/vector-icons";
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 import { useRouter } from "expo-router";
 import { LanguageSelector } from "@/Core/components/language-selector";
+import { useLanguage } from "@/Core/contexts/language-context";
 
 /* ================================================= */
 /*                 HOVER BUTTON                      */
@@ -97,6 +98,7 @@ function HeaderButton({
 
 export default function ProductDetail() {
     const router = useRouter();
+    const { t } = useLanguage();
 
     const { width } = useWindowDimensions();
 
@@ -227,7 +229,7 @@ export default function ProductDetail() {
                     ]}
                 >
                     <TextInput
-                        placeholder="Tìm kiếm sản phẩm"
+                        placeholder={t("Tìm kiếm sản phẩm")}
                         placeholderTextColor="#888"
                         style={[
                             styles.searchInput,
@@ -268,7 +270,7 @@ export default function ProductDetail() {
 
                     <HeaderButton
                         icon="cart-shopping"
-                        text="Giỏ hàng"
+                        text={t("Giỏ hàng")}
                         onPress={() => router.push("/cart")}
                         isMobile={isMobile}
                     />
@@ -277,7 +279,7 @@ export default function ProductDetail() {
 
                     <HeaderButton
                         icon="box"
-                        text="Đơn hàng"
+                        text={t("Đơn hàng")}
                         onPress={() => router.push("/orders")}
                         isMobile={isMobile}
                     />
@@ -286,7 +288,7 @@ export default function ProductDetail() {
 
                     <HeaderButton
                         icon="user"
-                        text="Tài khoản"
+                        text={t("Tài khoản")}
                         onPress={() => router.push("/account")}
                         isMobile={isMobile}
                     />

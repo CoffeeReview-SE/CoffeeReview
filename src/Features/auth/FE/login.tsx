@@ -12,10 +12,12 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import { useLanguage } from "@/Core/contexts/language-context";
 import { loginUser } from "../Use-cases/authService";
 
 export default function LoginScreen() {
   const router = useRouter();
+  const { t } = useLanguage();
   const { width } = useWindowDimensions();
   const isMobile = width < 700;
   const [email, setEmail] = useState("");
@@ -116,10 +118,9 @@ export default function LoginScreen() {
         </View>
 
         <View style={[styles.formCard, isMobile && styles.formCardMobile]}>
-          <Text style={styles.title}>Đăng nhập</Text>
-          <Text style={styles.subtitle}>Chào mừng bạn quay trở lại!</Text>
-
-          <Text style={styles.label}>Email hoặc số điện thoại</Text>
+          <Text style={styles.title}>{t("Đăng nhập")}</Text>
+          <Text style={styles.subtitle}>{t("Chào mừng bạn quay trở lại!")}</Text>
+          <Text style={styles.label}>{t("Email hoặc số điện thoại")}</Text>
           <View
             style={[
               styles.inputWrap,
@@ -142,7 +143,7 @@ export default function LoginScreen() {
             />
           </View>
 
-          <Text style={styles.label}>Mật khẩu</Text>
+          <Text style={styles.label}>{t("Mật khẩu")}</Text>
           <View
             style={[
               styles.inputWrap,
@@ -183,11 +184,11 @@ export default function LoginScreen() {
                 size={18}
                 color={remember ? "#d32f2f" : "#777"}
               />
-              <Text style={styles.optionText}>Nhớ đăng nhập</Text>
+              <Text style={styles.optionText}>{t("Nhớ đăng nhập")}</Text>
             </Pressable>
 
             <Pressable onPress={() => router.push("/forgot_password")}>
-              <Text style={styles.link}>Quên mật khẩu?</Text>
+              <Text style={styles.link}>{t("Quên mật khẩu?")}</Text>
             </Pressable>
           </View>
 
@@ -199,7 +200,7 @@ export default function LoginScreen() {
 
           <View style={styles.dividerRow}>
             <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>Hoặc</Text>
+            <Text style={styles.dividerText}>{t("Hoặc")}</Text>
             <View style={styles.dividerLine} />
           </View>
 
@@ -238,9 +239,9 @@ export default function LoginScreen() {
           </View>
 
           <View style={styles.registerRow}>
-            <Text style={styles.optionText}>Chưa có tài khoản? </Text>
+            <Text style={styles.optionText}>{t("Chưa có tài khoản? ")}</Text>
             <Pressable onPress={() => router.push("/sign_up")}>
-              <Text style={styles.link}>Đăng ký ngay</Text>
+              <Text style={styles.link}>{t("Đăng ký ngay")}</Text>
             </Pressable>
           </View>
         </View>

@@ -10,9 +10,11 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { getCurrentUser, updateCurrentUser, UserProfile } from "../Use-cases/authService";
+import { useLanguage } from "@/Core/contexts/language-context";
 
 export default function ProfileScreen() {
   const router = useRouter();
+  const { t } = useLanguage();
   const [, setUser] = useState<UserProfile | null>(null);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -50,12 +52,12 @@ export default function ProfileScreen() {
   return (
     <ScrollView style={s.page} contentContainerStyle={s.content}>
       <Pressable onPress={() => router.push("/account")}>
-        <Text style={s.back}>‹ Quay lại tài khoản</Text>
+        <Text style={s.back}>‹ {t("Quay lại tài khoản")}</Text>
       </Pressable>
       <View style={s.card}>
-        <Text style={s.title}>Thông tin cá nhân</Text>
-        <Text style={s.hint}>Cập nhật hồ sơ BVP Shop của bạn.</Text>
-        <Text style={s.label}>Họ và tên</Text>
+        <Text style={s.title}>{t("Thông tin cá nhân")}</Text>
+        <Text style={s.hint}>{t("Cập nhật hồ sơ BVP Shop của bạn.")}</Text>
+        <Text style={s.label}>{t("Họ và tên")}</Text>
         <TextInput
           style={s.input}
           value={name}
@@ -71,16 +73,16 @@ export default function ProfileScreen() {
           autoCapitalize="none"
           placeholder="email@example.com"
         />
-        <Text style={s.label}>Số điện thoại</Text>
+        <Text style={s.label}>{t("Số điện thoại")}</Text>
         <TextInput
           style={s.input}
           value={phone}
           onChangeText={setPhone}
           keyboardType="phone-pad"
-          placeholder="Số điện thoại"
+          placeholder={t("Số điện thoại")}
         />
         <Pressable style={s.button} onPress={save}>
-          <Text style={s.buttonText}>Lưu thay đổi</Text>
+          <Text style={s.buttonText}>{t("Lưu thay đổi")}</Text>
         </Pressable>
       </View>
     </ScrollView>

@@ -13,6 +13,7 @@ import {
 
 import { Ionicons } from "@expo/vector-icons";
 import { LanguageSelector } from "@/Core/components/language-selector";
+import { useLanguage } from "@/Core/contexts/language-context";
 
 /* ================================================= */
 /*                 HOVER BUTTON                      */
@@ -59,6 +60,7 @@ export default function App() {
 
 function PhoneLayout() {
   const router = useRouter();
+  const { t } = useLanguage();
 
   return (
     <View style={styles.phoneContainer}>
@@ -74,7 +76,7 @@ function PhoneLayout() {
             style={styles.phoneLogoImage}
           />
 
-          <Text style={styles.phoneLogoText}>BVP Shop</Text>
+          <Text style={styles.phoneLogoText}>{t("BVP Shop")}</Text>
         </View>
 
         {/* Customer icons */}
@@ -101,7 +103,7 @@ function PhoneLayout() {
                   />
                 </View>
 
-                <Text style={styles.phoneIconText}>Giỏ hàng</Text>
+                <Text style={styles.phoneIconText}>{t("Giỏ hàng")}</Text>
               </>
             )}
           </HoverButton>
@@ -127,7 +129,7 @@ function PhoneLayout() {
                   />
                 </View>
 
-                <Text style={styles.phoneIconText}>Đơn hàng</Text>
+                <Text style={styles.phoneIconText}>{t("Đơn hàng")}</Text>
               </>
             )}
           </HoverButton>
@@ -153,7 +155,7 @@ function PhoneLayout() {
                   />
                 </View>
 
-                <Text style={styles.phoneIconText}>Tài khoản</Text>
+                <Text style={styles.phoneIconText}>{t("Tài khoản")}</Text>
               </>
             )}
           </HoverButton>
@@ -162,7 +164,7 @@ function PhoneLayout() {
         {/* Search bar */}
         <View style={styles.phoneSearchBar}>
           <TextInput
-            placeholder="Tìm kiếm sản phẩm"
+            placeholder={t("Tìm kiếm sản phẩm")}
             placeholderTextColor="#888"
             style={styles.phoneSearchInput}
           />
@@ -210,7 +212,7 @@ function PhoneLayout() {
               style={styles.phoneBuyButton}
               hoverStyle={styles.buttonHover}
             >
-              <Text style={styles.buyButtonText}>Mua ngay</Text>
+              <Text style={styles.buyButtonText}>{t("Mua ngay")}</Text>
             </HoverButton>
           </View>
 
@@ -236,7 +238,7 @@ function PhoneLayout() {
           >
             <Ionicons name="grid-outline" size={23} color="#ffffff" />
 
-            <Text style={styles.categoryTextActive}>Tất cả</Text>
+            <Text style={styles.categoryTextActive}>{t("Tất cả")}</Text>
           </HoverButton>
 
           {/* Điện thoại */}
@@ -246,7 +248,7 @@ function PhoneLayout() {
           >
             <Ionicons name="phone-portrait-outline" size={23} color="red" />
 
-            <Text style={styles.phoneCategoryText}>Điện thoại</Text>
+            <Text style={styles.phoneCategoryText}>{t("Điện thoại")}</Text>
           </HoverButton>
 
           {/* Laptop */}
@@ -256,7 +258,7 @@ function PhoneLayout() {
           >
             <Ionicons name="laptop-outline" size={23} color="red" />
 
-            <Text style={styles.phoneCategoryText}>Laptop</Text>
+            <Text style={styles.phoneCategoryText}>{t("Laptop")}</Text>
           </HoverButton>
 
           {/* Phụ kiện */}
@@ -266,7 +268,7 @@ function PhoneLayout() {
           >
             <Ionicons name="headset-outline" size={23} color="red" />
 
-            <Text style={styles.phoneCategoryText}>Phụ kiện</Text>
+            <Text style={styles.phoneCategoryText}>{t("Phụ kiện")}</Text>
           </HoverButton>
         </View>
 
@@ -277,13 +279,13 @@ function PhoneLayout() {
         <View style={styles.phoneFeaturedProducts}>
           {/* Tiêu đề */}
           <View style={styles.titleRow}>
-            <Text style={styles.phoneTitle}>Sản phẩm nổi bật</Text>
+            <Text style={styles.phoneTitle}>{t("Sản phẩm nổi bật")}</Text>
 
             <HoverButton
               style={styles.viewAllButton}
               hoverStyle={styles.viewAllHover}
             >
-              <Text style={styles.viewAll}>Xem tất cả</Text>
+              <Text style={styles.viewAll}>{t("Xem tất cả")}</Text>
             </HoverButton>
           </View>
 
@@ -310,7 +312,7 @@ function PhoneLayout() {
                 style={styles.addCartButton}
                 hoverStyle={styles.buttonHover}
               >
-                <Text style={styles.addCartText}>Thêm vào giỏ</Text>
+                <Text style={styles.addCartText}>{t("Thêm vào giỏ")}</Text>
               </HoverButton>
             </Pressable>
           </View>
@@ -326,6 +328,7 @@ function PhoneLayout() {
 
 function DesktopLayout() {
   const router = useRouter();
+  const { t } = useLanguage();
 
   return (
     <View style={styles.container}>
@@ -341,13 +344,13 @@ function DesktopLayout() {
             style={styles.logoImage}
           />
 
-          <Text style={styles.logoText}>BVP Shop</Text>
+          <Text style={styles.logoText}>{t("BVP Shop")}</Text>
         </View>
 
         {/* search bar */}
         <View style={styles.searchBar}>
           <TextInput
-            placeholder="Tìm kiếm sản phẩm"
+            placeholder={t("Tìm kiếm sản phẩm")}
             placeholderTextColor="#888"
             style={styles.searchInput}
           />
@@ -381,7 +384,7 @@ function DesktopLayout() {
                   />
                 </View>
 
-                <Text style={styles.iconText}>Giỏ hàng</Text>
+                <Text style={styles.iconText}>{t("Giỏ hàng")}</Text>
               </>
             )}
           </HoverButton>
@@ -404,7 +407,7 @@ function DesktopLayout() {
                   />
                 </View>
 
-                <Text style={styles.iconText}>Đơn hàng</Text>
+                <Text style={styles.iconText}>{t("Đơn hàng")}</Text>
               </>
             )}
           </HoverButton>
@@ -427,7 +430,7 @@ function DesktopLayout() {
                   />
                 </View>
 
-                <Text style={styles.iconText}>Tài khoản</Text>
+                <Text style={styles.iconText}>{t("Tài khoản")}</Text>
               </>
             )}
           </HoverButton>
@@ -468,7 +471,7 @@ function DesktopLayout() {
               style={styles.buyButton}
               hoverStyle={styles.buttonHover}
             >
-              <Text style={styles.buyButtonText}>Mua ngay</Text>
+              <Text style={styles.buyButtonText}>{t("Mua ngay")}</Text>
             </HoverButton>
           </View>
 
@@ -494,7 +497,7 @@ function DesktopLayout() {
           >
             <Ionicons name="grid-outline" size={28} color="#ffffff" />
 
-            <Text style={styles.categoryTextActive}>Tất cả</Text>
+            <Text style={styles.categoryTextActive}>{t("Tất cả")}</Text>
           </HoverButton>
 
           {/* Điện thoại */}
@@ -504,7 +507,7 @@ function DesktopLayout() {
           >
             <Ionicons name="phone-portrait-outline" size={28} color="red" />
 
-            <Text style={styles.categoryText}>Điện thoại</Text>
+            <Text style={styles.categoryText}>{t("Điện thoại")}</Text>
           </HoverButton>
 
           {/* Laptop */}
@@ -514,7 +517,7 @@ function DesktopLayout() {
           >
             <Ionicons name="laptop-outline" size={28} color="red" />
 
-            <Text style={styles.categoryText}>Laptop</Text>
+            <Text style={styles.categoryText}>{t("Laptop")}</Text>
           </HoverButton>
 
           {/* Phụ kiện */}
@@ -524,7 +527,7 @@ function DesktopLayout() {
           >
             <Ionicons name="headset-outline" size={28} color="red" />
 
-            <Text style={styles.categoryText}>Phụ kiện</Text>
+            <Text style={styles.categoryText}>{t("Phụ kiện")}</Text>
           </HoverButton>
         </View>
 
@@ -535,13 +538,13 @@ function DesktopLayout() {
         <View style={styles.featuredProducts}>
           {/* Tiêu đề */}
           <View style={styles.titleRow}>
-            <Text style={styles.title}>Sản phẩm nổi bật</Text>
+            <Text style={styles.title}>{t("Sản phẩm nổi bật")}</Text>
 
             <HoverButton
               style={styles.viewAllButton}
               hoverStyle={styles.viewAllHover}
             >
-              <Text style={styles.viewAll}>Xem tất cả</Text>
+              <Text style={styles.viewAll}>{t("Xem tất cả")}</Text>
             </HoverButton>
           </View>
 
@@ -568,7 +571,7 @@ function DesktopLayout() {
                 style={styles.addCartButton}
                 hoverStyle={styles.buttonHover}
               >
-                <Text style={styles.addCartText}>Thêm vào giỏ</Text>
+                <Text style={styles.addCartText}>{t("Thêm vào giỏ")}</Text>
               </HoverButton>
             </Pressable>
           </View>
