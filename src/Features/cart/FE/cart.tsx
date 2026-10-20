@@ -1,3 +1,4 @@
+
 import React from "react";
 import {
   Image,
@@ -16,8 +17,10 @@ import { useLanguage } from "@/Core/contexts/language-context";
 /* ================================================= */
 /*                  HOVER BUTTON                     */
 /* ================================================= */
+
 function HoverButton({ children, style, hoverStyle, ...props }: any) {
   const [hovered, setHovered] = React.useState(false);
+
   return (
     <Pressable
       {...props}
@@ -33,6 +36,7 @@ function HoverButton({ children, style, hoverStyle, ...props }: any) {
 /* ================================================= */
 /*                  KIỂU DỮ LIỆU                    */
 /* ================================================= */
+
 type CartProduct = {
   id: string;
   name: string;
@@ -46,6 +50,7 @@ type CartProduct = {
 /* ================================================= */
 /*              DỮ LIỆU GIỎ HÀNG MẪU                */
 /* ================================================= */
+
 const initialProducts: CartProduct[] = [
   {
     id: "SP001",
@@ -70,57 +75,111 @@ const initialProducts: CartProduct[] = [
     name: "Chuột không dây",
     variant: "Màu xám · Kết nối USB",
     price: 390000,
+    originalPrice: 490000,
     quantity: 1,
     icon: "hardware-chip-outline",
   },
+  {
+    id: "SP004",
+    name: "Ốp lưng iPhone 16e",
+    variant: "Màu trong suốt · Chống trầy xước",
+    price: 150000,
+    originalPrice: 200000,
+    quantity: 1,
+    icon: "phone-portrait-outline",
+  },
+  {
+    id: "SP005",
+    name: "Sạc nhanh USB-C 20W",
+    variant: "Màu trắng · Bảo hành 12 tháng",
+    price: 350000,
+    originalPrice: 450000,
+    quantity: 1,
+    icon: "flash-outline",
+  },
 ];
 
-const formatPrice = (price: number) => `${price.toLocaleString("vi-VN")}đ`;
+const formatPrice = (price: number) =>
+  `${price.toLocaleString("vi-VN")}đ`;
 
 /* ================================================= */
 /*                  MÀN HÌNH GIỎ HÀNG               */
 /* ================================================= */
+
 export default function CartScreen() {
   const { width } = useWindowDimensions();
   const isMobile = width < 600;
+
   const router = useRouter();
   const { t } = useLanguage();
-  const [products, setProducts] =
-    React.useState<CartProduct[]>(initialProducts);
+
+  // Khởi tạo danh sách 5 sản phẩm mẫu khi màn hình được mount.
+  const [products, setProducts] = React.useState<CartProduct[]>(
+    () => [...initialProducts],
+  );
+
   const [selectedIds, setSelectedIds] = React.useState<string[]>(
-    initialProducts.map((p) => p.id),
+    () => initialProducts.map((product) => product.id),
   );
-  const [pendingDelete, setPendingDelete] = React.useState<CartProduct | null>(
-    null,
-  );
+
+  const [pendingDelete, setPendingDelete] =
+    React.useState<CartProduct | null>(null);
+
   const [showCheckoutModal, setShowCheckoutModal] = React.useState(false);
   const [notice, setNotice] = React.useState("");
 
-  const selectedProducts = products.filter((p) => selectedIds.includes(p.id));
+  const selectedProducts = products.filter((product) =>
+    selectedIds.includes(product.id),
+  );
+
   const subtotal = selectedProducts.reduce(
-    (sum, p) => sum + p.price * p.quantity,
+    (sum, product) => sum + product.price * product.quantity,
     0,
   );
+
   const savings = selectedProducts.reduce(
-    (sum, p) =>
-      sum + Math.max(0, (p.originalPrice ?? p.price) - p.price) * p.quantity,
+    (sum, product) =>
+      sum +
+      Math.max(
+        0,
+        (product.originalPrice ?? product.price) - product.price,
+      ) *
+        product.quantity,
     0,
   );
+
   const shipping =
     selectedProducts.length === 0 || subtotal >= 5000000 ? 0 : 30000;
+
   const total = subtotal + shipping;
+
+  /* ================================================= */
+  /*                 XỬ LÝ SẢN PHẨM                   */
+  /* ================================================= */
 
   const changeQuantity = (id: string, amount: number) => {
     setProducts((current) =>
-      current.map((p) =>
-        p.id === id ? { ...p, quantity: Math.max(1, p.quantity + amount) } : p,
+      current.map((product) =>
+        product.id === id
+          ? {
+              ...product,
+              quantity: Math.max(1, product.quantity + amount),
+            }
+          : product,
       ),
     );
   };
+
   const removeProduct = (id: string) => {
-    setProducts((current) => current.filter((p) => p.id !== id));
-    setSelectedIds((current) => current.filter((item) => item !== id));
+    setProducts((current) =>
+      current.filter((product) => product.id !== id),
+    );
+
+    setSelectedIds((current) =>
+      current.filter((item) => item !== id),
+    );
   };
+
   const toggleSelected = (id: string) => {
     setSelectedIds((current) =>
       current.includes(id)
@@ -129,21 +188,36 @@ export default function CartScreen() {
     );
   };
 
+  const toggleSelectAll = () => {
+    setSelectedIds((current) =>
+      current.length === products.length
+        ? []
+        : products.map((product) => product.id),
+    );
+  };
+
+  /* ================================================= */
+  /*                       GIAO DIỆN                   */
+  /* ================================================= */
+
   return (
     <View style={styles.container}>
-      {/* ================================================= */}
-      {/*                       HEADER                      */}
-      {/* ================================================= */}
+      {/* HEADER */}
+
       <View style={isMobile ? styles.phoneHeader : styles.header}>
-        {/* Logo ảnh và tên cửa hàng giống trang chủ */}
-        <HoverButton style={styles.brandRow} onPress={() => router.push("/")}>
+        <HoverButton
+          style={styles.brandRow}
+          onPress={() => router.push("/")}
+        >
           <Image
             source={require("@/assets/image/logo.jpg")}
             style={isMobile ? styles.phoneLogoImage : styles.logoImage}
             resizeMode="cover"
           />
+
           <View style={styles.brandCopy}>
             <Text style={styles.logoText}>{t("BVP Shop")}</Text>
+
             {!isMobile && (
               <Text style={styles.headerSubtitle}>
                 {t("Mua sắm dễ dàng · Giao hàng tận nơi")}
@@ -152,81 +226,119 @@ export default function CartScreen() {
           </View>
         </HoverButton>
 
-        {/* Không hiển thị nút về trang chủ; bấm logo hoặc tên shop để về trang chủ */}
         <View style={styles.headerActions}>
           <LanguageSelector />
+
           {!isMobile && (
             <HoverButton
               style={styles.headerAction}
               hoverStyle={styles.headerActionHover}
               onPress={() => router.push("/orders")}
             >
-              <Ionicons name="receipt-outline" size={23} color="#ffffff" />
-              <Text style={styles.headerActionText}>{t("Đơn hàng")}</Text>
+              <Ionicons
+                name="receipt-outline"
+                size={23}
+                color="#ffffff"
+              />
+              <Text style={styles.headerActionText}>
+                {t("Đơn hàng")}
+              </Text>
             </HoverButton>
           )}
+
           <HoverButton
-            style={[styles.headerAction, isMobile && styles.phoneHeaderAction]}
+            style={[
+              styles.headerAction,
+              isMobile && styles.phoneHeaderAction,
+            ]}
             hoverStyle={styles.headerActionHover}
             onPress={() => router.push("/account")}
             accessibilityRole="button"
             accessibilityLabel="Tài khoản"
           >
-            <Ionicons name="person-outline" size={23} color="#ffffff" />
+            <Ionicons
+              name="person-outline"
+              size={23}
+              color="#ffffff"
+            />
+
             {!isMobile && (
-              <Text style={styles.headerActionText}>{t("Tài khoản")}</Text>
+              <Text style={styles.headerActionText}>
+                {t("Tài khoản")}
+              </Text>
             )}
           </HoverButton>
         </View>
       </View>
 
-      {/* ================================================= */}
-      {/*                  NỘI DUNG GIỎ HÀNG               */}
-      {/* ================================================= */}
+      {/* NỘI DUNG GIỎ HÀNG */}
+
       <ScrollView
         style={styles.contentScroll}
         contentContainerStyle={
           isMobile ? styles.phoneContent : styles.desktopContent
         }
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
       >
+        {/* TIÊU ĐỀ */}
+
         <View style={styles.pageHeading}>
           <View style={styles.headingIcon}>
-            <Ionicons name="cart-outline" size={25} color="red" />
+            <Ionicons
+              name="cart-outline"
+              size={25}
+              color="red"
+            />
           </View>
+
           <View style={styles.headingCopy}>
-            <Text style={isMobile ? styles.phonePageTitle : styles.pageTitle}>
+            <Text
+              style={
+                isMobile ? styles.phonePageTitle : styles.pageTitle
+              }
+            >
               {t("Giỏ hàng của tôi")}
             </Text>
+
             <Text style={styles.pageSubtitle}>
               Kiểm tra sản phẩm và thông tin trước khi đặt hàng
             </Text>
           </View>
         </View>
 
-        <View style={styles.cartLayout}>
+        <View
+          style={[
+            styles.cartLayout,
+            isMobile && styles.phoneCartLayout,
+          ]}
+        >
+          {/* BẢNG SẢN PHẨM */}
+
           <View style={styles.cartPanel}>
             <View
-              style={isMobile ? styles.phonePanelHeader : styles.panelHeader}
+              style={
+                isMobile
+                  ? styles.phonePanelHeader
+                  : styles.panelHeader
+              }
             >
               <View style={styles.panelTitleGroup}>
-                <Text style={styles.panelTitle}>{t("Sản phẩm trong giỏ")}</Text>
+                <Text style={styles.panelTitle}>
+                  {t("Sản phẩm trong giỏ")}
+                </Text>
+
                 <Text style={styles.panelSubtitle}>
                   {products.length} {t("sản phẩm")} · {t("Đã chọn")}{" "}
                   {selectedProducts.length}
                 </Text>
               </View>
+
               {products.length > 0 && (
                 <HoverButton
                   style={styles.selectAllButton}
                   hoverStyle={styles.selectAllHover}
-                  onPress={() =>
-                    setSelectedIds(
-                      selectedIds.length === products.length
-                        ? []
-                        : products.map((p) => p.id),
-                    )
-                  }
+                  onPress={toggleSelectAll}
                 >
                   <Ionicons
                     name={
@@ -237,6 +349,7 @@ export default function CartScreen() {
                     size={18}
                     color="red"
                   />
+
                   <Text style={styles.selectAllText}>
                     {selectedIds.length === products.length
                       ? t("Bỏ chọn tất cả")
@@ -246,10 +359,19 @@ export default function CartScreen() {
               )}
             </View>
 
+            {/* DANH SÁCH SẢN PHẨM */}
+
             {products.map((product) => {
               const selected = selectedIds.includes(product.id);
+
               return (
-                <View key={product.id} style={styles.productRow}>
+                <View
+                  key={product.id}
+                  style={[
+                    styles.productRow,
+                    isMobile && styles.phoneProductRow,
+                  ]}
+                >
                   <Pressable
                     onPress={() => toggleSelected(product.id)}
                     style={styles.checkArea}
@@ -257,58 +379,95 @@ export default function CartScreen() {
                     accessibilityState={{ checked: selected }}
                   >
                     <Ionicons
-                      name={selected ? "checkbox" : "square-outline"}
+                      name={
+                        selected ? "checkbox" : "square-outline"
+                      }
                       size={22}
                       color={selected ? "red" : "#999"}
                     />
                   </Pressable>
-                  <View style={styles.productImage}>
+
+                  <View
+                    style={[
+                      styles.productImage,
+                      isMobile && styles.phoneProductImage,
+                    ]}
+                  >
                     <Ionicons
                       name={product.icon}
                       size={isMobile ? 32 : 38}
                       color="#777"
                     />
                   </View>
+
                   <View style={styles.productInfo}>
-                    <Text style={styles.productName}>{product.name}</Text>
-                    <Text style={styles.productVariant}>{product.variant}</Text>
+                    <Text style={styles.productName}>
+                      {product.name}
+                    </Text>
+
+                    <Text style={styles.productVariant}>
+                      {product.variant}
+                    </Text>
+
                     <View
-                      style={
-                        isMobile
-                          ? styles.phoneProductBottom
-                          : styles.productBottom
-                      }
+                      style={[
+                        styles.productBottom,
+                        isMobile && styles.phoneProductBottom,
+                      ]}
                     >
                       <View style={styles.priceGroup}>
                         <Text style={styles.productPrice}>
                           {formatPrice(product.price)}
                         </Text>
+
                         {!!product.originalPrice && (
                           <Text style={styles.originalPrice}>
                             {formatPrice(product.originalPrice)}
                           </Text>
                         )}
                       </View>
-                      <View style={styles.quantityAndRemove}>
+
+                      <View
+                        style={[
+                          styles.quantityAndRemove,
+                          isMobile &&
+                            styles.phoneQuantityAndRemove,
+                        ]}
+                      >
                         <View style={styles.quantityControl}>
                           <Pressable
-                            onPress={() => changeQuantity(product.id, -1)}
+                            onPress={() =>
+                              changeQuantity(product.id, -1)
+                            }
                             style={styles.quantityButton}
                             accessibilityLabel={t("Giảm số lượng")}
                           >
-                            <Ionicons name="remove" size={16} color="#444" />
+                            <Ionicons
+                              name="remove"
+                              size={16}
+                              color="#444"
+                            />
                           </Pressable>
+
                           <Text style={styles.quantityText}>
                             {product.quantity}
                           </Text>
+
                           <Pressable
-                            onPress={() => changeQuantity(product.id, 1)}
+                            onPress={() =>
+                              changeQuantity(product.id, 1)
+                            }
                             style={styles.quantityButton}
                             accessibilityLabel={t("Tăng số lượng")}
                           >
-                            <Ionicons name="add" size={16} color="#444" />
+                            <Ionicons
+                              name="add"
+                              size={16}
+                              color="#444"
+                            />
                           </Pressable>
                         </View>
+
                         <Pressable
                           onPress={() => setPendingDelete(product)}
                           style={styles.removeButton}
@@ -319,8 +478,11 @@ export default function CartScreen() {
                             size={16}
                             color="#c62828"
                           />
+
                           {!isMobile && (
-                            <Text style={styles.removeText}>{t("Xóa")}</Text>
+                            <Text style={styles.removeText}>
+                              {t("Xóa")}
+                            </Text>
                           )}
                         </Pressable>
                       </View>
@@ -330,16 +492,27 @@ export default function CartScreen() {
               );
             })}
 
+            {/* GIỎ HÀNG TRỐNG */}
+
             {products.length === 0 && (
               <View style={styles.emptyState}>
                 <View style={styles.emptyIcon}>
-                  <Ionicons name="cart-outline" size={42} color="#aaa" />
+                  <Ionicons
+                    name="cart-outline"
+                    size={42}
+                    color="#aaa"
+                  />
                 </View>
-                <Text style={styles.emptyTitle}>{t("Giỏ hàng đang trống")}</Text>
-                <Text style={styles.emptyDescription}>
-                  Hãy khám phá các sản phẩm và thêm món đồ bạn yêu thích vào giỏ
-                  hàng.
+
+                <Text style={styles.emptyTitle}>
+                  {t("Giỏ hàng đang trống")}
                 </Text>
+
+                <Text style={styles.emptyDescription}>
+                  Hãy khám phá các sản phẩm và thêm món đồ bạn yêu
+                  thích vào giỏ hàng.
+                </Text>
+
                 <HoverButton
                   style={styles.primaryButton}
                   hoverStyle={styles.primaryButtonHover}
@@ -350,17 +523,26 @@ export default function CartScreen() {
                     size={17}
                     color="#ffffff"
                   />
-                  <Text style={styles.primaryButtonText}>{t("Tiếp tục mua sắm")}</Text>
+
+                  <Text style={styles.primaryButtonText}>
+                    {t("Tiếp tục mua sắm")}
+                  </Text>
                 </HoverButton>
               </View>
             )}
+
             {products.length > 0 && (
               <HoverButton
                 style={styles.continueShopping}
                 hoverStyle={styles.continueShoppingHover}
                 onPress={() => router.push("/")}
               >
-                <Ionicons name="arrow-back" size={16} color="red" />
+                <Ionicons
+                  name="arrow-back"
+                  size={16}
+                  color="red"
+                />
+
                 <Text style={styles.continueShoppingText}>
                   Tiếp tục mua sắm
                 </Text>
@@ -368,112 +550,199 @@ export default function CartScreen() {
             )}
           </View>
 
-          <View style={styles.summaryPanel}>
-            <Text style={styles.summaryTitle}>{t("Tóm tắt đơn hàng")}</Text>
+          {/* TÓM TẮT ĐƠN HÀNG */}
+
+          <View
+            style={[
+              styles.summaryPanel,
+              isMobile && styles.phoneSummaryPanel,
+            ]}
+          >
+            <Text style={styles.summaryTitle}>
+              {t("Tóm tắt đơn hàng")}
+            </Text>
+
             <View style={styles.summaryLine}>
               <Text style={styles.summaryLabel}>
                 Tạm tính (
-                {selectedProducts.reduce((sum, p) => sum + p.quantity, 0)} sản
-                phẩm)
+                {selectedProducts.reduce(
+                  (sum, product) => sum + product.quantity,
+                  0,
+                )}{" "}
+                sản phẩm)
               </Text>
-              <Text style={styles.summaryValue}>{formatPrice(subtotal)}</Text>
+
+              <Text style={styles.summaryValue}>
+                {formatPrice(subtotal)}
+              </Text>
             </View>
+
             {savings > 0 && (
               <View style={styles.summaryLine}>
-                <Text style={styles.savingsLabel}>{t("Ưu đãi sản phẩm")}</Text>
-                <Text style={styles.savingsValue}>-{formatPrice(savings)}</Text>
+                <Text style={styles.savingsLabel}>
+                  {t("Ưu đãi sản phẩm")}
+                </Text>
+
+                <Text style={styles.savingsValue}>
+                  -{formatPrice(savings)}
+                </Text>
               </View>
             )}
+
             <View style={styles.summaryLine}>
-              <Text style={styles.summaryLabel}>{t("Phí giao hàng")}</Text>
+              <Text style={styles.summaryLabel}>
+                {t("Phí giao hàng")}
+              </Text>
+
               <Text
                 style={
-                  shipping === 0 ? styles.freeShipping : styles.summaryValue
+                  shipping === 0
+                    ? styles.freeShipping
+                    : styles.summaryValue
                 }
               >
-                {shipping === 0 ? "Miễn phí" : formatPrice(shipping)}
+                {shipping === 0
+                  ? "Miễn phí"
+                  : formatPrice(shipping)}
               </Text>
             </View>
+
             <View style={styles.summaryDivider} />
+
             <View style={styles.totalLine}>
-              <Text style={styles.totalLabel}>{t("Tổng cộng")}</Text>
-              <Text style={styles.totalValue}>{formatPrice(total)}</Text>
+              <Text style={styles.totalLabel}>
+                {t("Tổng cộng")}
+              </Text>
+
+              <Text style={styles.totalValue}>
+                {formatPrice(total)}
+              </Text>
             </View>
-            <Text style={styles.vatNote}>{t("Đã bao gồm VAT (nếu có)")}</Text>
+
+            <Text style={styles.vatNote}>
+              {t("Đã bao gồm VAT (nếu có)")}
+            </Text>
+
             <View style={styles.deliveryNotice}>
-              <Ionicons name="car-outline" size={20} color="red" />
+              <Ionicons
+                name="car-outline"
+                size={20}
+                color="red"
+              />
+
               <View style={styles.deliveryCopy}>
-                <Text style={styles.deliveryTitle}>{t("Miễn phí giao hàng")}</Text>
+                <Text style={styles.deliveryTitle}>
+                  {t("Miễn phí giao hàng")}
+                </Text>
+
                 <Text style={styles.deliveryDescription}>
                   Cho đơn hàng từ 5.000.000đ
                 </Text>
               </View>
             </View>
+
             <HoverButton
               style={[
                 styles.checkoutButton,
-                selectedProducts.length === 0 && styles.checkoutDisabled,
+                selectedProducts.length === 0 &&
+                  styles.checkoutDisabled,
               ]}
               hoverStyle={styles.checkoutButtonHover}
               disabled={selectedProducts.length === 0}
               onPress={() => setShowCheckoutModal(true)}
             >
-              <Text style={styles.checkoutButtonText}>{t("Tiến hành đặt hàng")}</Text>
-              <Ionicons name="arrow-forward" size={18} color="#ffffff" />
+              <Text style={styles.checkoutButtonText}>
+                {t("Tiến hành đặt hàng")}
+              </Text>
+
+              <Ionicons
+                name="arrow-forward"
+                size={18}
+                color="#ffffff"
+              />
             </HoverButton>
+
             <View style={styles.secureNote}>
               <Ionicons
                 name="shield-checkmark-outline"
                 size={16}
                 color="#16834a"
               />
+
               <Text style={styles.secureText}>
                 Thông tin của bạn được bảo mật
               </Text>
             </View>
           </View>
         </View>
+
         <Text style={styles.footerNote}>
           BVP Shop · Cảm ơn bạn đã mua sắm cùng chúng tôi!
         </Text>
       </ScrollView>
 
-      {/* Thông báo thao tác */}
+      {/* THÔNG BÁO THAO TÁC */}
+
       {!!notice && (
         <View style={styles.toast}>
-          <Ionicons name="checkmark-circle" size={19} color="#16834a" />
+          <Ionicons
+            name="checkmark-circle"
+            size={19}
+            color="#16834a"
+          />
+
           <Text style={styles.toastText}>{notice}</Text>
+
           <Pressable
             onPress={() => setNotice("")}
             accessibilityLabel={t("Đóng thông báo")}
           >
-            <Ionicons name="close" size={18} color="#666" />
+            <Ionicons
+              name="close"
+              size={18}
+              color="#666"
+            />
           </Pressable>
         </View>
       )}
 
-      {/* Hộp thoại xác nhận xóa sản phẩm */}
+      {/* XÁC NHẬN XÓA SẢN PHẨM */}
+
       {!!pendingDelete && (
         <View style={styles.modalBackdrop}>
           <Pressable
             style={styles.modalBackdropTouch}
             onPress={() => setPendingDelete(null)}
           />
+
           <View style={styles.modalCard}>
             <View style={styles.modalIcon}>
-              <Ionicons name="trash-outline" size={26} color="#c62828" />
+              <Ionicons
+                name="trash-outline"
+                size={26}
+                color="#c62828"
+              />
             </View>
-            <Text style={styles.modalTitle}>Xóa sản phẩm?</Text>
-            <Text style={styles.modalMessage}>
-              Bạn có chắc muốn xóa “{pendingDelete.name}” khỏi giỏ hàng không?
+
+            <Text style={styles.modalTitle}>
+              Xóa sản phẩm?
             </Text>
+
+            <Text style={styles.modalMessage}>
+              Bạn có chắc muốn xóa “{pendingDelete.name}” khỏi giỏ
+              hàng không?
+            </Text>
+
             <View style={styles.modalActions}>
               <Pressable
                 style={styles.modalCancelButton}
                 onPress={() => setPendingDelete(null)}
               >
-                <Text style={styles.modalCancelText}>{t("Hủy")}</Text>
+                <Text style={styles.modalCancelText}>
+                  {t("Hủy")}
+                </Text>
               </Pressable>
+
               <Pressable
                 style={styles.modalDeleteButton}
                 onPress={() => {
@@ -482,45 +751,71 @@ export default function CartScreen() {
                   setNotice("Đã xóa sản phẩm khỏi giỏ hàng");
                 }}
               >
-                <Text style={styles.modalDeleteText}>{t("Xóa sản phẩm")}</Text>
+                <Text style={styles.modalDeleteText}>
+                  {t("Xóa sản phẩm")}
+                </Text>
               </Pressable>
             </View>
           </View>
         </View>
       )}
 
-      {/* Hộp thoại xác nhận bước đặt hàng mẫu */}
+      {/* XÁC NHẬN ĐẶT HÀNG */}
+
       {showCheckoutModal && (
         <View style={styles.modalBackdrop}>
           <Pressable
             style={styles.modalBackdropTouch}
             onPress={() => setShowCheckoutModal(false)}
           />
+
           <View style={styles.modalCard}>
-            <View style={[styles.modalIcon, styles.modalSuccessIcon]}>
-              <Ionicons name="bag-check-outline" size={27} color="#16834a" />
+            <View
+              style={[
+                styles.modalIcon,
+                styles.modalSuccessIcon,
+              ]}
+            >
+              <Ionicons
+                name="bag-check-outline"
+                size={27}
+                color="#16834a"
+              />
             </View>
-            <Text style={styles.modalTitle}>Tiến hành đặt hàng</Text>
-            <Text style={styles.modalMessage}>
-              Đây là giao diện mẫu. Bạn đã chọn {selectedProducts.length} sản
-              phẩm với tổng tiền {formatPrice(total)}. Có thể kết nối chức năng
-              đặt hàng với API sau.
+
+            <Text style={styles.modalTitle}>
+              Tiến hành đặt hàng
             </Text>
+
+            <Text style={styles.modalMessage}>
+              Đây là giao diện mẫu. Bạn đã chọn{" "}
+              {selectedProducts.length} sản phẩm với tổng tiền{" "}
+              {formatPrice(total)}. Có thể kết nối chức năng đặt hàng
+              với API sau.
+            </Text>
+
             <View style={styles.modalActions}>
               <Pressable
                 style={styles.modalCancelButton}
                 onPress={() => setShowCheckoutModal(false)}
               >
-                <Text style={styles.modalCancelText}>{t("Đóng")}</Text>
+                <Text style={styles.modalCancelText}>
+                  {t("Đóng")}
+                </Text>
               </Pressable>
+
               <Pressable
                 style={styles.modalDeleteButton}
                 onPress={() => {
                   setShowCheckoutModal(false);
-                  setNotice("Thông tin đơn hàng đã sẵn sàng để kết nối API");
+                  setNotice(
+                    "Thông tin đơn hàng đã sẵn sàng để kết nối API",
+                  );
                 }}
               >
-                <Text style={styles.modalDeleteText}>{t("Đã hiểu")}</Text>
+                <Text style={styles.modalDeleteText}>
+                  {t("Đã hiểu")}
+                </Text>
               </Pressable>
             </View>
           </View>
@@ -533,9 +828,17 @@ export default function CartScreen() {
 /* ================================================= */
 /*                      STYLES                       */
 /* ================================================= */
+
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f5f5f5" },
-  contentScroll: { flex: 1 },
+  container: {
+    flex: 1,
+    backgroundColor: "#f5f5f5",
+  },
+
+  contentScroll: {
+    flex: 1,
+  },
+
   header: {
     backgroundColor: "red",
     paddingHorizontal: 28,
@@ -546,6 +849,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     gap: 20,
   },
+
   phoneHeader: {
     backgroundColor: "red",
     paddingHorizontal: 12,
@@ -556,42 +860,83 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     gap: 8,
   },
+
   brandRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
     flexShrink: 1,
   },
-  logoImage: { width: 65, height: 65, borderRadius: 8 },
-  phoneLogoImage: { width: 48, height: 48, borderRadius: 7 },
-  brandCopy: { flexShrink: 1 },
-  logoText: { color: "#ffffff", fontSize: 24, fontWeight: "800" },
-  headerSubtitle: { color: "#ffe5e5", fontSize: 12, marginTop: 3 },
-  headerActions: { flexDirection: "row", alignItems: "center", gap: 20 },
+
+  logoImage: {
+    width: 65,
+    height: 65,
+    borderRadius: 8,
+  },
+
+  phoneLogoImage: {
+    width: 48,
+    height: 48,
+    borderRadius: 7,
+  },
+
+  brandCopy: {
+    flexShrink: 1,
+  },
+
+  logoText: {
+    color: "#ffffff",
+    fontSize: 24,
+    fontWeight: "800",
+  },
+
+  headerSubtitle: {
+    color: "#ffe5e5",
+    fontSize: 12,
+    marginTop: 3,
+  },
+
+  headerActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 20,
+  },
+
   homeIconButton: {
     alignItems: "center",
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 10,
   },
+
   headerAction: {
     alignItems: "center",
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 10,
   },
-  phoneHeaderAction: { paddingHorizontal: 6, paddingVertical: 6 },
-  headerActionCurrent: { backgroundColor: "rgba(255,255,255,0.17)" },
+
+  phoneHeaderAction: {
+    paddingHorizontal: 6,
+    paddingVertical: 6,
+  },
+
+  headerActionCurrent: {
+    backgroundColor: "rgba(255,255,255,0.17)",
+  },
+
   headerActionHover: {
     backgroundColor: "rgba(255,255,255,0.16)",
     transform: [{ scale: 1.04 }],
   },
+
   headerActionText: {
     color: "#ffffff",
     fontSize: 11,
     marginTop: 4,
     fontWeight: "500",
   },
+
   desktopContent: {
     paddingHorizontal: 24,
     paddingTop: 26,
@@ -600,13 +945,20 @@ const styles = StyleSheet.create({
     width: "100%",
     alignSelf: "center",
   },
-  phoneContent: { paddingHorizontal: 12, paddingTop: 18, paddingBottom: 24 },
+
+  phoneContent: {
+    paddingHorizontal: 12,
+    paddingTop: 18,
+    paddingBottom: 24,
+  },
+
   pageHeading: {
     flexDirection: "row",
     alignItems: "center",
     marginBottom: 22,
     gap: 12,
   },
+
   headingIcon: {
     width: 48,
     height: 48,
@@ -617,11 +969,42 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  headingCopy: { flex: 1 },
-  pageTitle: { fontSize: 28, fontWeight: "800", color: "#222" },
-  phonePageTitle: { fontSize: 22, fontWeight: "800", color: "#222" },
-  pageSubtitle: { fontSize: 13, color: "#777", marginTop: 4 },
-  cartLayout: { flexDirection: "row", alignItems: "flex-start", gap: 18 },
+
+  headingCopy: {
+    flex: 1,
+  },
+
+  pageTitle: {
+    fontSize: 28,
+    fontWeight: "800",
+    color: "#222",
+  },
+
+  phonePageTitle: {
+    fontSize: 22,
+    fontWeight: "800",
+    color: "#222",
+  },
+
+  pageSubtitle: {
+    fontSize: 13,
+    color: "#777",
+    marginTop: 4,
+  },
+
+  cartLayout: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 18,
+  },
+
+  phoneCartLayout: {
+    flexDirection: "column",
+    alignItems: "stretch",
+    gap: 14,
+    width: "100%",
+  },
+
   cartPanel: {
     flex: 1,
     minWidth: 0,
@@ -631,6 +1014,7 @@ const styles = StyleSheet.create({
     borderColor: "#e9e9e9",
     overflow: "hidden",
   },
+
   panelHeader: {
     paddingHorizontal: 20,
     paddingTop: 20,
@@ -640,15 +1024,34 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     gap: 12,
   },
+
   phonePanelHeader: {
     paddingHorizontal: 14,
     paddingTop: 16,
     paddingBottom: 13,
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
     gap: 10,
   },
-  panelTitleGroup: { flex: 1 },
-  panelTitle: { color: "#222", fontSize: 19, fontWeight: "700" },
-  panelSubtitle: { color: "#888", fontSize: 12, marginTop: 5 },
+
+  panelTitleGroup: {
+    flex: 1,
+    minWidth: 0,
+  },
+
+  panelTitle: {
+    color: "#222",
+    fontSize: 19,
+    fontWeight: "700",
+  },
+
+  panelSubtitle: {
+    color: "#888",
+    fontSize: 12,
+    marginTop: 5,
+  },
+
   selectAllButton: {
     flexDirection: "row",
     alignItems: "center",
@@ -657,8 +1060,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: 7,
     borderRadius: 8,
   },
-  selectAllHover: { backgroundColor: "#fff0f0" },
-  selectAllText: { color: "#c00", fontSize: 12, fontWeight: "600" },
+
+  selectAllHover: {
+    backgroundColor: "#fff0f0",
+  },
+
+  selectAllText: {
+    color: "#c00",
+    fontSize: 12,
+    fontWeight: "600",
+  },
+
   productRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -668,7 +1080,22 @@ const styles = StyleSheet.create({
     borderTopColor: "#eeeeee",
     gap: 12,
   },
-  checkArea: { paddingVertical: 6 },
+
+  phoneProductRow: {
+    width: "100%",
+    alignSelf: "stretch",
+    flexDirection: "row",
+    alignItems: "flex-start",
+    paddingHorizontal: 12,
+    paddingVertical: 14,
+    gap: 9,
+  },
+
+  checkArea: {
+    paddingVertical: 6,
+    flexShrink: 0,
+  },
+
   productImage: {
     width: 86,
     height: 86,
@@ -678,10 +1105,38 @@ const styles = StyleSheet.create({
     borderColor: "#eeeeee",
     justifyContent: "center",
     alignItems: "center",
+    flexShrink: 0,
   },
-  productInfo: { flex: 1, minWidth: 0, gap: 6 },
-  productName: { color: "#222", fontSize: 15, fontWeight: "700" },
-  productVariant: { color: "#888", fontSize: 12 },
+
+  phoneProductImage: {
+    width: 64,
+    height: 64,
+    borderRadius: 11,
+    flexShrink: 0,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+
+  productInfo: {
+    flex: 1,
+    minWidth: 0,
+    flexShrink: 1,
+    gap: 6,
+  },
+
+  productName: {
+    color: "#222",
+    fontSize: 15,
+    fontWeight: "700",
+    flexShrink: 1,
+  },
+
+  productVariant: {
+    color: "#888",
+    fontSize: 12,
+    flexShrink: 1,
+  },
+
   productBottom: {
     flexDirection: "row",
     alignItems: "center",
@@ -689,20 +1144,46 @@ const styles = StyleSheet.create({
     gap: 12,
     marginTop: 7,
   },
-  phoneProductBottom: { gap: 10, marginTop: 7 },
+
+  phoneProductBottom: {
+    alignItems: "flex-start",
+    flexDirection: "column",
+    gap: 10,
+    marginTop: 7,
+  },
+
   priceGroup: {
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
     flexWrap: "wrap",
   },
-  productPrice: { color: "red", fontSize: 16, fontWeight: "800" },
+
+  productPrice: {
+    color: "red",
+    fontSize: 16,
+    fontWeight: "800",
+  },
+
   originalPrice: {
     color: "#999",
     fontSize: 12,
     textDecorationLine: "line-through",
   },
-  quantityAndRemove: { flexDirection: "row", alignItems: "center", gap: 12 },
+
+  quantityAndRemove: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+
+  phoneQuantityAndRemove: {
+    alignSelf: "stretch",
+    justifyContent: "space-between",
+    flexDirection: "row",
+    alignItems: "center",
+  },
+
   quantityControl: {
     flexDirection: "row",
     alignItems: "center",
@@ -712,6 +1193,7 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     height: 32,
   },
+
   quantityButton: {
     width: 31,
     height: 30,
@@ -719,6 +1201,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     backgroundColor: "#fafafa",
   },
+
   quantityText: {
     minWidth: 30,
     textAlign: "center",
@@ -726,13 +1209,19 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "600",
   },
+
   removeButton: {
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
     padding: 5,
   },
-  removeText: { color: "#c62828", fontSize: 12 },
+
+  removeText: {
+    color: "#c62828",
+    fontSize: 12,
+  },
+
   continueShopping: {
     flexDirection: "row",
     alignItems: "center",
@@ -742,8 +1231,17 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: "#eeeeee",
   },
-  continueShoppingHover: { backgroundColor: "#fff8f8" },
-  continueShoppingText: { color: "red", fontSize: 13, fontWeight: "600" },
+
+  continueShoppingHover: {
+    backgroundColor: "#fff8f8",
+  },
+
+  continueShoppingText: {
+    color: "red",
+    fontSize: 13,
+    fontWeight: "600",
+  },
+
   summaryPanel: {
     width: 320,
     backgroundColor: "#ffffff",
@@ -752,12 +1250,19 @@ const styles = StyleSheet.create({
     borderColor: "#e9e9e9",
     padding: 20,
   },
+
+  phoneSummaryPanel: {
+    width: "100%",
+    padding: 16,
+  },
+
   summaryTitle: {
     color: "#222",
     fontSize: 19,
     fontWeight: "800",
     marginBottom: 20,
   },
+
   summaryLine: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -765,21 +1270,69 @@ const styles = StyleSheet.create({
     gap: 12,
     marginBottom: 15,
   },
-  summaryLabel: { color: "#666", fontSize: 12, flex: 1 },
-  summaryValue: { color: "#333", fontSize: 13, fontWeight: "600" },
-  savingsLabel: { color: "#16834a", fontSize: 12, flex: 1 },
-  savingsValue: { color: "#16834a", fontSize: 13, fontWeight: "600" },
-  freeShipping: { color: "#16834a", fontSize: 13, fontWeight: "700" },
-  summaryDivider: { height: 1, backgroundColor: "#eeeeee", marginVertical: 5 },
+
+  summaryLabel: {
+    color: "#666",
+    fontSize: 12,
+    flex: 1,
+  },
+
+  summaryValue: {
+    color: "#333",
+    fontSize: 13,
+    fontWeight: "600",
+  },
+
+  savingsLabel: {
+    color: "#16834a",
+    fontSize: 12,
+    flex: 1,
+  },
+
+  savingsValue: {
+    color: "#16834a",
+    fontSize: 13,
+    fontWeight: "600",
+  },
+
+  freeShipping: {
+    color: "#16834a",
+    fontSize: 13,
+    fontWeight: "700",
+  },
+
+  summaryDivider: {
+    height: 1,
+    backgroundColor: "#eeeeee",
+    marginVertical: 5,
+  },
+
   totalLine: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     marginTop: 13,
   },
-  totalLabel: { color: "#222", fontSize: 15, fontWeight: "700" },
-  totalValue: { color: "red", fontSize: 21, fontWeight: "800" },
-  vatNote: { color: "#999", fontSize: 11, textAlign: "right", marginTop: 5 },
+
+  totalLabel: {
+    color: "#222",
+    fontSize: 15,
+    fontWeight: "700",
+  },
+
+  totalValue: {
+    color: "red",
+    fontSize: 21,
+    fontWeight: "800",
+  },
+
+  vatNote: {
+    color: "#999",
+    fontSize: 11,
+    textAlign: "right",
+    marginTop: 5,
+  },
+
   deliveryNotice: {
     flexDirection: "row",
     alignItems: "center",
@@ -790,9 +1343,23 @@ const styles = StyleSheet.create({
     marginTop: 19,
     marginBottom: 17,
   },
-  deliveryCopy: { flex: 1 },
-  deliveryTitle: { color: "#333", fontSize: 12, fontWeight: "700" },
-  deliveryDescription: { color: "#888", fontSize: 11, marginTop: 3 },
+
+  deliveryCopy: {
+    flex: 1,
+  },
+
+  deliveryTitle: {
+    color: "#333",
+    fontSize: 12,
+    fontWeight: "700",
+  },
+
+  deliveryDescription: {
+    color: "#888",
+    fontSize: 11,
+    marginTop: 3,
+  },
+
   checkoutButton: {
     flexDirection: "row",
     alignItems: "center",
@@ -803,12 +1370,22 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     paddingHorizontal: 12,
   },
+
   checkoutButtonHover: {
     backgroundColor: "#d90000",
     transform: [{ scale: 1.02 }],
   },
-  checkoutDisabled: { opacity: 0.45 },
-  checkoutButtonText: { color: "#ffffff", fontSize: 13, fontWeight: "800" },
+
+  checkoutDisabled: {
+    opacity: 0.45,
+  },
+
+  checkoutButtonText: {
+    color: "#ffffff",
+    fontSize: 13,
+    fontWeight: "800",
+  },
+
   secureNote: {
     flexDirection: "row",
     alignItems: "center",
@@ -816,7 +1393,12 @@ const styles = StyleSheet.create({
     gap: 6,
     marginTop: 14,
   },
-  secureText: { color: "#777", fontSize: 11 },
+
+  secureText: {
+    color: "#777",
+    fontSize: 11,
+  },
+
   emptyState: {
     alignItems: "center",
     paddingHorizontal: 24,
@@ -824,6 +1406,7 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: "#eeeeee",
   },
+
   emptyIcon: {
     width: 78,
     height: 78,
@@ -833,12 +1416,14 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginBottom: 14,
   },
+
   emptyTitle: {
     color: "#333",
     fontSize: 17,
     fontWeight: "800",
     textAlign: "center",
   },
+
   emptyDescription: {
     color: "#888",
     fontSize: 12,
@@ -847,6 +1432,7 @@ const styles = StyleSheet.create({
     marginTop: 7,
     marginBottom: 18,
   },
+
   primaryButton: {
     flexDirection: "row",
     alignItems: "center",
@@ -857,11 +1443,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: 17,
     paddingVertical: 12,
   },
+
   primaryButtonHover: {
     backgroundColor: "#d90000",
     transform: [{ scale: 1.02 }],
   },
-  primaryButtonText: { color: "#ffffff", fontSize: 13, fontWeight: "700" },
+
+  primaryButtonText: {
+    color: "#ffffff",
+    fontSize: 13,
+    fontWeight: "700",
+  },
+
   footerNote: {
     textAlign: "center",
     color: "#999",
@@ -869,6 +1462,7 @@ const styles = StyleSheet.create({
     marginTop: 22,
     marginBottom: 6,
   },
+
   modalBackdrop: {
     position: "absolute",
     top: 0,
@@ -881,6 +1475,7 @@ const styles = StyleSheet.create({
     padding: 20,
     zIndex: 1000,
   },
+
   modalBackdropTouch: {
     position: "absolute",
     top: 0,
@@ -888,6 +1483,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
   },
+
   modalCard: {
     width: "100%",
     maxWidth: 420,
@@ -901,6 +1497,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 8 },
     elevation: 8,
   },
+
   modalIcon: {
     width: 58,
     height: 58,
@@ -910,13 +1507,18 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginBottom: 14,
   },
-  modalSuccessIcon: { backgroundColor: "#eaf7ef" },
+
+  modalSuccessIcon: {
+    backgroundColor: "#eaf7ef",
+  },
+
   modalTitle: {
     color: "#222",
     fontSize: 20,
     fontWeight: "800",
     textAlign: "center",
   },
+
   modalMessage: {
     color: "#666",
     fontSize: 14,
@@ -924,12 +1526,14 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginTop: 10,
   },
+
   modalActions: {
     flexDirection: "row",
     alignSelf: "stretch",
     gap: 10,
     marginTop: 22,
   },
+
   modalCancelButton: {
     flex: 1,
     minHeight: 44,
@@ -940,7 +1544,13 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     paddingHorizontal: 10,
   },
-  modalCancelText: { color: "#444", fontSize: 14, fontWeight: "700" },
+
+  modalCancelText: {
+    color: "#444",
+    fontSize: 14,
+    fontWeight: "700",
+  },
+
   modalDeleteButton: {
     flex: 1,
     minHeight: 44,
@@ -950,7 +1560,13 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     paddingHorizontal: 10,
   },
-  modalDeleteText: { color: "#fff", fontSize: 14, fontWeight: "700" },
+
+  modalDeleteText: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "700",
+  },
+
   toast: {
     position: "absolute",
     top: 18,
@@ -974,5 +1590,11 @@ const styles = StyleSheet.create({
     elevation: 5,
     zIndex: 1100,
   },
-  toastText: { flex: 1, color: "#333", fontSize: 13, fontWeight: "600" },
+
+  toastText: {
+    flex: 1,
+    color: "#333",
+    fontSize: 13,
+    fontWeight: "600",
+  },
 });
