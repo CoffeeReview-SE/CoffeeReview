@@ -141,6 +141,18 @@ function Sidebar({
       page: "category_management",
     },
     {
+      label: "Tồn kho",
+      icon: "file-tray-stacked-outline" as const,
+      route: "/stock_inventory",
+      page: "stock_inventory",
+    },
+    {
+      label: "Nhập xuất kho",
+      icon: "swap-vertical-outline" as const,
+      route: "/stock_movements",
+      page: "stock_movements",
+    },
+    {
       label: "Quản lý khách hàng",
       icon: "person-outline" as const,
       route: "/customer_management",

@@ -48,6 +48,8 @@ function Sidebar({ width, active }: { width: number; active: Tab }) {
     ["Quản lý đơn hàng", "cart-outline", "/order_management", null],
     ["Quản lý sản phẩm", "cube-outline", "/product_management", "products"],
     ["Quản lý danh mục", "grid-outline", "/category_management", "categories"],
+    ["Tồn kho", "file-tray-stacked-outline", "/stock_inventory", null],
+    ["Nhập xuất kho", "swap-vertical-outline", "/stock_movements", null],
     ["Quản lý khách hàng", "person-outline", "/customer_management", null],
   ] as const;
 

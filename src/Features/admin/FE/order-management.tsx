@@ -269,6 +269,16 @@ function Sidebar({ width, activePage, onNavigate }: SidebarProps) {
       page: "category_management",
     },
     {
+      label: "Tồn kho",
+      icon: "file-tray-stacked-outline" as const,
+      page: "stock_inventory",
+    },
+    {
+      label: "Nhập xuất kho",
+      icon: "swap-vertical-outline" as const,
+      page: "stock_movements",
+    },
+    {
       label: "Quản lý khách hàng",
       icon: "person-outline" as const,
       page: "customer_management",
@@ -489,13 +499,15 @@ export default function OrderManagement() {
       main_Admin: "/main_Admin",
       product_management: "/product_management",
       category_management: "/category_management",
+      stock_inventory: "/stock_inventory",
+      stock_movements: "/stock_movements",
       customer_management: "/customer_management",
     } as const;
 
     const route = routes[page as keyof typeof routes];
 
     if (route) {
-      router.push(route);
+      router.push(route as never);
       return;
     }
 

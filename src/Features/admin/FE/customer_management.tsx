@@ -189,6 +189,8 @@ function Sidebar({ width }: { width: number }) {
     ["Quản lý đơn hàng", "cart-outline", "/order_management"],
     ["Quản lý sản phẩm", "cube-outline", "/product_management"],
     ["Quản lý danh mục", "grid-outline", "/category_management"],
+    ["Tồn kho", "file-tray-stacked-outline", "/stock_inventory"],
+    ["Nhập xuất kho", "swap-vertical-outline", "/stock_movements"],
     ["Quản lý khách hàng", "people-outline", "/customer_management"],
   ] as const;
   return (
@@ -211,17 +213,17 @@ function Sidebar({ width }: { width: number }) {
           <React.Fragment key={route}>
             {index === 1 && <Text style={styles.menuHeading}>QUẢN LÝ</Text>}
             <Pressable
-              style={[styles.menuLink, index === 4 && styles.menuActive]}
-              onPress={() => index !== 4 && router.push(route as never)}
+              style={[styles.menuLink, index === 6 && styles.menuActive]}
+              onPress={() => index !== 6 && router.push(route as never)}
             >
               <Ionicons
                 name={icon}
                 size={19}
-                color={index === 4 ? "#fff" : "#ed263d"}
+                color={index === 6 ? "#fff" : "#ed263d"}
               />
               <Text
                 numberOfLines={1}
-                style={[styles.menuText, index === 4 && styles.menuTextActive]}
+                style={[styles.menuText, index === 6 && styles.menuTextActive]}
               >
                 {label}
               </Text>
