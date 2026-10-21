@@ -1,4 +1,3 @@
-
 import React from "react";
 import {
   Image,
@@ -40,7 +39,7 @@ function HoverButton({ children, style, hoverStyle, ...props }: any) {
 /*                  KIỂU DỮ LIỆU                    */
 /* ================================================= */
 
-type CartProduct = CartItem;
+type CartProduct = CartItem & { stock?: number }; // Thêm trường tồn kho để kiểm tra theo Activity
 
 const formatPrice = (price: number) =>
   `${price.toLocaleString("vi-VN")}đ`;
@@ -56,8 +55,8 @@ export default function CartScreen() {
   const router = useRouter();
   const { t } = useLanguage();
 
-  // Khởi tạo danh sách 5 sản phẩm mẫu khi màn hình được mount.
-  const { items: products, itemCount, updateQuantity, removeItem, clear } = useCart();
+  const { items, itemCount, updateQuantity, removeItem, clear } = useCart();
+  const products = items as CartProduct[];
   const [selectedIds, setSelectedIds] = React.useState<string[] | null>(null);
 
   const [pendingDelete, setPendingDelete] =
@@ -98,8 +97,22 @@ export default function CartScreen() {
   /*                 XỬ LÝ SẢN PHẨM                   */
   /* ================================================= */
 
-  const changeQuantity = (id: string, amount: number) => {
-    updateQuantity(id, amount);
+  // Cập nhật theo Nhánh ngoại lệ Activity: Kiểm tra số lượng hợp lệ và đủ tồn kho hay không
+  const changeQuantity = (product: CartProduct, amount: number) => {
+    const newQty = product.quantity + amount;
+    const maxStock = product.stock ?? 10; // Mặc định tồn kho giả định nếu không có sẵn
+
+    if (newQty <= 0) {
+      setPendingDelete(product);
+      return;
+    }
+
+    if (newQty > maxStock) {
+      setNotice(t("Số lượng không hợp lệ hoặc không đủ hàng trong kho!"));
+      return; // Quay lại bước nhập/kiểm tra (giữ nguyên số lượng cũ)
+    }
+
+    updateQuantity(product.id, amount);
   };
 
   const removeProduct = (id: string) => {
@@ -365,7 +378,7 @@ export default function CartScreen() {
                         <View style={styles.quantityControl}>
                           <Pressable
                             onPress={() =>
-                              changeQuantity(product.id, -1)
+                              changeQuantity(product, -1)
                             }
                             style={styles.quantityButton}
                             accessibilityLabel={t("Giảm số lượng")}
@@ -383,7 +396,7 @@ export default function CartScreen() {
 
                           <Pressable
                             onPress={() =>
-                              changeQuantity(product.id, 1)
+                              changeQuantity(product, 1)
                             }
                             style={styles.quantityButton}
                             accessibilityLabel={t("Tăng số lượng")}
@@ -420,7 +433,7 @@ export default function CartScreen() {
               );
             })}
 
-            {/* GIỎ HÀNG TRỐNG */}
+            {/* GIỎ HÀNG TRỐNG (Khớp nhánh kết thúc nhánh khi giỏ hàng không còn sản phẩm) */}
 
             {products.length === 0 && (
               <View style={styles.emptyState}>
@@ -608,14 +621,14 @@ export default function CartScreen() {
         </Text>
       </ScrollView>
 
-      {/* THÔNG BÁO THAO TÁC */}
+      {/* THÔNG BÁO THAO TÁC / NGOẠI LỆ */}
 
       {!!notice && (
         <View style={styles.toast}>
           <Ionicons
-            name="checkmark-circle"
+            name="alert-circle-outline"
             size={19}
-            color="#16834a"
+            color="#c62828"
           />
 
           <Text style={styles.toastText}>{notice}</Text>
@@ -892,13 +905,6 @@ const styles = StyleSheet.create({
     gap: 20,
   },
 
-  homeIconButton: {
-    alignItems: "center",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 10,
-  },
-
   headerAction: {
     alignItems: "center",
     paddingHorizontal: 8,
@@ -909,10 +915,6 @@ const styles = StyleSheet.create({
   phoneHeaderAction: {
     paddingHorizontal: 6,
     paddingVertical: 6,
-  },
-
-  headerActionCurrent: {
-    backgroundColor: "rgba(255,255,255,0.17)",
   },
 
   headerActionHover: {
@@ -1572,7 +1574,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 9,
     borderWidth: 1,
-    borderColor: "#d9eee1",
+    borderColor: "#f5c6cb",
     shadowColor: "#000",
     shadowOpacity: 0.12,
     shadowRadius: 10,
@@ -1583,7 +1585,7 @@ const styles = StyleSheet.create({
 
   toastText: {
     flex: 1,
-    color: "#333",
+    color: "#c62828",
     fontSize: 13,
     fontWeight: "600",
   },

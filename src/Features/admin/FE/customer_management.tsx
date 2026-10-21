@@ -514,7 +514,9 @@ export default function CustomerManagement() {
       name: editName.trim(),
       phone: editPhone.trim(),
     }));
+    // Thông báo kết quả cập nhật theo nhánh cuối của activity diagram.
     setDialog(null);
+    Alert.alert("Cập nhật thành công", "Đã lưu thay đổi hồ sơ khách hàng.");
   }
   // Đổi trạng thái khóa/mở khóa và ghi lý do thành một sự kiện đầu lịch sử.
   function saveStatus() {
@@ -537,6 +539,10 @@ export default function CustomerManagement() {
     }));
     setReason("");
     setDialog(null);
+    Alert.alert(
+      "Cập nhật thành công",
+      `Đã ${next === "Đã khóa" ? "khóa" : "mở khóa"} tài khoản ${selected.name}.`,
+    );
   }
 
   // Bố cục thay đổi theo độ rộng: danh sách dạng thẻ trên mobile, dạng bảng trên màn hình lớn.
@@ -770,7 +776,8 @@ export default function CustomerManagement() {
                   <View style={styles.headingText}>
                     <Text style={styles.headingTitle}>Quản lý khách hàng</Text>
                     <Text style={styles.headingDescription}>
-                      Theo dõi tài khoản, lịch sử mua hàng và tình trạng khách hàng.
+                      Theo dõi tài khoản, lịch sử mua hàng và tình trạng khách
+                      hàng.
                     </Text>
                   </View>
                 </View>
@@ -880,8 +887,8 @@ export default function CustomerManagement() {
                 <View style={styles.pagination}>
                   <Text style={styles.paginationText}>
                     Hiển thị {filtered.length ? (page - 1) * 5 + 1 : 0}–
-                    {Math.min(page * 5, filtered.length)} trong {filtered.length}{" "}
-                    khách hàng
+                    {Math.min(page * 5, filtered.length)} trong{" "}
+                    {filtered.length} khách hàng
                   </Text>
                   <View style={styles.pageControls}>
                     <Pressable

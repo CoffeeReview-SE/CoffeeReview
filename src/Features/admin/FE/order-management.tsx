@@ -1,4 +1,3 @@
-
 import React, { useMemo, useState } from "react";
 import {
   Alert,
@@ -400,6 +399,19 @@ export default function OrderManagement() {
   // Thu nhỏ sidebar trên màn hình hẹp
   const sidebarWidth = screenWidth <= 768 ? 220 : 255;
 
+  // Tổng chiều rộng các cột trong bảng: 42 + 180 + 145 + 115
+  // + 120 + 120 + 135 + 155 + 80 = 1092 px.
+  const tableWidth = 1092;
+
+  // Vùng hiển thị còn lại sau sidebar và lề trái/phải của nội dung.
+  // Màn hình rộng: bảng giữ đúng chiều rộng cột và được căn giữa.
+  // Màn hình hẹp: khung bảng vừa vùng hiển thị, có thể cuộn ngang.
+  const availableContentWidth = Math.max(
+    0,
+    screenWidth - sidebarWidth - 48,
+  );
+  const ordersViewportWidth = Math.min(tableWidth, availableContentWidth);
+
   // ===== STATE QUẢN LÝ TÌM KIẾM VÀ BỘ LỌC =====
   const [keyword, setKeyword] = useState("");
   const [status, setStatus] = useState(statusOptions[0]);
@@ -409,13 +421,19 @@ export default function OrderManagement() {
   // ===== STATE QUẢN LÝ CHECKBOX =====
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
+  // ===== STATE CẬP NHẬT TRẠNG THÁI ĐƠN HÀNG =====
+  const [displayOrders, setDisplayOrders] = useState<Order[]>(orders);
+  const [statusChangeId, setStatusChangeId] = useState<string | null>(null);
+  const [newStatus, setNewStatus] = useState(statusOptions[1]);
+  const orderToUpdate = displayOrders.find((item) => item.id === statusChangeId) ?? null;
+
   // ===== LẤY DANH SÁCH ĐƠN HÀNG SAU KHI LỌC =====
   // Tìm theo mã đơn, tên khách hàng, số điện thoại.
   // Lọc trạng thái, phương thức thanh toán và sắp xếp ngày đặt.
   const filteredOrders = useMemo(() => {
     const normalizedKeyword = keyword.trim().toLowerCase();
 
-    return orders
+    return displayOrders
       .filter((order) =>
         `${order.id} ${order.customer} ${order.phone}`
           .toLowerCase()
@@ -435,7 +453,7 @@ export default function OrderManagement() {
           ? b.date.localeCompare(a.date)
           : a.date.localeCompare(b.date),
       );
-  }, [keyword, status, payment, dateOrder]);
+  }, [keyword, status, payment, dateOrder, displayOrders]);
 
   // ===== CHỌN HOẶC BỎ CHỌN MỘT ĐƠN HÀNG =====
   function toggleOrder(id: string) {
@@ -472,10 +490,33 @@ export default function OrderManagement() {
     }
   }
 
+  // ===== XỬ LÝ THAY ĐỔI TRẠNG THÁI ĐƠN HÀNG =====
+  // Theo activity diagram: chọn đơn → cập nhật trạng thái → kiểm tra dữ liệu → lưu → thông báo.
+  function openStatusChange(id: string) {
+    const order = displayOrders.find((item) => item.id === id);
+    if (!order) return;
+    setStatusChangeId(id);
+    setNewStatus(order.status === "Đã hủy" ? statusOptions[1] : order.status);
+  }
+
+  function saveStatusChange() {
+    if (!orderToUpdate || !newStatus) return;
+    setDisplayOrders((current) =>
+      current.map((order) =>
+        order.id === orderToUpdate.id ? { ...order, status: newStatus } : order,
+      ),
+    );
+    setStatusChangeId(null);
+    Alert.alert(
+      "Cập nhật thành công",
+      `Đơn hàng #${orderToUpdate.id} đã chuyển sang trạng thái "${newStatus}".`,
+    );
+  }
+
   // ===== XỬ LÝ NÚT THAO TÁC ĐƠN HÀNG =====
   // Hiện tại hiển thị thông tin cơ bản; có thể thay bằng màn hình chi tiết.
   function viewOrder(id: string) {
-    const order = orders.find((item) => item.id === id);
+    const order = displayOrders.find((item) => item.id === id);
 
     if (!order) return;
 
@@ -487,7 +528,15 @@ export default function OrderManagement() {
         `Trạng thái: ${order.status}\n` +
         `Thanh toán: ${order.payment}\n` +
         `Thời gian đặt: ${order.date}`,
-      [{ text: "Đóng" }],
+      [
+        { text: "Đóng", style: "cancel" },
+        order.status !== "Hoàn thành" && order.status !== "Đã hủy"
+          ? {
+              text: "Cập nhật trạng thái",
+              onPress: () => openStatusChange(order.id),
+            }
+          : null,
+      ].filter(Boolean) as { text: string; onPress?: () => void }[],
     );
   }
 
@@ -528,8 +577,13 @@ export default function OrderManagement() {
         style={[
           styles.page,
           {
-            marginLeft: sidebarWidth,
-            width: Math.max(0, screenWidth - sidebarWidth),
+            // Cố định vùng nội dung từ cạnh phải sidebar đến sát mép màn hình.
+            // Không cộng marginLeft vào một width đã tính sẵn, tránh tràn ngang.
+            position: "absolute",
+            left: sidebarWidth,
+            right: 0,
+            top: 0,
+            bottom: 0,
           },
         ]}
       >
@@ -618,12 +672,21 @@ export default function OrderManagement() {
           </View>
 
           {/* Bảng đơn hàng: dùng ScrollView ngang thay cho <table> */}
-          <View style={styles.orders}>
+          <View
+            style={[
+              styles.orders,
+              {
+                width: ordersViewportWidth,
+                alignSelf: "center",
+              },
+            ]}
+          >
             <ScrollView
               horizontal
-              showsHorizontalScrollIndicator
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ width: tableWidth }}
             >
-              <View>
+              <View style={{ width: tableWidth }}>
                 {/* Tiêu đề bảng */}
                 <View style={[styles.tableRow, styles.tableHeader]}>
                   <View style={[styles.cell, styles.checkboxCell]}>
@@ -844,6 +907,68 @@ export default function OrderManagement() {
           </View>
         </ScrollView>
       </View>
+
+      {/* Modal cập nhật trạng thái đơn hàng theo activity diagram */}
+      <Modal
+        visible={statusChangeId !== null}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setStatusChangeId(null)}
+      >
+        <Pressable
+          style={styles.modalOverlay}
+          onPress={() => setStatusChangeId(null)}
+        >
+          <Pressable style={styles.modalContent} onPress={() => {}}>
+            <Text style={styles.modalTitle}>Cập nhật trạng thái đơn hàng</Text>
+            <Text style={styles.modalDescription}>
+              {orderToUpdate
+                ? `Đơn hàng #${orderToUpdate.id} · ${orderToUpdate.customer}`
+                : ""}
+            </Text>
+
+            {statusOptions
+              .filter((option) => option !== statusOptions[0])
+              .map((option) => (
+                <Pressable
+                  key={option}
+                  style={[
+                    styles.optionItem,
+                    newStatus === option && styles.optionSelected,
+                  ]}
+                  onPress={() => setNewStatus(option)}
+                >
+                  <Text
+                    style={[
+                      styles.optionText,
+                      newStatus === option && styles.optionSelectedText,
+                    ]}
+                  >
+                    {option}
+                  </Text>
+                  {newStatus === option && (
+                    <Ionicons name="checkmark" size={19} color="#e52332" />
+                  )}
+                </Pressable>
+              ))}
+
+            <View style={styles.statusActions}>
+              <Pressable
+                style={styles.closeButton}
+                onPress={() => setStatusChangeId(null)}
+              >
+                <Text style={styles.closeButtonText}>Hủy</Text>
+              </Pressable>
+              <Pressable
+                style={styles.saveStatusButton}
+                onPress={saveStatusChange}
+              >
+                <Text style={styles.closeButtonText}>Lưu thay đổi</Text>
+              </Pressable>
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </View>
   );
 }
@@ -965,6 +1090,7 @@ const styles = StyleSheet.create({
   page: {
     flex: 1,
     height: "100%",
+    minWidth: 0,
   },
   header: {
     height: 70,
@@ -1289,7 +1415,7 @@ const styles = StyleSheet.create({
 
   // Thông báo không có dữ liệu
   emptyState: {
-    width: 1100,
+    width: "100%",
     minHeight: 160,
     alignItems: "center",
     justifyContent: "center",
@@ -1298,5 +1424,26 @@ const styles = StyleSheet.create({
   emptyText: {
     color: "#758198",
     fontSize: 13,
+  },
+
+  // Modal cập nhật trạng thái
+  modalDescription: {
+    marginBottom: 12,
+    color: "#758198",
+    fontSize: 12,
+  },
+  statusActions: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    gap: 10,
+    marginTop: 14,
+  },
+  saveStatusButton: {
+    minHeight: 42,
+    paddingHorizontal: 16,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#e52332",
+    borderRadius: 8,
   },
 });

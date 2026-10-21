@@ -1,4 +1,3 @@
-
 import React from "react";
 import {
   Alert,
@@ -132,7 +131,7 @@ export default function OrdersScreen() {
       return;
     }
 
-    // Chỉ cho phép hủy đơn đang chờ xác nhận.
+    // Chỉ cho phép hủy đơn đang chờ xác nhận (Nhánh ngoại lệ: Trạng thái đơn không cho phép hủy)[cite: 7]
     if (selectedOrder.status !== "Chờ xác nhận") {
       const message =
         selectedOrder.status === "Đã hủy"
@@ -148,7 +147,7 @@ export default function OrdersScreen() {
       return;
     }
 
-    // Cập nhật trạng thái sau khi khách hàng xác nhận.
+    // Hàm thực hiện ghi nhận yêu cầu hủy và cập nhật trạng thái[cite: 7]
     const confirmCancel = () => {
       setOrders((previousOrders) =>
         previousOrders.map((order) =>
@@ -167,7 +166,16 @@ export default function OrdersScreen() {
       }
     };
 
-    // Web sử dụng confirm; Android/iOS sử dụng Alert.
+    // Nhánh ngoại lệ Activity: Khách hàng không xác nhận hủy -> Giữ nguyên đơn hàng[cite: 7]
+    const handleKeepOrder = () => {
+      const message = t("Giữ nguyên đơn hàng.");
+      if (Platform.OS === "web") {
+        window.alert(message);
+      } else {
+        Alert.alert(t("Thông báo"), message);
+      }
+    };
+
     if (Platform.OS === "web") {
       const confirmed = window.confirm(
         `${t("Bạn có chắc chắn muốn hủy đơn hàng ")}${orderId}${t("?")}`,
@@ -175,6 +183,8 @@ export default function OrdersScreen() {
 
       if (confirmed) {
         confirmCancel();
+      } else {
+        handleKeepOrder(); // Khớp nhánh "Giữ nguyên đơn hàng"[cite: 7]
       }
 
       return;
@@ -187,6 +197,7 @@ export default function OrdersScreen() {
         {
           text: t("Không"),
           style: "cancel",
+          onPress: handleKeepOrder, // Khớp nhánh "Giữ nguyên đơn hàng"[cite: 7]
         },
         {
           text: t("Xác nhận hủy"),
