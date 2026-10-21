@@ -32,8 +32,28 @@ const server = createServer(async (req, res) => {
     req.url || "/",
     `http://${req.headers.host || "localhost"}`,
   ).pathname;
-  if (req.method === "GET" && path === "/health")
-    return send(res, 200, { ok: true, provider: "gemini", model });
+  if (req.method === "GET" && path === "/health") {
+    if (!apiKey)
+      return send(res, 200, { ok: true, provider: "gemini", model, aiConnected: false });
+
+    try {
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}`,
+        {
+          headers: { "x-goog-api-key": apiKey },
+          signal: AbortSignal.timeout(5000),
+        },
+      );
+      return send(res, 200, {
+        ok: true,
+        provider: "gemini",
+        model,
+        aiConnected: response.ok,
+      });
+    } catch {
+      return send(res, 200, { ok: true, provider: "gemini", model, aiConnected: false });
+    }
+  }
   if (req.method !== "POST" || path !== "/api/chat")
     return send(res, 404, { error: "Không tìm thấy endpoint." });
   if (!apiKey)

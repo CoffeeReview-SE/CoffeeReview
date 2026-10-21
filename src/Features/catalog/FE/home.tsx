@@ -13,6 +13,7 @@ import {
 
 import { Ionicons } from "@expo/vector-icons";
 import { LanguageSelector } from "@/Core/components/language-selector";
+import { AiConsultationWidget } from "@/Core/components/ai-consultation-widget";
 import { useLanguage } from "@/Core/contexts/language-context";
 
 /* ================================================= */
@@ -82,10 +83,6 @@ function PhoneLayout() {
         {/* Customer icons */}
         <View style={styles.phoneCustomerIcons}>
           <LanguageSelector />
-          <HoverButton style={styles.phoneIconItem} onPress={() => router.push("/chat")}>
-            <View style={styles.phoneIconButton}><Ionicons name="chatbubble-ellipses-outline" size={22} color="#ffffff" /></View>
-            <Text style={styles.phoneIconText}>Trợ lý AI</Text>
-          </HoverButton>
           {/* Giỏ hàng */}
           <HoverButton
             style={styles.phoneIconItem}
@@ -324,6 +321,7 @@ function PhoneLayout() {
           </View>
         </View>
       </ScrollView>
+      <AiConsultationWidget onPress={() => router.push("/chat")} />
     </View>
   );
 }
@@ -374,10 +372,6 @@ function DesktopLayout() {
         {/* Customer icons */}
         <View style={styles.customerIcons}>
           <LanguageSelector />
-          <HoverButton style={styles.iconItem} onPress={() => router.push("/chat")}>
-            <View style={styles.iconButton}><Ionicons name="chatbubble-ellipses-outline" size={22} color="#ffffff" /></View>
-            <Text style={styles.iconText}>Trợ lý AI</Text>
-          </HoverButton>
           {/* Giỏ hàng */}
           <HoverButton
             style={styles.iconItem}
@@ -589,6 +583,7 @@ function DesktopLayout() {
           </View>
         </View>
       </ScrollView>
+      <AiConsultationWidget onPress={() => router.push("/chat")} />
     </View>
   );
 }

@@ -14,6 +14,7 @@ import { Ionicons } from "@expo/vector-icons";
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 import { useRouter } from "expo-router";
 import { LanguageSelector } from "@/Core/components/language-selector";
+import { AiConsultationWidget } from "@/Core/components/ai-consultation-widget";
 import { useLanguage } from "@/Core/contexts/language-context";
 
 /* ================================================= */
@@ -168,6 +169,33 @@ export default function ProductDetail() {
         },
     ];
 
+    const specifications = [
+        { icon: "phone-portrait-outline" as const, label: "Màn hình", value: '6.1" Super Retina' },
+        { icon: "hardware-chip-outline" as const, label: "Chip", value: "A18 Bionic" },
+        { icon: "camera-outline" as const, label: "Camera", value: "Hệ thống 48MP mới" },
+        { icon: "battery-full-outline" as const, label: "Pin", value: "4820 mAh" },
+    ];
+
+    const searchBar = (
+        <View style={[styles.searchBar, isMobile && styles.searchBarMobile]}>
+            <TextInput
+                placeholder={t("Tìm kiếm sản phẩm")}
+                placeholderTextColor="#888"
+                style={[styles.searchInput, isMobile && styles.searchInputMobile]}
+            />
+            <HoverButton
+                style={[styles.searchButton, isMobile && styles.searchButtonMobile]}
+                hoverStyle={styles.buttonHover}
+            >
+                <FontAwesome6
+                    name="magnifying-glass"
+                    size={isMobile ? 16 : 18}
+                    color="#ffffff"
+                />
+            </HoverButton>
+        </View>
+    );
+
     /* ================================================= */
     /*                    RENDER                         */
     /* ================================================= */
@@ -217,42 +245,7 @@ export default function ProductDetail() {
                     </Text>
                 </Pressable>
 
-                {/* ================================================= */}
-                {/*                      SEARCH                       */}
-                {/* ================================================= */}
-
-                <View
-                    style={[
-                        styles.searchBar,
-                        isMobile &&
-                        styles.searchBarMobile,
-                    ]}
-                >
-                    <TextInput
-                        placeholder={t("Tìm kiếm sản phẩm")}
-                        placeholderTextColor="#888"
-                        style={[
-                            styles.searchInput,
-                            isMobile &&
-                            styles.searchInputMobile,
-                        ]}
-                    />
-
-                    <HoverButton
-                        style={[
-                            styles.searchButton,
-                            isMobile &&
-                            styles.searchButtonMobile,
-                        ]}
-                        hoverStyle={styles.buttonHover}
-                    >
-                        <FontAwesome6
-                            name="magnifying-glass"
-                            size={isMobile ? 16 : 18}
-                            color="#ffffff"
-                        />
-                    </HoverButton>
-                </View>
+                {!isMobile && searchBar}
 
                 {/* ================================================= */}
                 {/*                  CUSTOMER ICONS                    */}
@@ -293,6 +286,8 @@ export default function ProductDetail() {
                         isMobile={isMobile}
                     />
                 </View>
+
+                {isMobile && searchBar}
             </View>
 
             {/* ================================================= */}
@@ -420,6 +415,24 @@ export default function ProductDetail() {
                             {t("iPhone 16e 128GB")}
                         </Text>
 
+                        <Text style={styles.tagline}>
+                            {t("The New Standard of Intelligence.")}
+                        </Text>
+
+                        <View style={styles.voicePanel}>
+                            <View style={styles.voicePanelHeading}>
+                                <Ionicons name="mic" size={15} color="#a8262d" />
+                                <Text style={styles.voicePanelTitle}>{t("GIỌNG NÓI")}</Text>
+                                <Ionicons name="chevron-up" size={15} color="#8b8b8b" />
+                            </View>
+                            <View style={styles.voiceActions}>
+                                <Pressable style={styles.voiceAction}>
+                                    <Ionicons name="play" size={12} color="#b3242b" />
+                                    <Text style={styles.voiceActionText}>{t("Nghe mô tả")}</Text>
+                                </Pressable>
+                            </View>
+                        </View>
+
                         {/* GIÁ */}
 
                         <Text
@@ -441,45 +454,19 @@ export default function ProductDetail() {
                                 styles.infoProductMobile,
                             ]}
                         >
-                            <Text
-                                style={[
-                                    styles.infoText,
-                                    isMobile &&
-                                    styles.infoTextMobile,
-                                ]}
-                            >
-                                {t('Màn hình 6.1"')}
-                            </Text>
-
-                            <Text
-                                style={[
-                                    styles.infoText,
-                                    isMobile &&
-                                    styles.infoTextMobile,
-                                ]}
-                            >
-                                Chip A18
-                            </Text>
-
-                            <Text
-                                style={[
-                                    styles.infoText,
-                                    isMobile &&
-                                    styles.infoTextMobile,
-                                ]}
-                            >
-                                Camera 48MP
-                            </Text>
-
-                            <Text
-                                style={[
-                                    styles.infoText,
-                                    isMobile &&
-                                    styles.infoTextMobile,
-                                ]}
-                            >
-                                Pin 4820 mAh
-                            </Text>
+                            {specifications.map(({ icon, label, value }) => (
+                                <View key={label} style={styles.infoRow}>
+                                    <Ionicons name={icon} size={13} color="#343434" />
+                                    <Text
+                                        style={[
+                                            styles.infoText,
+                                            isMobile && styles.infoTextMobile,
+                                        ]}
+                                    >
+                                        <Text style={styles.infoLabel}>{t(label)}:</Text> {t(value)}
+                                    </Text>
+                                </View>
+                            ))}
                         </View>
 
                         {/* ================================================= */}
@@ -487,6 +474,7 @@ export default function ProductDetail() {
                         {/* ================================================= */}
 
                         {/* Cập nhật màu đang chọn để làm nổi bật lựa chọn trong danh sách. */}
+                        <Text style={styles.optionLabel}>Màu sắc</Text>
                         <View
                             style={[
                                 styles.colorContainer,
@@ -544,6 +532,7 @@ export default function ProductDetail() {
                         {/* ================================================= */}
 
                         {/* Cập nhật dung lượng đang chọn và trạng thái hiển thị của nút. */}
+                        <Text style={styles.optionLabel}>Dung lượng</Text>
                         <View
                             style={[
                                 styles.capacityContainer,
@@ -691,7 +680,35 @@ export default function ProductDetail() {
                         </View>
                     </View>
                 </View>
+                <View style={styles.assuranceRow}>
+                    <View style={styles.assuranceItem}>
+                        <Ionicons name="car-outline" size={19} color="#9a3434" />
+                        <Text style={styles.assuranceText}>Giao hàng miễn phí</Text>
+                    </View>
+                    <View style={styles.assuranceItem}>
+                        <Ionicons name="shield-checkmark-outline" size={19} color="#9a3434" />
+                        <Text style={styles.assuranceText}>Bảo hành chính hãng 1 năm</Text>
+                    </View>
+                    <View style={styles.assuranceItem}>
+                        <Ionicons name="card-outline" size={19} color="#9a3434" />
+                        <Text style={styles.assuranceText}>Thanh toán an toàn</Text>
+                    </View>
+                </View>
+                {!isMobile && (
+                    <View style={styles.reviewBreakdown}>
+                        {[100, 82, 36, 14, 8].map((fill, index) => (
+                            <View key={index} style={styles.reviewLine}>
+                                <Text style={styles.reviewScore}>{5 - index}</Text>
+                                <Ionicons name="star" size={8} color="#b75c57" />
+                                <View style={styles.reviewTrack}>
+                                    <View style={[styles.reviewFill, { width: `${fill}%` }]} />
+                                </View>
+                            </View>
+                        ))}
+                    </View>
+                )}
             </ScrollView>
+            <AiConsultationWidget onPress={() => router.push("/chat")} />
         </View>
     );
 }
@@ -721,11 +738,11 @@ const styles = StyleSheet.create({
     },
 
     scrollContent: {
-        paddingBottom: 40,
+        paddingBottom: 90,
     },
 
     scrollContentMobile: {
-        paddingBottom: 25,
+        paddingBottom: 100,
     },
 
     /* ================================================= */
@@ -734,7 +751,6 @@ const styles = StyleSheet.create({
 
     header: {
         backgroundColor: "red",
-
         paddingHorizontal: 25,
         paddingTop: 45,
         paddingBottom: 18,
@@ -751,7 +767,6 @@ const styles = StyleSheet.create({
 
     headerMobile: {
         backgroundColor: "red",
-
         paddingHorizontal: 15,
         paddingTop: 30,
         paddingBottom: 15,
@@ -820,7 +835,6 @@ const styles = StyleSheet.create({
 
     searchBar: {
         flex: 1,
-
         height: 48,
 
         flexDirection: "row",
@@ -838,7 +852,6 @@ const styles = StyleSheet.create({
 
     searchBarMobile: {
         width: "100%",
-
         height: 44,
 
         marginTop: 15,
@@ -876,7 +889,6 @@ const styles = StyleSheet.create({
 
     searchButton: {
         width: 42,
-
         height: 42,
 
         marginRight: 3,
@@ -1036,24 +1048,24 @@ const styles = StyleSheet.create({
 
     productDetail: {
         flexDirection: "row",
-
-        gap: 60,
-
-        width: 1300,
+        gap: 24,
+        width: 760,
 
         maxWidth: "95%",
 
         alignSelf: "center",
 
-        marginTop: 50,
-
-        padding: 20,
-
+        marginTop: 22,
+        padding: 18,
+        backgroundColor: "#ffffff",
         borderWidth: 1,
-
-        borderColor: "black",
-
-        borderRadius: 15,
+        borderColor: "#eeeeee",
+        borderRadius: 16,
+        shadowColor: "#272727",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.1,
+        shadowRadius: 14,
+        elevation: 3,
 
         alignItems: "center",
 
@@ -1071,27 +1083,59 @@ const styles = StyleSheet.create({
 
         alignSelf: "center",
 
-        marginTop: 15,
-
-        padding: 10,
-
+        marginTop: 14,
+        padding: 12,
         borderWidth: 1,
-
-        borderColor: "black",
-
-        borderRadius: 12,
+        borderColor: "#eeeeee",
+        borderRadius: 14,
 
         alignItems: "stretch",
 
         justifyContent: "center",
     },
 
+    assuranceRow: {
+        width: 760,
+        maxWidth: "95%",
+        alignSelf: "center",
+        flexDirection: "row",
+        justifyContent: "space-between",
+        gap: 12,
+        paddingHorizontal: 8,
+        marginTop: 14,
+    },
+
+    assuranceItem: {
+        flex: 1,
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 6,
+    },
+
+    assuranceText: { flexShrink: 1, color: "#4c4c4c", fontSize: 10 },
+
+    reviewBreakdown: {
+        position: "absolute",
+        top: 292,
+        right: 18,
+        width: 78,
+        gap: 4,
+    },
+
+    reviewLine: { flexDirection: "row", alignItems: "center", gap: 3 },
+
+    reviewScore: { width: 8, color: "#555555", fontSize: 9 },
+
+    reviewTrack: { flex: 1, height: 4, backgroundColor: "#e7e7e7", borderRadius: 3 },
+
+    reviewFill: { height: 4, backgroundColor: "#be6a64", borderRadius: 3 },
+
     /* ================================================= */
     /*                 PRODUCT IMAGES                    */
     /* ================================================= */
 
     productImages: {
-        width: 550,
+        width: "48%",
 
         textAlign: "left" as any,
     },
@@ -1109,7 +1153,7 @@ const styles = StyleSheet.create({
 
         width: "100%",
 
-        height: 500,
+        height: 340,
 
         backgroundColor: "#F7F7F7",
 
@@ -1127,7 +1171,7 @@ const styles = StyleSheet.create({
     },
 
     mainImageMobile: {
-        height: 320,
+        height: 300,
 
         borderRadius: 10,
     },
@@ -1153,9 +1197,9 @@ const styles = StyleSheet.create({
     thumbnailList: {
         flexDirection: "row",
 
-        gap: 15,
+        gap: 8,
 
-        marginTop: 15,
+        marginTop: 8,
 
         flexWrap: "wrap",
     },
@@ -1169,9 +1213,9 @@ const styles = StyleSheet.create({
     },
 
     thumbnail: {
-        width: 90,
+        width: 56,
 
-        height: 90,
+        height: 56,
 
         borderWidth: 1,
 
@@ -1215,9 +1259,9 @@ const styles = StyleSheet.create({
     /* ================================================= */
 
     informationProduct: {
-        width: 550,
-
-        padding: 20,
+        flex: 1,
+        minWidth: 0,
+        padding: 0,
     },
 
     informationProductMobile: {
@@ -1228,40 +1272,95 @@ const styles = StyleSheet.create({
         padding: 10,
     },
 
+    tagline: {
+        color: "#414141",
+        fontSize: 15,
+        marginTop: 1,
+        marginBottom: 5,
+    },
+
+    voicePanel: {
+        backgroundColor: "#f5f5f7",
+        borderRadius: 9,
+        paddingHorizontal: 8,
+        paddingVertical: 7,
+        marginBottom: 5,
+        shadowColor: "#000000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 5,
+        elevation: 2,
+    },
+
+    voicePanelHeading: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 6,
+        marginBottom: 5,
+    },
+
+    voicePanelTitle: { flex: 1, color: "#282828", fontSize: 11, fontWeight: "700" },
+
+    voiceActions: { flexDirection: "row", alignItems: "center", gap: 4 },
+
+    voiceAction: {
+        flex: 1,
+        minHeight: 23,
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 3,
+        paddingHorizontal: 3,
+        borderRadius: 12,
+        backgroundColor: "#ffffff",
+        borderWidth: 1,
+        borderColor: "#e5e5e5",
+    },
+
+    voiceActionText: { color: "#333333", fontSize: 10, fontWeight: "500" },
+
+    ratingRow: { flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 5 },
+
+    ratingStars: { color: "#b75c57", fontSize: 12, letterSpacing: 1 },
+
+    ratingText: { color: "#777777", fontSize: 10 },
+
+    optionLabel: { color: "#333333", fontSize: 13, fontWeight: "600", marginTop: 8 },
+
     productName: {
-        fontSize: 42,
+        fontSize: 32,
 
         fontWeight: "bold",
 
-        color: "#000000",
+        color: "#a85655",
 
         margin: 0,
     },
 
     productNameMobile: {
-        fontSize: 28,
+        fontSize: 27,
 
         lineHeight: 34,
     },
 
     productPrice: {
-        fontSize: 45,
+        fontSize: 27,
 
         color: "red",
 
         fontWeight: "bold",
 
-        marginTop: 20,
+        marginTop: 8,
 
-        marginBottom: 20,
+        marginBottom: 6,
     },
 
     productPriceMobile: {
-        fontSize: 28,
+        fontSize: 26,
 
         marginTop: 12,
 
-        marginBottom: 15,
+        marginBottom: 8,
     },
 
     /* ================================================= */
@@ -1269,21 +1368,25 @@ const styles = StyleSheet.create({
     /* ================================================= */
 
     infoProduct: {
-        gap: 10,
+        gap: 5,
     },
 
     infoProductMobile: {
-        gap: 7,
+        gap: 5,
     },
 
+    infoRow: { flexDirection: "row", alignItems: "center", gap: 5 },
+
+    infoLabel: { fontWeight: "600" },
+
     infoText: {
-        fontSize: 18,
+        fontSize: 14,
 
         color: "#333333",
     },
 
     infoTextMobile: {
-        fontSize: 15,
+        fontSize: 14,
     },
 
     /* ================================================= */
@@ -1293,9 +1396,9 @@ const styles = StyleSheet.create({
     colorContainer: {
         flexDirection: "row",
 
-        gap: 15,
+        gap: 6,
 
-        marginTop: 20,
+        marginTop: 6,
 
         flexWrap: "wrap",
     },
@@ -1303,7 +1406,7 @@ const styles = StyleSheet.create({
     colorContainerMobile: {
         gap: 8,
 
-        marginTop: 18,
+        marginTop: 5,
     },
 
     colorItem: {
@@ -1313,11 +1416,11 @@ const styles = StyleSheet.create({
 
         justifyContent: "center",
 
-        gap: 10,
+        gap: 5,
 
-        paddingVertical: 10,
+        paddingVertical: 4,
 
-        paddingHorizontal: 15,
+        paddingHorizontal: 8,
 
         backgroundColor: "white",
 
@@ -1345,9 +1448,9 @@ const styles = StyleSheet.create({
     },
 
     colorCircle: {
-        width: 18,
+        width: 12,
 
-        height: 18,
+        height: 12,
 
         borderRadius: 50,
 
@@ -1385,13 +1488,13 @@ const styles = StyleSheet.create({
     },
 
     colorText: {
-        fontSize: 15,
+        fontSize: 13,
 
         color: "#000000",
     },
 
     colorTextMobile: {
-        fontSize: 13,
+        fontSize: 14,
     },
 
     /* ================================================= */
@@ -1405,9 +1508,9 @@ const styles = StyleSheet.create({
 
         justifyContent: "flex-start",
 
-        gap: 10,
+        gap: 6,
 
-        marginTop: 10,
+        marginTop: 3,
     },
 
     capacityContainerMobile: {
@@ -1417,17 +1520,18 @@ const styles = StyleSheet.create({
     },
 
     capacityItem: {
-        width: 90,
+        minWidth: 52,
 
-        paddingVertical: 7,
+        paddingVertical: 5,
+        paddingHorizontal: 8,
 
         alignItems: "center",
 
         justifyContent: "center",
 
-        borderWidth: 2,
+        borderWidth: 1,
 
-        borderColor: "black",
+        borderColor: "#d4d4d4",
 
         borderRadius: 5,
 
@@ -1447,13 +1551,13 @@ const styles = StyleSheet.create({
     },
 
     capacityText: {
-        fontSize: 15,
+        fontSize: 13,
 
         color: "black",
     },
 
     capacityTextMobile: {
-        fontSize: 13,
+        fontSize: 14,
     },
 
     capacityTextActive: {
@@ -1473,9 +1577,9 @@ const styles = StyleSheet.create({
 
         justifyContent: "flex-start",
 
-        gap: 10,
+        gap: 6,
 
-        marginTop: 10,
+        marginTop: 9,
     },
 
     buyContainerMobile: {
@@ -1489,9 +1593,9 @@ const styles = StyleSheet.create({
     },
 
     buyButton: {
-        width: 250,
+        flex: 1,
 
-        paddingVertical: 15,
+        paddingVertical: 9,
 
         borderRadius: 5,
 
@@ -1513,9 +1617,9 @@ const styles = StyleSheet.create({
     },
 
     cartButton: {
-        width: 250,
+        flex: 1,
 
-        paddingVertical: 15,
+        paddingVertical: 9,
 
         borderRadius: 5,
 
@@ -1537,9 +1641,9 @@ const styles = StyleSheet.create({
     },
 
     favoriteButton: {
-        width: 60,
+        width: 32,
 
-        height: 52,
+        height: 34,
 
         borderRadius: 5,
 
@@ -1569,7 +1673,7 @@ const styles = StyleSheet.create({
 
         fontWeight: "bold",
 
-        fontSize: 16,
+        fontSize: 11,
     },
 
     buttonTextMobile: {

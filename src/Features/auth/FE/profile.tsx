@@ -11,6 +11,7 @@ import {
 import { useRouter } from "expo-router";
 import { getCurrentUser, updateCurrentUser, UserProfile } from "../Use-cases/authService";
 import { useLanguage } from "@/Core/contexts/language-context";
+import { AiConsultationWidget } from "@/Core/components/ai-consultation-widget";
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -50,10 +51,13 @@ export default function ProfileScreen() {
     }
   };
   return (
-    <ScrollView style={s.page} contentContainerStyle={s.content}>
-      <Pressable onPress={() => router.push("/account")}>
-        <Text style={s.back}>‹ {t("Quay lại tài khoản")}</Text>
-      </Pressable>
+    <View style={s.page}>
+      <ScrollView style={s.scroll} contentContainerStyle={s.content}>
+      <View style={s.backRow}>
+        <Pressable onPress={() => router.push("/account")}>
+          <Text style={s.back}>‹ {t("Quay lại tài khoản")}</Text>
+        </Pressable>
+      </View>
       <View style={s.card}>
         <Text style={s.title}>{t("Thông tin cá nhân")}</Text>
         <Text style={s.hint}>{t("Cập nhật hồ sơ BVP Shop của bạn.")}</Text>
@@ -85,18 +89,26 @@ export default function ProfileScreen() {
           <Text style={s.buttonText}>{t("Lưu thay đổi")}</Text>
         </Pressable>
       </View>
-    </ScrollView>
+      </ScrollView>
+      <AiConsultationWidget onPress={() => router.push("/chat")} />
+    </View>
   );
 }
 const s = StyleSheet.create({
-  page: { flex: 1, backgroundColor: "#f5f5f5" },
-  content: { padding: 22, alignItems: "center" },
-  back: {
+  backRow: {
     width: "100%",
     maxWidth: 620,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 18,
+  },
+  page: { flex: 1, backgroundColor: "#f5f5f5" },
+  scroll: { flex: 1 },
+  content: { padding: 22, alignItems: "center" },
+  back: {
     color: "#d32f2f",
     fontWeight: "700",
-    marginBottom: 18,
   },
   card: {
     width: "100%",

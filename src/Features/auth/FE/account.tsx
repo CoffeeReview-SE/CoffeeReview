@@ -15,6 +15,7 @@ import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
 import { LanguageSelector } from "@/Core/components/language-selector";
+import { AiConsultationWidget } from "@/Core/components/ai-consultation-widget";
 import { useLanguage } from "@/Core/contexts/language-context";
 import {
   changeCurrentPassword,
@@ -149,20 +150,23 @@ export default function AccountScreen() {
   );
 
   return (
+    <>
     <ScrollView style={styles.page} contentContainerStyle={styles.pageContent}>
       <View style={[styles.header, isMobile && styles.headerMobile]}>
         <Pressable style={styles.brand} onPress={() => router.replace("/")}>
           <Image
             source={require("@/assets/image/logo.jpg")}
-            style={styles.logo}
+            style={[styles.logo, isMobile && styles.logoMobile]}
             resizeMode="contain"
           />
-          <Text style={styles.brandText}>{t("BVP Shop")}</Text>
+          <Text style={[styles.brandText, isMobile && styles.brandTextMobile]}>
+            {t("BVP Shop")}
+          </Text>
         </Pressable>
         {!isMobile && (
           <Text style={styles.headerCaption}>{t("Tài khoản của tôi")}</Text>
         )}
-        <View style={styles.headerActions}>
+        <View style={[styles.headerActions, isMobile && styles.headerActionsMobile]}>
           <LanguageSelector />
           <Pressable
             style={styles.homeButton}
@@ -427,6 +431,8 @@ export default function AccountScreen() {
       </View>
       <Text style={styles.footer}>© BVP Shop</Text>
     </ScrollView>
+    <AiConsultationWidget onPress={() => router.push("/chat")} />
+    </>
   );
 }
 
@@ -1223,23 +1229,32 @@ const styles = StyleSheet.create({
   page: { flex: 1, backgroundColor: "#f5f5f5" },
   pageContent: { flexGrow: 1, paddingBottom: 24 },
   header: {
-    minHeight: 76,
-    paddingHorizontal: 32,
-    paddingVertical: 14,
+    paddingHorizontal: 25,
+    paddingTop: 45,
+    paddingBottom: 18,
     backgroundColor: "red",
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+    gap: 25,
   },
-  headerMobile: { paddingHorizontal: 16, minHeight: 64 },
+  headerMobile: {
+    paddingHorizontal: 15,
+    paddingTop: 15,
+    paddingBottom: 15,
+    minHeight: 78,
+  },
   headerActions: {
     alignItems: "center",
     flexDirection: "row",
-    gap: 8,
+    gap: 25,
   },
+  headerActionsMobile: { gap: 8 },
   brand: { flexDirection: "row", alignItems: "center", gap: 9 },
-  logo: { width: 38, height: 38, borderRadius: 8 },
-  brandText: { color: "#fff", fontSize: 20, fontWeight: "800" },
+  logo: { width: 65, height: 65, borderRadius: 8 },
+  logoMobile: { width: 48, height: 48, borderRadius: 7 },
+  brandText: { color: "#fff", fontSize: 27, fontWeight: "800", marginLeft: 3 },
+  brandTextMobile: { fontSize: 22, marginLeft: 0 },
   headerCaption: { color: "#fff", fontSize: 13 },
   homeButton: {
     flexDirection: "row",

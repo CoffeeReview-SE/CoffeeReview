@@ -18,6 +18,7 @@ import {
   saveAddress,
 } from "../Use-cases/authService";
 import { useLanguage } from "@/Core/contexts/language-context";
+import { AiConsultationWidget } from "@/Core/components/ai-consultation-widget";
 
 // Tạo biểu mẫu địa chỉ rỗng; ID thật được gán khi bắt đầu thêm địa chỉ mới.
 const empty = (): Address => ({
@@ -89,10 +90,13 @@ export default function AddressesScreen() {
       },
     ]);
   return (
-    <ScrollView style={s.page} contentContainerStyle={s.content}>
-      <Pressable onPress={() => router.push("/account")}>
-        <Text style={s.back}>‹ {t("Quay lại tài khoản")}</Text>
-      </Pressable>
+    <View style={s.page}>
+      <ScrollView style={s.scroll} contentContainerStyle={s.content}>
+      <View style={s.backRow}>
+        <Pressable onPress={() => router.push("/account")}>
+          <Text style={s.back}>‹ {t("Quay lại tài khoản")}</Text>
+        </Pressable>
+      </View>
       <View style={s.heading}>
         <View style={{ flex: 1 }}>
           <Text style={s.title}>{t("Địa chỉ giao hàng")}</Text>
@@ -196,13 +200,24 @@ export default function AddressesScreen() {
           </View>
         </View>
       ))}
-    </ScrollView>
+      </ScrollView>
+      <AiConsultationWidget onPress={() => router.push("/chat")} />
+    </View>
   );
 }
 const s = StyleSheet.create({
+  backRow: {
+    width: "100%",
+    maxWidth: 620,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 18,
+  },
   page: { flex: 1, backgroundColor: "#f5f5f5" },
+  scroll: { flex: 1 },
   content: { padding: 22, alignSelf: "center", width: "100%", maxWidth: 950 },
-  back: { color: "#d32f2f", fontWeight: "700", marginBottom: 18 },
+  back: { color: "#d32f2f", fontWeight: "700" },
   heading: {
     flexDirection: "row",
     alignItems: "center",

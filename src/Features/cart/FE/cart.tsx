@@ -12,6 +12,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { LanguageSelector } from "@/Core/components/language-selector";
+import { AiConsultationWidget } from "@/Core/components/ai-consultation-widget";
 import { useLanguage } from "@/Core/contexts/language-context";
 
 /* ================================================= */
@@ -821,6 +822,7 @@ export default function CartScreen() {
           </View>
         </View>
       )}
+      <AiConsultationWidget onPress={() => router.push("/chat")} />
     </View>
   );
 }

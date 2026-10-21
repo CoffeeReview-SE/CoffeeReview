@@ -12,6 +12,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { LanguageSelector } from "@/Core/components/language-selector";
+import { AiConsultationWidget } from "@/Core/components/ai-consultation-widget";
 import { useLanguage } from "@/Core/contexts/language-context";
 
 /* ================================================= */
@@ -297,6 +298,7 @@ export default function OrdersScreen() {
           {t("BVP Shop · Cảm ơn bạn đã mua sắm cùng chúng tôi!")}
         </Text>
       </ScrollView>
+      <AiConsultationWidget onPress={() => router.push("/chat")} />
     </View>
   );
 }
