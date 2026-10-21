@@ -14,7 +14,27 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { LanguageSelector } from "@/Core/components/language-selector";
 import { AiConsultationWidget } from "@/Core/components/ai-consultation-widget";
+import { ProductCategoryPicker } from "@/Core/components/product-category-picker";
 import { useLanguage } from "@/Core/contexts/language-context";
+import { useProductCategories } from "@/Core/hooks/use-product-categories";
+import { useProducts } from "@/Core/hooks/use-products";
+
+const categoryIcon = (categoryId: string, productName = ""): React.ComponentProps<typeof Ionicons>["name"] => {
+  switch (categoryId.toUpperCase()) {
+    case "PHONE1": return "phone-portrait-outline";
+    case "LAPTOP": return "laptop-outline";
+    case "WATCH1": return "watch-outline";
+    case "ACC001": {
+      const name = productName.toLowerCase();
+      if (name.includes("ssd")) return "server-outline";
+      if (name.includes("ram")) return "albums-outline";
+      if (name.includes("cpu") || name.includes("gpu") || name.includes("rtx") || name.includes("core ultra")) return "hardware-chip-outline";
+      if (name.includes("mainboard") || name.includes("motherboard")) return "git-network-outline";
+      return "headset-outline";
+    }
+    default: return "cube-outline";
+  }
+};
 
 /* ================================================= */
 /*                 HOVER BUTTON                      */
@@ -61,7 +81,14 @@ export default function App() {
 
 function PhoneLayout() {
   const router = useRouter();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const { products, error } = useProducts(true, language);
+  const { categories } = useProductCategories(true, language);
+  const [selectedCategoryId, setSelectedCategoryId] = React.useState<string | null>(null);
+  const pricedProducts = products.filter((product) => product.price > 0);
+  const visibleProducts = selectedCategoryId
+    ? pricedProducts.filter((product) => product.categoryId === selectedCategoryId)
+    : pricedProducts;
 
   return (
     <View style={styles.phoneContainer}>
@@ -233,47 +260,12 @@ function PhoneLayout() {
         {/*                    DANH MỤC                       */}
         {/* ================================================= */}
 
-        <View style={styles.phoneCategories}>
-          {/* Tất cả */}
-          <HoverButton
-            style={[styles.phoneCategory, styles.categoryActive]}
-            hoverStyle={styles.categoryHover}
-          >
-            <Ionicons name="grid-outline" size={23} color="#ffffff" />
-
-            <Text style={styles.categoryTextActive}>{t("Tất cả")}</Text>
-          </HoverButton>
-
-          {/* Điện thoại */}
-          <HoverButton
-            style={styles.phoneCategory}
-            hoverStyle={styles.categoryHover}
-          >
-            <Ionicons name="phone-portrait-outline" size={23} color="red" />
-
-            <Text style={styles.phoneCategoryText}>{t("Điện thoại")}</Text>
-          </HoverButton>
-
-          {/* Laptop */}
-          <HoverButton
-            style={styles.phoneCategory}
-            hoverStyle={styles.categoryHover}
-          >
-            <Ionicons name="laptop-outline" size={23} color="red" />
-
-            <Text style={styles.phoneCategoryText}>{t("Laptop")}</Text>
-          </HoverButton>
-
-          {/* Phụ kiện */}
-          <HoverButton
-            style={styles.phoneCategory}
-            hoverStyle={styles.categoryHover}
-          >
-            <Ionicons name="headset-outline" size={23} color="red" />
-
-            <Text style={styles.phoneCategoryText}>{t("Phụ kiện")}</Text>
-          </HoverButton>
-        </View>
+        <ProductCategoryPicker
+          categories={categories}
+          selectedCategoryId={selectedCategoryId}
+          onSelect={setSelectedCategoryId}
+          compact
+        />
 
         {/* ================================================= */}
         {/*                  SẢN PHẨM                         */}
@@ -294,22 +286,15 @@ function PhoneLayout() {
 
           {/* Danh sách sản phẩm */}
           <View style={styles.phoneProductList}>
-            {/* Product 1 */}
-            <Pressable
+            {visibleProducts.map((product) => <Pressable
+              key={product.id}
               style={styles.phoneProductCard}
-              onPress={() => router.push("/product_detail")}
+              onPress={() => router.push({ pathname: "/product_detail", params: { productId: product.id } })}
             >
-              <Image
-                source={require("@/assets/image/16e4.jpg")}
-                style={styles.phoneProductImage}
-                resizeMode="contain"
-              />
-
-              <Text style={styles.phoneProductName}>iPhone 16e 128GB</Text>
-
-              <Text style={styles.rating}>⭐ 4.8</Text>
-
-              <Text style={styles.phonePrice}>16.990.000đ</Text>
+              <View style={[styles.phoneProductImage, styles.productPlaceholder]}><Ionicons name={categoryIcon(product.categoryId, product.name)} size={58} color="#d9273e" /></View>
+              <Text style={styles.phoneProductName} numberOfLines={2}>{product.name}</Text>
+              <Text style={styles.phonePrice}>{product.price.toLocaleString("vi-VN")} đ</Text>
+              <Text style={styles.phoneStock}>{product.stock > 0 ? `${product.stock} ${t("sản phẩm")}` : t("Hết hàng")}</Text>
 
               <HoverButton
                 style={styles.addCartButton}
@@ -317,7 +302,10 @@ function PhoneLayout() {
               >
                 <Text style={styles.addCartText}>{t("Thêm vào giỏ")}</Text>
               </HoverButton>
-            </Pressable>
+            </Pressable>)}
+            {error && products.length === 0 && <Text style={styles.productLoadError}>{t("Không tải được sản phẩm. Hãy kiểm tra kết nối máy chủ.")}</Text>}
+            {!error && products.length === 0 && <Text style={styles.productLoadError}>{t("Chưa có sản phẩm.")}</Text>}
+            {products.length > 0 && visibleProducts.length === 0 && <Text style={styles.productLoadError}>{t("Không tìm thấy sản phẩm phù hợp.")}</Text>}
           </View>
         </View>
       </ScrollView>
@@ -332,7 +320,14 @@ function PhoneLayout() {
 
 function DesktopLayout() {
   const router = useRouter();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const { products, error } = useProducts(true, language);
+  const { categories } = useProductCategories(true, language);
+  const [selectedCategoryId, setSelectedCategoryId] = React.useState<string | null>(null);
+  const pricedProducts = products.filter((product) => product.price > 0);
+  const visibleProducts = selectedCategoryId
+    ? pricedProducts.filter((product) => product.categoryId === selectedCategoryId)
+    : pricedProducts;
 
   return (
     <View style={styles.container}>
@@ -495,47 +490,11 @@ function DesktopLayout() {
         {/*                    DANH MỤC                       */}
         {/* ================================================= */}
 
-        <View style={styles.categories}>
-          {/* Tất cả */}
-          <HoverButton
-            style={[styles.category, styles.categoryActive]}
-            hoverStyle={styles.categoryHover}
-          >
-            <Ionicons name="grid-outline" size={28} color="#ffffff" />
-
-            <Text style={styles.categoryTextActive}>{t("Tất cả")}</Text>
-          </HoverButton>
-
-          {/* Điện thoại */}
-          <HoverButton
-            style={styles.category}
-            hoverStyle={styles.categoryHover}
-          >
-            <Ionicons name="phone-portrait-outline" size={28} color="red" />
-
-            <Text style={styles.categoryText}>{t("Điện thoại")}</Text>
-          </HoverButton>
-
-          {/* Laptop */}
-          <HoverButton
-            style={styles.category}
-            hoverStyle={styles.categoryHover}
-          >
-            <Ionicons name="laptop-outline" size={28} color="red" />
-
-            <Text style={styles.categoryText}>{t("Laptop")}</Text>
-          </HoverButton>
-
-          {/* Phụ kiện */}
-          <HoverButton
-            style={styles.category}
-            hoverStyle={styles.categoryHover}
-          >
-            <Ionicons name="headset-outline" size={28} color="red" />
-
-            <Text style={styles.categoryText}>{t("Phụ kiện")}</Text>
-          </HoverButton>
-        </View>
+        <ProductCategoryPicker
+          categories={categories}
+          selectedCategoryId={selectedCategoryId}
+          onSelect={setSelectedCategoryId}
+        />
 
         {/* ================================================= */}
         {/*                  SẢN PHẨM                         */}
@@ -556,22 +515,15 @@ function DesktopLayout() {
 
           {/* Danh sách sản phẩm */}
           <View style={styles.productList}>
-            {/* Product 1 */}
-            <Pressable
+            {visibleProducts.map((product) => <Pressable
+              key={product.id}
               style={styles.productCard}
-              onPress={() => router.push("/product_detail")}
+              onPress={() => router.push({ pathname: "/product_detail", params: { productId: product.id } })}
             >
-              <Image
-                source={require("@/assets/image/16e4.jpg")}
-                style={styles.productImage}
-                resizeMode="contain"
-              />
-
-              <Text style={styles.productName}>iPhone 16e 128GB</Text>
-
-              <Text style={styles.rating}>⭐ 4.8</Text>
-
-              <Text style={styles.price}>16.990.000đ</Text>
+              <View style={[styles.productImage, styles.productPlaceholder]}><Ionicons name={categoryIcon(product.categoryId, product.name)} size={72} color="#d9273e" /></View>
+              <Text style={styles.productName} numberOfLines={2}>{product.name}</Text>
+              <Text style={styles.price}>{product.price.toLocaleString("vi-VN")} đ</Text>
+              <Text style={styles.productStock}>{product.stock > 0 ? `${product.stock} ${t("sản phẩm")}` : t("Hết hàng")}</Text>
 
               <HoverButton
                 style={styles.addCartButton}
@@ -579,7 +531,10 @@ function DesktopLayout() {
               >
                 <Text style={styles.addCartText}>{t("Thêm vào giỏ")}</Text>
               </HoverButton>
-            </Pressable>
+            </Pressable>)}
+            {error && products.length === 0 && <Text style={styles.productLoadError}>{t("Không tải được sản phẩm. Hãy kiểm tra kết nối máy chủ.")}</Text>}
+            {!error && products.length === 0 && <Text style={styles.productLoadError}>{t("Chưa có sản phẩm.")}</Text>}
+            {products.length > 0 && visibleProducts.length === 0 && <Text style={styles.productLoadError}>{t("Không tìm thấy sản phẩm phù hợp.")}</Text>}
           </View>
         </View>
       </ScrollView>
@@ -968,6 +923,8 @@ const styles = StyleSheet.create({
 
   productCard: {
     width: 220,
+    minHeight: 300,
+    justifyContent: "flex-start",
 
     backgroundColor: "#ffffff",
 
@@ -996,10 +953,21 @@ const styles = StyleSheet.create({
   productImage: {
     width: "100%",
 
-    height: 180,
+    height: 160,
 
     marginBottom: 10,
   },
+
+  productPlaceholder: {
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#fff7f7",
+    borderRadius: 10,
+  },
+
+  productStock: { color: "#667085", fontSize: 13, marginBottom: 10 },
+  phoneStock: { color: "#667085", fontSize: 11, marginBottom: 8 },
+  productLoadError: { color: "#667085", paddingVertical: 16 },
 
   productName: {
     fontSize: 16,
@@ -1007,6 +975,9 @@ const styles = StyleSheet.create({
     fontWeight: "600",
 
     color: "#222",
+
+    lineHeight: 20,
+    minHeight: 40,
 
     marginBottom: 7,
   },
@@ -1392,6 +1363,8 @@ const styles = StyleSheet.create({
 
   phoneProductCard: {
     width: "48%",
+    minHeight: 270,
+    justifyContent: "flex-start",
 
     backgroundColor: "#ffffff",
 
@@ -1422,7 +1395,7 @@ const styles = StyleSheet.create({
   phoneProductImage: {
     width: "100%",
 
-    height: 130,
+    height: 118,
 
     marginBottom: 8,
   },
@@ -1433,6 +1406,9 @@ const styles = StyleSheet.create({
     fontWeight: "600",
 
     color: "#222",
+
+    lineHeight: 17,
+    minHeight: 34,
 
     marginBottom: 5,
   },

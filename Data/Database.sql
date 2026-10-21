@@ -23,6 +23,13 @@ Luu y:
 
 */
 
+-- Keep SQL Server session options compatible with indexed/persisted computed columns.
+SET ANSI_NULLS ON;
+SET ANSI_WARNINGS ON;
+SET ARITHABORT ON;
+SET QUOTED_IDENTIFIER ON;
+GO
+
 IF DB_ID(N'ElectronicCommerceDB') IS NULL
     CREATE DATABASE ElectronicCommerceDB;
 GO
@@ -34,6 +41,7 @@ DROP TABLE IF EXISTS CHI_TIET_THANH_TOAN;
 DROP TABLE IF EXISTS THANH_TOAN;
 DROP TABLE IF EXISTS CHI_TIET_PHIEU_NHAP;
 DROP TABLE IF EXISTS PHIEU_NHAP;
+DROP TABLE IF EXISTS LICH_SU_KHO;
 DROP TABLE IF EXISTS CHI_TIET_DON_HANG;
 DROP TABLE IF EXISTS DON_HANG;
 DROP TABLE IF EXISTS CHI_TIET_GIO_HANG;
@@ -137,12 +145,28 @@ CREATE TABLE TON_KHO (
     MaKho CHAR(6) NOT NULL,
     MaSP CHAR(8) NOT NULL,
     SoLuongTon INT NOT NULL CONSTRAINT DF_TON_KHO_SoLuong DEFAULT 0,
+    MucTonToiThieu INT NOT NULL CONSTRAINT DF_TON_KHO_MucTonToiThieu DEFAULT 5,
     CONSTRAINT PK_TON_KHO PRIMARY KEY (MaKho, MaSP),
     CONSTRAINT FK_TON_KHO_KHO FOREIGN KEY (MaKho)
         REFERENCES KHO(MaKho),
     CONSTRAINT FK_TON_KHO_SP FOREIGN KEY (MaSP)
         REFERENCES SAN_PHAM(MaSP),
     CONSTRAINT CK_TON_KHO_SoLuong CHECK (SoLuongTon >= 0)
+);
+GO
+
+CREATE TABLE LICH_SU_KHO (
+    MaPhieu NVARCHAR(32) NOT NULL,
+    LoaiPhieu NVARCHAR(20) NOT NULL,
+    MaSP CHAR(8) NOT NULL,
+    SoLuong INT NOT NULL,
+    DoiTac NVARCHAR(200) NOT NULL CONSTRAINT DF_LICH_SU_KHO_DoiTac DEFAULT N'',
+    GhiChu NVARCHAR(500) NOT NULL CONSTRAINT DF_LICH_SU_KHO_GhiChu DEFAULT N'',
+    NgayTao DATETIME2 NOT NULL CONSTRAINT DF_LICH_SU_KHO_NgayTao DEFAULT SYSDATETIME(),
+    CONSTRAINT PK_LICH_SU_KHO PRIMARY KEY (MaPhieu),
+    CONSTRAINT FK_LICH_SU_KHO_SAN_PHAM FOREIGN KEY (MaSP) REFERENCES SAN_PHAM(MaSP),
+    CONSTRAINT CK_LICH_SU_KHO_Loai CHECK (LoaiPhieu IN (N'Nhập kho', N'Xuất kho')),
+    CONSTRAINT CK_LICH_SU_KHO_SoLuong CHECK (SoLuong > 0)
 );
 GO
 
@@ -311,27 +335,21 @@ GO
 INSERT INTO LOAI_SAN_PHAM (MaLoai, TrangThai)
 VALUES
 ('PHONE1', 1),
-('CPU001', 1),
-('GPU001', 1),
-('MAIN01', 1),
-('RAM001', 1),
-('SSD001', 1);
+('LAPTOP', 1),
+('WATCH1', 1),
+('ACC001', 1);
 GO
 
 INSERT INTO LOAI_SAN_PHAM_NGON_NGU (MaLoai, MaNgonNgu, TenLoai, MoTa)
 VALUES
 ('PHONE1','VI',N'Điện thoại',N'Điện thoại thông minh và thiết bị di động.'),
 ('PHONE1','EN',N'Smartphone',N'Smartphones and mobile devices.'),
-('CPU001','VI',N'Bộ vi xử lý',N'CPU cho máy tính để bàn.'),
-('CPU001','EN',N'CPU',N'Processors for desktop computers.'),
-('GPU001','VI',N'Card đồ họa',N'GPU/card màn hình cho máy tính.'),
-('GPU001','EN',N'Graphics Card',N'GPUs and graphics cards for computers.'),
-('MAIN01','VI',N'Bo mạch chủ',N'Mainboard cho máy tính.'),
-('MAIN01','EN',N'Motherboard',N'Motherboards for computers.'),
-('RAM001','VI',N'RAM',N'Bộ nhớ RAM cho máy tính.'),
-('RAM001','EN',N'RAM',N'Computer memory modules.'),
-('SSD001','VI',N'Ổ cứng SSD',N'Ổ lưu trữ SSD.'),
-('SSD001','EN',N'SSD',N'Solid-state storage devices.');
+('LAPTOP','VI',N'Laptop',N'Máy tính xách tay.'),
+('LAPTOP','EN',N'Laptop',N'Portable laptop computers.'),
+('WATCH1','VI',N'Đồng hồ',N'Đồng hồ thông minh và thiết bị đeo.'),
+('WATCH1','EN',N'Watch',N'Smartwatches and wearable devices.'),
+('ACC001','VI',N'Phụ kiện',N'Phụ kiện và linh kiện công nghệ.'),
+('ACC001','EN',N'Accessories',N'Tech accessories and components.');
 GO
 
 /* 3. San pham
@@ -389,11 +407,21 @@ VALUES
 ('SP000053','PHONE1',N'Chiếc',NULL,NULL,1),
 ('SP000054','PHONE1',N'Chiếc',NULL,NULL,1),
 ('SP000055','PHONE1',N'Chiếc',NULL,NULL,1),
-('SP000007','CPU001',N'Chiếc',11990000,9590000,1),
-('SP000008','SSD001',N'Chiếc',4790000,3790000,1),
-('SP000009','GPU001',N'Chiếc',14490000,11590000,1),
-('SP000010','MAIN01',N'Chiếc',2490000,1790000,1),
-('SP000011','RAM001',N'Thanh',5490000,2690000,1);
+('SP000056','LAPTOP',N'Chiếc',22990000,19590000,1),
+('SP000057','LAPTOP',N'Chiếc',25990000,22990000,1),
+('SP000058','WATCH1',N'Chiếc',9990000,9990000,1),
+('SP000059','WATCH1',N'Chiếc',10990000,10990000,1),
+('SP000007','ACC001',N'Chiếc',11990000,9590000,1),
+('SP000008','ACC001',N'Chiếc',4790000,3790000,1),
+('SP000009','ACC001',N'Chiếc',14490000,11590000,1),
+('SP000010','ACC001',N'Chiếc',2490000,1790000,1),
+('SP000011','ACC001',N'Thanh',5490000,2690000,1);
+GO
+
+/* Keep products with no configured selling price out of the active storefront. */
+UPDATE dbo.SAN_PHAM
+SET TrangThai = 0
+WHERE COALESCE(GiaBan, GiaNiemYet, 0) <= 0;
 GO
 
 /* 4. Ten va mo ta da ngon ngu */
@@ -605,7 +633,15 @@ VALUES
 
 ('SP000011','VI',N'Patriot RAM 16GB DDR4 3200MHz',N'RAM Patriot 16GB DDR4 3200MHz.'),
 
-('SP000011','EN',N'Patriot 16GB DDR4 3200MHz RAM',N'Patriot 16GB DDR4 3200MHz memory.');
+('SP000011','EN',N'Patriot 16GB DDR4 3200MHz RAM',N'Patriot 16GB DDR4 3200MHz memory.'),
+('SP000056','VI',N'Laptop ASUS Vivobook 15 X1504VA-BQ265W',N'Intel Core 5 120U, RAM 16GB DDR5, SSD NVMe 512GB, màn hình IPS Full HD 15,6 inch, Windows 11 Home.'),
+('SP000056','EN',N'ASUS Vivobook 15 X1504VA-BQ265W Laptop',N'Intel Core 5 120U, 16GB DDR5 RAM, 512GB NVMe SSD, 15.6-inch Full HD IPS display, Windows 11 Home.'),
+('SP000057','VI',N'Laptop Acer Aspire 14 AI A14-11M-X8FP',N'Snapdragon X X1-26-100, RAM 16GB, SSD 512GB, màn hình WUXGA IPS 14 inch 120Hz, Windows 11 Home.'),
+('SP000057','EN',N'Acer Aspire 14 AI A14-11M-X8FP Laptop',N'Snapdragon X X1-26-100, 16GB RAM, 512GB SSD, 14-inch WUXGA IPS 120Hz display, Windows 11 Home.'),
+('SP000058','VI',N'Samsung Galaxy Watch9 Bluetooth 40mm',N'Màn hình Super AMOLED 1,3 inch, Bluetooth 6.0, GPS, bộ nhớ 32GB, pin 390mAh.'),
+('SP000058','EN',N'Samsung Galaxy Watch9 Bluetooth 40mm',N'1.3-inch Super AMOLED display, Bluetooth 6.0, GPS, 32GB storage, 390mAh battery.'),
+('SP000059','VI',N'Samsung Galaxy Watch9 Bluetooth 44mm',N'Màn hình Super AMOLED 1,5 inch, Bluetooth 6.0, GPS, bộ nhớ 32GB, pin 445mAh.'),
+('SP000059','EN',N'Samsung Galaxy Watch9 Bluetooth 44mm',N'1.5-inch Super AMOLED display, Bluetooth 6.0, GPS, 32GB storage, 445mAh battery.');
 GO
 /* 5. Nha cung cap / kenh cung ung mau */
 INSERT INTO NHA_CUNG_CAP (MaNCC, TenNCC, DiaChi, Email, SDT)
@@ -673,11 +709,22 @@ VALUES
 ('KHO001','SP000053',12),
 ('KHO001','SP000054',12),
 ('KHO001','SP000055',12),
+('KHO001','SP000056',8),
+('KHO001','SP000057',8),
+('KHO001','SP000058',12),
+('KHO001','SP000059',12),
 ('KHO001','SP000007',20),
 ('KHO001','SP000008',20),
 ('KHO001','SP000009',20),
 ('KHO001','SP000010',20),
-('KHO001','SP000011',20);GO
+('KHO001','SP000011',20);
+GO
+
+INSERT INTO LICH_SU_KHO (MaPhieu, LoaiPhieu, MaSP, SoLuong, DoiTac, GhiChu)
+SELECT CONCAT(N'SEED-', RTRIM(MaSP)), N'Nhập kho', MaSP, SoLuongTon,
+       N'Khởi tạo dữ liệu', N'Tồn đầu kỳ từ dữ liệu mẫu'
+FROM TON_KHO
+WHERE SoLuongTon > 0;
 
 /* 8. Khach hang mau */
 INSERT INTO KHACH_HANG (MaKH, HoTen, SDT, DiaChi, Email)
@@ -746,9 +793,9 @@ VALUES
 ('PN000002','SP000009',8,10000000),
 ('PN000002','SP000010',10,1500000),
 ('PN000002','SP000011',20,2200000),
-('PN000003','SP000012',5,21000000),
-('PN000003','SP000013',5,23000000),
-('PN000003','SP000014',5,0);
+('PN000003','SP000015',5,21000000),
+('PN000003','SP000016',5,23000000),
+('PN000003','SP000017',5,0);
 GO
 
 /* 

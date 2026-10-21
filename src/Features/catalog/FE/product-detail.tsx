@@ -12,10 +12,11 @@ import {
 
 import { Ionicons } from "@expo/vector-icons";
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { LanguageSelector } from "@/Core/components/language-selector";
 import { AiConsultationWidget } from "@/Core/components/ai-consultation-widget";
 import { useLanguage } from "@/Core/contexts/language-context";
+import { useProducts } from "@/Core/hooks/use-products";
 
 /* ================================================= */
 /*                 HOVER BUTTON                      */
@@ -93,18 +94,48 @@ function HeaderButton({
     );
 }
 
+function productCategoryIcon(categoryId: string, productName = ""): React.ComponentProps<typeof Ionicons>["name"] {
+    if (categoryId === "PHONE1") return "phone-portrait-outline";
+    if (categoryId === "LAPTOP") return "laptop-outline";
+    if (categoryId === "WATCH1") return "watch-outline";
+    const name = productName.toLowerCase();
+    if (name.includes("ssd")) return "server-outline";
+    if (name.includes("ram")) return "albums-outline";
+    if (name.includes("cpu") || name.includes("gpu") || name.includes("rtx") || name.includes("core ultra")) return "hardware-chip-outline";
+    if (name.includes("mainboard") || name.includes("motherboard")) return "git-network-outline";
+    return "headset-outline";
+}
+
+function descriptionIcon(line: string): React.ComponentProps<typeof Ionicons>["name"] {
+    const normalized = line.toLowerCase();
+    if (normalized.includes("battery") || normalized.includes("pin")) return "battery-full-outline";
+    if (normalized.includes("display") || normalized.includes("màn hình")) return "phone-portrait-outline";
+    if (normalized.includes("ssd") || normalized.includes("storage") || normalized.includes("bộ nhớ")) return "server-outline";
+    if (normalized.includes("ram")) return "albums-outline";
+    if (normalized.includes("camera") || normalized.includes("lens")) return "camera-outline";
+    if (normalized.includes("bluetooth") || normalized.includes("wi-fi") || normalized.includes("gps")) return "wifi-outline";
+    return "hardware-chip-outline";
+}
+
 /* ================================================= */
 /*                     APP                           */
 /* ================================================= */
 
 export default function ProductDetail() {
     const router = useRouter();
-    const { t } = useLanguage();
+    const { t, language } = useLanguage();
+    const { productId } = useLocalSearchParams<{ productId?: string }>();
+    const { products, loading } = useProducts(Boolean(productId), language);
+    const managedProduct = products.find((item) => item.id === productId);
+    const descriptionLines = managedProduct?.description
+        .split(/[;\n]+/)
+        .map((line) => line.trim().replace(/[.]$/, ""))
+        .filter(Boolean) ?? [];
 
     const { width } = useWindowDimensions();
 
     // Dùng cùng ngưỡng 600px để chuyển bố cục và style sang phiên bản điện thoại.
-    const isMobile = width < 600;
+    const isMobile = width < 760;
 
     /* ================================================= */
     /*                     STATE                         */
@@ -114,6 +145,18 @@ export default function ProductDetail() {
     const [selectedColor, setSelectedColor] = useState(1);
     const [selectedCapacity, setSelectedCapacity] = useState(1);
     const [selectedImage, setSelectedImage] = useState(0);
+
+    if (productId && !loading && !managedProduct) {
+        return (
+            <View style={[styles.container, styles.unavailableContainer]}>
+                <Ionicons name="cube-outline" size={48} color="#c82435" />
+                <Text style={styles.unavailableText}>{t("Sản phẩm không tồn tại")}</Text>
+                <Pressable onPress={() => router.replace("/")} style={styles.unavailableButton}>
+                    <Text style={styles.unavailableButtonText}>{t("Trang chủ")}</Text>
+                </Pressable>
+            </View>
+        );
+    }
 
     /* ================================================= */
     /*                 DANH SÁCH ẢNH                     */
@@ -330,7 +373,11 @@ export default function ProductDetail() {
 
                         {/* ẢNH LỚN */}
 
-                        <View
+                        {managedProduct ? (
+                        <View style={[styles.mainImage, styles.managedProductImage, isMobile && styles.mainImageMobile]}>
+                            <Ionicons name={productCategoryIcon(managedProduct.categoryId, managedProduct.name)} size={100} color="#d9273e" />
+                        </View>
+                        ) : <View
                             style={[
                                 styles.mainImage,
                                 isMobile &&
@@ -349,11 +396,11 @@ export default function ProductDetail() {
                                     styles.mainProductImageMobile,
                                 ]}
                             />
-                        </View>
+                        </View>}
 
                         {/* THUMBNAIL */}
 
-                        <View
+                        {!managedProduct && <View
                             style={[
                                 styles.thumbnailList,
                                 isMobile &&
@@ -388,7 +435,7 @@ export default function ProductDetail() {
                                     </Pressable>
                                 )
                             )}
-                        </View>
+                        </View>}
                     </View>
 
                     {/* ================================================= */}
@@ -412,12 +459,13 @@ export default function ProductDetail() {
                                 styles.productNameMobile,
                             ]}
                         >
-                            {t("iPhone 16e 128GB")}
+                            {managedProduct?.name ?? (productId ? t("Sản phẩm không tồn tại") : t("iPhone 16e 128GB"))}
                         </Text>
 
-                        <Text style={styles.tagline}>
+                        {!managedProduct && <Text style={styles.tagline}>
                             {t("The New Standard of Intelligence.")}
-                        </Text>
+                        </Text>}
+                        {managedProduct && <Text style={styles.tagline}>{managedProduct.category}</Text>}
 
                         <View style={styles.voicePanel}>
                             <View style={styles.voicePanelHeading}>
@@ -442,31 +490,36 @@ export default function ProductDetail() {
                                 styles.productPriceMobile,
                             ]}
                         >
-                            16.990.000 ₫
+                            {managedProduct ? `${managedProduct.price.toLocaleString("vi-VN")} ` : "16.990.000"} ₫
                         </Text>
 
                         {/* THÔNG TIN */}
 
-                        <View
-                            style={[
-                                styles.infoProduct,
-                                isMobile &&
-                                styles.infoProductMobile,
-                            ]}
-                        >
-                            {specifications.map(({ icon, label, value }) => (
-                                <View key={label} style={styles.infoRow}>
-                                    <Ionicons name={icon} size={13} color="#343434" />
-                                    <Text
-                                        style={[
-                                            styles.infoText,
-                                            isMobile && styles.infoTextMobile,
-                                        ]}
-                                    >
-                                        <Text style={styles.infoLabel}>{t(label)}:</Text> {t(value)}
-                                    </Text>
-                                </View>
-                            ))}
+                        <View style={styles.specificationsCard}>
+                            <Text style={styles.specificationsTitle}>{t("Thông số nổi bật")}</Text>
+                            <View style={styles.specificationsGrid}>
+                                {managedProduct ? descriptionLines.map((line, index) => (
+                                    <View key={`${managedProduct.id}-${index}`} style={[styles.specificationItem, isMobile && styles.specificationItemMobile]}>
+                                        <View style={styles.specificationIcon}>
+                                            <Ionicons name={descriptionIcon(line)} size={17} color="#b32b36" />
+                                        </View>
+                                        <Text style={styles.specificationText}>{line}</Text>
+                                    </View>
+                                )) : specifications.map(({ icon, label, value }) => (
+                                    <View key={label} style={[styles.specificationItem, isMobile && styles.specificationItemMobile]}>
+                                        <View style={styles.specificationIcon}>
+                                            <Ionicons name={icon} size={17} color="#b32b36" />
+                                        </View>
+                                        <Text style={styles.specificationText}>
+                                            <Text style={styles.infoLabel}>{t(label)}:</Text> {t(value)}
+                                        </Text>
+                                    </View>
+                                ))}
+                            </View>
+                            {managedProduct && <View style={styles.productMetaRow}>
+                                <Text style={styles.productMetaText}>{t("Danh mục")}: {managedProduct.category}</Text>
+                                <Text style={styles.productMetaText}>{t("Tồn kho")}: {managedProduct.stock}</Text>
+                            </View>}
                         </View>
 
                         {/* ================================================= */}
@@ -474,7 +527,7 @@ export default function ProductDetail() {
                         {/* ================================================= */}
 
                         {/* Cập nhật màu đang chọn để làm nổi bật lựa chọn trong danh sách. */}
-                        <Text style={styles.optionLabel}>Màu sắc</Text>
+                        {!managedProduct && <><Text style={styles.optionLabel}>Màu sắc</Text>
                         <View
                             style={[
                                 styles.colorContainer,
@@ -571,7 +624,7 @@ export default function ProductDetail() {
                                     </Text>
                                 </Pressable>
                             ))}
-                        </View>
+                        </View></>}
 
                         {/* ================================================= */}
                         {/*                    BUTTONS                       */}
@@ -727,6 +780,33 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: "#FFFFFF",
         overflow: "hidden",
+    },
+
+    unavailableContainer: {
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 12,
+        padding: 24,
+    },
+
+    unavailableText: {
+        color: "#333333",
+        fontSize: 18,
+        fontWeight: "600",
+        textAlign: "center",
+    },
+
+    unavailableButton: {
+        backgroundColor: "#c82435",
+        borderRadius: 8,
+        paddingVertical: 10,
+        paddingHorizontal: 24,
+    },
+
+    unavailableButtonText: {
+        color: "#ffffff",
+        fontSize: 14,
+        fontWeight: "600",
     },
 
     /* ================================================= */
@@ -1048,15 +1128,15 @@ const styles = StyleSheet.create({
 
     productDetail: {
         flexDirection: "row",
-        gap: 24,
-        width: 760,
+        gap: 32,
+        width: 1040,
 
         maxWidth: "95%",
 
         alignSelf: "center",
 
-        marginTop: 22,
-        padding: 18,
+        marginTop: 32,
+        padding: 26,
         backgroundColor: "#ffffff",
         borderWidth: 1,
         borderColor: "#eeeeee",
@@ -1095,7 +1175,7 @@ const styles = StyleSheet.create({
     },
 
     assuranceRow: {
-        width: 760,
+        width: 1040,
         maxWidth: "95%",
         alignSelf: "center",
         flexDirection: "row",
@@ -1135,7 +1215,7 @@ const styles = StyleSheet.create({
     /* ================================================= */
 
     productImages: {
-        width: "48%",
+        width: "49%",
 
         textAlign: "left" as any,
     },
@@ -1153,7 +1233,7 @@ const styles = StyleSheet.create({
 
         width: "100%",
 
-        height: 340,
+        height: 440,
 
         backgroundColor: "#F7F7F7",
 
@@ -1279,6 +1359,16 @@ const styles = StyleSheet.create({
         marginBottom: 5,
     },
 
+    managedProductImage: {
+        backgroundColor: "#f7f8fb",
+        borderColor: "#eceef3",
+        shadowColor: "#000000",
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.08,
+        shadowRadius: 8,
+        elevation: 2,
+    },
+
     voicePanel: {
         backgroundColor: "#f5f5f7",
         borderRadius: 9,
@@ -1328,7 +1418,7 @@ const styles = StyleSheet.create({
     optionLabel: { color: "#333333", fontSize: 13, fontWeight: "600", marginTop: 8 },
 
     productName: {
-        fontSize: 32,
+        fontSize: 38,
 
         fontWeight: "bold",
 
@@ -1344,7 +1434,7 @@ const styles = StyleSheet.create({
     },
 
     productPrice: {
-        fontSize: 27,
+        fontSize: 32,
 
         color: "red",
 
@@ -1373,6 +1463,79 @@ const styles = StyleSheet.create({
 
     infoProductMobile: {
         gap: 5,
+    },
+
+    specificationsCard: {
+        marginTop: 10,
+        padding: 16,
+        backgroundColor: "#fafafa",
+        borderWidth: 1,
+        borderColor: "#ededed",
+        borderRadius: 12,
+    },
+
+    specificationsTitle: {
+        color: "#292929",
+        fontSize: 16,
+        fontWeight: "700",
+        marginBottom: 10,
+    },
+
+    specificationsGrid: {
+        flexDirection: "row",
+        flexWrap: "wrap",
+        columnGap: 14,
+        rowGap: 8,
+    },
+
+    specificationItem: {
+        width: "48%",
+        minHeight: 46,
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 9,
+        paddingVertical: 6,
+        paddingHorizontal: 4,
+        borderBottomWidth: 1,
+        borderBottomColor: "#e9e9e9",
+    },
+
+    specificationItemMobile: {
+        width: "100%",
+    },
+
+    specificationIcon: {
+        width: 32,
+        height: 32,
+        flexShrink: 0,
+        alignItems: "center",
+        justifyContent: "center",
+        backgroundColor: "#fff0f1",
+        borderRadius: 9,
+    },
+
+    specificationText: {
+        flex: 1,
+        color: "#383838",
+        fontSize: 14,
+        lineHeight: 20,
+    },
+
+    productMetaRow: {
+        flexDirection: "row",
+        flexWrap: "wrap",
+        gap: 8,
+        marginTop: 12,
+    },
+
+    productMetaText: {
+        color: "#666666",
+        backgroundColor: "#f1f1f1",
+        borderRadius: 14,
+        overflow: "hidden",
+        paddingVertical: 5,
+        paddingHorizontal: 10,
+        fontSize: 12,
     },
 
     infoRow: { flexDirection: "row", alignItems: "center", gap: 5 },
