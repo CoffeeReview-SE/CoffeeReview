@@ -13,32 +13,19 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
+import { useAdminProducts } from "@/Core/hooks/use-admin-products";
+import { useAdminCategories } from "@/Core/hooks/use-admin-categories";
+import {
+  createAdminProduct,
+  removeAdminCategory,
+  removeAdminProduct,
+  saveAdminCategory,
+  updateAdminProduct,
+  type AdminProduct,
+} from "@/Core/services/admin-api";
 
 type Tab = "products" | "categories";
-type Product = {
-  id: string;
-  name: string;
-  category: string;
-  price: number;
-  stock: number;
-  status: "Đang bán" | "Hết hàng";
-};
-type Category = { id: string; name: string; description: string; productCount: number };
-
-const initialProducts: Product[] = [
-  { id: "SP0001", name: "iPhone 15 Pro Max", category: "Điện thoại", price: 28990000, stock: 18, status: "Đang bán" },
-  { id: "SP0002", name: "MacBook Air M3", category: "Laptop", price: 25990000, stock: 7, status: "Đang bán" },
-  { id: "SP0003", name: "Tai nghe Sony WH-1000XM5", category: "Phụ kiện", price: 7490000, stock: 0, status: "Hết hàng" },
-  { id: "SP0004", name: "Apple Watch Series 10", category: "Đồng hồ", price: 11990000, stock: 12, status: "Đang bán" },
-  { id: "SP0005", name: "Bàn phím cơ Keychron K2", category: "Phụ kiện", price: 2190000, stock: 24, status: "Đang bán" },
-];
-
-const initialCategories: Category[] = [
-  { id: "DM001", name: "Điện thoại", description: "Smartphone và thiết bị di động", productCount: 24 },
-  { id: "DM002", name: "Laptop", description: "Máy tính xách tay và máy tính cá nhân", productCount: 16 },
-  { id: "DM003", name: "Phụ kiện", description: "Phụ kiện công nghệ và thiết bị ngoại vi", productCount: 38 },
-  { id: "DM004", name: "Đồng hồ", description: "Đồng hồ thông minh và phụ kiện", productCount: 9 },
-];
+type Category = import("@/Core/services/admin-api").Category;
 
 const money = (value: number) => `${value.toLocaleString("vi-VN")} đ`;
 
@@ -99,12 +86,12 @@ export function ProductManagement({ initialTab = "products" }: { initialTab?: Ta
   const { width } = useWindowDimensions();
   const sidebarWidth = width <= 768 ? 220 : 255;
   const [tab, setTab] = useState<Tab>(initialTab);
-  const [products, setProducts] = useState(initialProducts);
-  const [categories, setCategories] = useState(initialCategories);
+  const { products, error: productsError, reload: reloadProducts } = useAdminProducts();
+  const { categories, error: categoriesError, reload: reloadCategories } = useAdminCategories();
   const [keyword, setKeyword] = useState("");
   const [status, setStatus] = useState("Tất cả trạng thái");
   const [modal, setModal] = useState<"product" | "category" | null>(null);
-  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [editingProduct, setEditingProduct] = useState<AdminProduct | null>(null);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [name, setName] = useState("");
   const [category, setCategory] = useState("");
@@ -120,7 +107,7 @@ export function ProductManagement({ initialTab = "products" }: { initialTab?: Ta
     });
   }, [keyword, products, status]);
 
-  const openProduct = (item?: Product) => {
+  const openProduct = (item?: AdminProduct) => {
     setEditingProduct(item ?? null);
     setName(item?.name ?? "");
     setCategory(item?.category ?? "");
@@ -135,47 +122,56 @@ export function ProductManagement({ initialTab = "products" }: { initialTab?: Ta
     setModal("category");
   };
 
-  const saveProduct = () => {
+  const saveProduct = async () => {
     const numericPrice = Number(price.replace(/\D/g, ""));
     const numericStock = Number(stock.replace(/\D/g, ""));
     if (!name.trim() || !category.trim() || !numericPrice || numericStock < 0) {
       Alert.alert("Thiếu thông tin", "Vui lòng nhập tên, danh mục, giá và tồn kho hợp lệ.");
       return;
     }
-    const next: Product = {
-      id: editingProduct?.id ?? `SP${String(products.length + 1).padStart(4, "0")}`,
+    const input = {
       name: name.trim(),
       category: category.trim(),
       price: numericPrice,
       stock: numericStock,
-      status: numericStock > 0 ? "Đang bán" : "Hết hàng",
     };
-    setProducts((current) => editingProduct ? current.map((item) => item.id === editingProduct.id ? next : item) : [next, ...current]);
-    setModal(null);
+    try {
+      if (editingProduct) await updateAdminProduct(editingProduct.id, input);
+      else await createAdminProduct(input);
+      await reloadProducts();
+      setModal(null);
+    } catch (error) {
+      Alert.alert("Không thể lưu sản phẩm", error instanceof Error ? error.message : "Kiểm tra kết nối SQL Server rồi thử lại.");
+    }
   };
 
-  const saveCategory = () => {
+  const saveCategory = async () => {
     if (!name.trim() || !description.trim()) {
       Alert.alert("Thiếu thông tin", "Vui lòng nhập tên và mô tả danh mục.");
       return;
     }
-    const next: Category = {
-      id: editingCategory?.id ?? `DM${String(categories.length + 1).padStart(3, "0")}`,
-      name: name.trim(),
-      description: description.trim(),
-      productCount: editingCategory?.productCount ?? 0,
-    };
-    setCategories((current) => editingCategory ? current.map((item) => item.id === editingCategory.id ? next : item) : [next, ...current]);
-    setModal(null);
+    try {
+      await saveAdminCategory({ name: name.trim(), description: description.trim() }, editingCategory?.id);
+      await reloadCategories();
+      setModal(null);
+    } catch (error) {
+      Alert.alert("Không thể lưu danh mục", error instanceof Error ? error.message : "Kiểm tra kết nối SQL Server rồi thử lại.");
+    }
   };
 
-  const removeProduct = (item: Product) => Alert.alert("Xóa sản phẩm", `Bạn có chắc muốn xóa "${item.name}"?`, [
+  const removeProduct = (item: AdminProduct) => Alert.alert("Ngừng bán sản phẩm", `Bạn có chắc muốn ngừng bán "${item.name}"?`, [
     { text: "Hủy", style: "cancel" },
-    { text: "Xóa", style: "destructive", onPress: () => setProducts((current) => current.filter((value) => value.id !== item.id)) },
+    { text: "Ngừng bán", style: "destructive", onPress: async () => {
+      try { await removeAdminProduct(item.id); await reloadProducts(); }
+      catch (error) { Alert.alert("Không thể ngừng bán", error instanceof Error ? error.message : "Kiểm tra kết nối SQL Server rồi thử lại."); }
+    } },
   ]);
-  const removeCategory = (item: Category) => Alert.alert("Xóa danh mục", `Bạn có chắc muốn xóa "${item.name}"?`, [
+  const removeCategory = (item: Category) => Alert.alert("Ẩn danh mục", `Bạn có chắc muốn ẩn "${item.name}"?`, [
     { text: "Hủy", style: "cancel" },
-    { text: "Xóa", style: "destructive", onPress: () => setCategories((current) => current.filter((value) => value.id !== item.id)) },
+    { text: "Ẩn", style: "destructive", onPress: async () => {
+      try { await removeAdminCategory(item.id); await reloadCategories(); }
+      catch (error) { Alert.alert("Không thể ẩn danh mục", error instanceof Error ? error.message : "Kiểm tra kết nối SQL Server rồi thử lại."); }
+    } },
   ]);
 
   return (
@@ -206,6 +202,8 @@ export function ProductManagement({ initialTab = "products" }: { initialTab?: Ta
               <Text style={styles.addButtonText}>{tab === "products" ? "Thêm sản phẩm" : "Thêm danh mục"}</Text>
             </Pressable>
           </View>
+
+          {(tab === "products" ? productsError : categoriesError) && <Text style={styles.empty}>{tab === "products" ? productsError : categoriesError}</Text>}
 
         <View style={styles.tabs}>
           <Pressable style={[styles.tab, tab === "products" && styles.tabActive]} onPress={() => { setTab("products"); setKeyword(""); }}>

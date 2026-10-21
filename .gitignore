@@ -13,3 +13,4 @@ expo-env.d.ts
 .env.*
 !.env.example
 .expo/
+backend/data/products.json

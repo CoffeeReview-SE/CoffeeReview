@@ -1,8 +1,4 @@
-import Constants from "expo-constants";
+import { backendUrl } from "@/Core/services/backend-url";
 
-const metroHost = Constants.expoConfig?.hostUri?.split(":")[0] || "localhost";
-
-export const chatApiUrl =
-  process.env.EXPO_PUBLIC_CHAT_API_URL || `http://${metroHost}:3333/api/chat`;
-
-export const chatHealthUrl = chatApiUrl.replace(/\/api\/chat\/?$/, "/health");
+export const chatApiUrl = `${backendUrl}/api/chat`;
+export const chatHealthUrl = `${backendUrl}/health`;

@@ -86,7 +86,7 @@ export default function StockManagement({ initialTab }: { initialTab: StockTab }
   const { width } = useWindowDimensions();
   const compact = width < 700;
   const sidebarWidth = compact ? 0 : width <= 768 ? 220 : 255;
-  const { products, movements } = useStockData();
+  const { products, movements, error: stockError } = useStockData();
   const [query, setQuery] = useState("");
   const [inventoryFilter, setInventoryFilter] = useState<"Tất cả" | "Sắp hết" | "Hết hàng">("Tất cả");
   const [movementFilter, setMovementFilter] = useState<"Tất cả" | MovementType>("Tất cả");
@@ -221,6 +221,8 @@ export default function StockManagement({ initialTab }: { initialTab: StockTab }
               </Pressable>
             )}
           </View>
+
+          {stockError && <Text style={styles.emptyText}>Không tải được dữ liệu SQL Server: {stockError}</Text>}
 
           {initialTab === "inventory" ? (
             <>
