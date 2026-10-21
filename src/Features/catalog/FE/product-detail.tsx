@@ -145,6 +145,7 @@ export default function ProductDetail() {
     const [selectedColor, setSelectedColor] = useState(1);
     const [selectedCapacity, setSelectedCapacity] = useState(1);
     const [selectedImage, setSelectedImage] = useState(0);
+    const [selectedRating, setSelectedRating] = useState(0);
 
     if (productId && !loading && !managedProduct) {
         return (
@@ -733,33 +734,71 @@ export default function ProductDetail() {
                         </View>
                     </View>
                 </View>
-                <View style={styles.assuranceRow}>
-                    <View style={styles.assuranceItem}>
-                        <Ionicons name="car-outline" size={19} color="#9a3434" />
-                        <Text style={styles.assuranceText}>Giao hàng miễn phí</Text>
+                <View style={[styles.productHighlights, isMobile && styles.productHighlightsMobile]}>
+                    <View style={[styles.ratingCard, isMobile && styles.highlightCardMobile]}>
+                        <View style={styles.highlightHeading}>
+                            <View style={[styles.highlightIcon, styles.ratingIcon]}>
+                                <Ionicons name="star" size={19} color="#c27a16" />
+                            </View>
+                            <View style={styles.highlightHeadingCopy}>
+                                <Text style={styles.highlightTitle}>{t("Đánh giá sản phẩm")}</Text>
+                                <Text style={styles.highlightSubtitle}>{t("Chia sẻ trải nghiệm của bạn")}</Text>
+                            </View>
+                        </View>
+                        <View style={styles.ratingControls}>
+                            <View style={styles.ratingStars}>
+                                {[1, 2, 3, 4, 5].map((star) => (
+                                    <Pressable
+                                        key={star}
+                                        accessibilityRole="button"
+                                        accessibilityLabel={`${t("Đánh giá")} ${star} ${t("sao")}`}
+                                        accessibilityState={{ selected: selectedRating === star }}
+                                        onPress={() => setSelectedRating(star)}
+                                        style={({ pressed }) => [styles.ratingStarButton, pressed && styles.ratingStarPressed]}
+                                    >
+                                        <Ionicons
+                                            name={selectedRating >= star ? "star" : "star-outline"}
+                                            size={25}
+                                            color={selectedRating >= star ? "#e39a27" : "#c78b39"}
+                                        />
+                                    </Pressable>
+                                ))}
+                            </View>
+                            <Text style={styles.ratingHint}>
+                                {selectedRating
+                                    ? `${selectedRating}/5 · ${t("Cảm ơn bạn đã đánh giá")}`
+                                    : t("Chạm vào sao để đánh giá")}
+                            </Text>
+                        </View>
                     </View>
-                    <View style={styles.assuranceItem}>
-                        <Ionicons name="shield-checkmark-outline" size={19} color="#9a3434" />
-                        <Text style={styles.assuranceText}>Bảo hành chính hãng 1 năm</Text>
-                    </View>
-                    <View style={styles.assuranceItem}>
-                        <Ionicons name="card-outline" size={19} color="#9a3434" />
-                        <Text style={styles.assuranceText}>Thanh toán an toàn</Text>
+
+                    <View style={[styles.deliveryCard, isMobile && styles.highlightCardMobile]}>
+                        <View style={styles.highlightHeading}>
+                            <View style={[styles.highlightIcon, styles.deliveryIcon]}>
+                                <Ionicons name="cube-outline" size={19} color="#a8323d" />
+                            </View>
+                            <View style={styles.highlightHeadingCopy}>
+                                <Text style={styles.highlightTitle}>{t("Thông tin giao hàng")}</Text>
+                                <Text style={styles.highlightSubtitle}>{t("Mua sắm an tâm, hỗ trợ tận tình")}</Text>
+                            </View>
+                        </View>
+                        <View style={styles.deliveryBenefits}>
+                            {[
+                                { icon: "car-outline" as const, title: "Miễn phí giao hàng", detail: "Áp dụng theo điều kiện đơn hàng" },
+                                { icon: "shield-checkmark-outline" as const, title: "Bảo hành chính hãng 1 năm", detail: "An tâm trong quá trình sử dụng" },
+                                { icon: "card-outline" as const, title: "Thanh toán an toàn", detail: "Bảo mật thông tin thanh toán" },
+                            ].map((benefit) => (
+                                <View key={benefit.title} style={styles.deliveryBenefit}>
+                                    <Ionicons name={benefit.icon} size={18} color="#a8323d" />
+                                    <View style={styles.deliveryBenefitCopy}>
+                                        <Text style={styles.deliveryBenefitTitle}>{t(benefit.title)}</Text>
+                                        <Text style={styles.deliveryBenefitDetail}>{t(benefit.detail)}</Text>
+                                    </View>
+                                </View>
+                            ))}
+                        </View>
                     </View>
                 </View>
-                {!isMobile && (
-                    <View style={styles.reviewBreakdown}>
-                        {[100, 82, 36, 14, 8].map((fill, index) => (
-                            <View key={index} style={styles.reviewLine}>
-                                <Text style={styles.reviewScore}>{5 - index}</Text>
-                                <Ionicons name="star" size={8} color="#b75c57" />
-                                <View style={styles.reviewTrack}>
-                                    <View style={[styles.reviewFill, { width: `${fill}%` }]} />
-                                </View>
-                            </View>
-                        ))}
-                    </View>
-                )}
             </ScrollView>
             <AiConsultationWidget onPress={() => router.push("/chat")} />
         </View>
@@ -1174,41 +1213,119 @@ const styles = StyleSheet.create({
         justifyContent: "center",
     },
 
-    assuranceRow: {
+    productHighlights: {
         width: 1040,
         maxWidth: "95%",
         alignSelf: "center",
         flexDirection: "row",
-        justifyContent: "space-between",
-        gap: 12,
-        paddingHorizontal: 8,
-        marginTop: 14,
+        alignItems: "stretch",
+        gap: 16,
+        marginTop: 16,
+        marginBottom: 30,
     },
 
-    assuranceItem: {
-        flex: 1,
+    productHighlightsMobile: {
+        width: "94%",
+        maxWidth: "100%",
+        flexDirection: "column",
+        gap: 12,
+        marginTop: 12,
+        marginBottom: 24,
+    },
+
+    ratingCard: {
+        flex: 0.85,
+        minWidth: 250,
+        padding: 18,
+        borderRadius: 16,
+        borderWidth: 1,
+        borderColor: "#f0e7d9",
+        backgroundColor: "#fffdf9",
+        shadowColor: "#302313",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.06,
+        shadowRadius: 12,
+        elevation: 2,
+    },
+
+    deliveryCard: {
+        flex: 1.15,
+        minWidth: 300,
+        padding: 18,
+        borderRadius: 16,
+        borderWidth: 1,
+        borderColor: "#f2dfe0",
+        backgroundColor: "#fff9f8",
+        shadowColor: "#381a1b",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.06,
+        shadowRadius: 12,
+        elevation: 2,
+    },
+
+    highlightCardMobile: {
+        width: "100%",
+        minWidth: 0,
+        flex: 0,
+        padding: 16,
+    },
+
+    highlightHeading: {
         flexDirection: "row",
         alignItems: "center",
-        gap: 6,
+        gap: 11,
     },
 
-    assuranceText: { flexShrink: 1, color: "#4c4c4c", fontSize: 10 },
-
-    reviewBreakdown: {
-        position: "absolute",
-        top: 292,
-        right: 18,
-        width: 78,
-        gap: 4,
+    highlightIcon: {
+        width: 42,
+        height: 42,
+        alignItems: "center",
+        justifyContent: "center",
+        borderRadius: 13,
     },
 
-    reviewLine: { flexDirection: "row", alignItems: "center", gap: 3 },
+    ratingIcon: { backgroundColor: "#fff2d9" },
 
-    reviewScore: { width: 8, color: "#555555", fontSize: 9 },
+    deliveryIcon: { backgroundColor: "#fce8e8" },
 
-    reviewTrack: { flex: 1, height: 4, backgroundColor: "#e7e7e7", borderRadius: 3 },
+    highlightHeadingCopy: { flex: 1, minWidth: 0, gap: 3 },
 
-    reviewFill: { height: 4, backgroundColor: "#be6a64", borderRadius: 3 },
+    highlightTitle: { color: "#252525", fontSize: 15, fontWeight: "700" },
+
+    highlightSubtitle: { color: "#77716c", fontSize: 12, lineHeight: 17 },
+
+    ratingControls: {
+        marginTop: 18,
+        paddingTop: 14,
+        borderTopWidth: 1,
+        borderTopColor: "#f1eadf",
+        gap: 9,
+    },
+
+    ratingStars: { flexDirection: "row", alignItems: "center", gap: 7 },
+
+    ratingStarButton: {
+        width: 42,
+        height: 42,
+        alignItems: "center",
+        justifyContent: "center",
+        borderRadius: 12,
+        backgroundColor: "#fff5e4",
+    },
+
+    ratingStarPressed: { transform: [{ scale: 0.92 }], backgroundColor: "#ffebc7" },
+
+    ratingHint: { color: "#756b60", fontSize: 12, lineHeight: 18 },
+
+    deliveryBenefits: { marginTop: 14, gap: 12 },
+
+    deliveryBenefit: { flexDirection: "row", alignItems: "center", gap: 11 },
+
+    deliveryBenefitCopy: { flex: 1, minWidth: 0, gap: 2 },
+
+    deliveryBenefitTitle: { color: "#332729", fontSize: 13, fontWeight: "700" },
+
+    deliveryBenefitDetail: { color: "#796c6c", fontSize: 11, lineHeight: 16 },
 
     /* ================================================= */
     /*                 PRODUCT IMAGES                    */
@@ -1408,12 +1525,6 @@ const styles = StyleSheet.create({
     },
 
     voiceActionText: { color: "#333333", fontSize: 10, fontWeight: "500" },
-
-    ratingRow: { flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 5 },
-
-    ratingStars: { color: "#b75c57", fontSize: 12, letterSpacing: 1 },
-
-    ratingText: { color: "#777777", fontSize: 10 },
 
     optionLabel: { color: "#333333", fontSize: 13, fontWeight: "600", marginTop: 8 },
 
