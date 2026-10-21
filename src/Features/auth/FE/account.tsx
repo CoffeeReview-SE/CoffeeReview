@@ -134,8 +134,8 @@ export default function AccountScreen() {
       router.replace("/login");
     } catch (error) {
       Alert.alert(
-        "Đăng xuất thất bại",
-        error instanceof Error ? error.message : "Không thể đăng xuất lúc này.",
+        t("Đăng xuất thất bại"),
+        error instanceof Error ? t(error.message) : t("Không thể đăng xuất lúc này."),
       );
     }
   };
@@ -443,6 +443,7 @@ function InlineProfileEditor({
   user: UserProfile;
   onUpdated: (user: UserProfile) => void;
 }) {
+  const { t } = useLanguage();
   const [fullName, setFullName] = useState(user.fullName);
   const [email, setEmail] = useState(user.email);
   const [phone, setPhone] = useState(user.phone);
@@ -469,34 +470,34 @@ function InlineProfileEditor({
             `data:${asset.mimeType ?? "image/jpeg"};base64,${asset.base64}`,
           );
         } else {
-          setFeedback("Ảnh quá lớn. Hãy chọn ảnh khác có dung lượng nhỏ hơn.");
+          setFeedback(t("Ảnh quá lớn. Hãy chọn ảnh khác có dung lượng nhỏ hơn."));
           return;
         }
         setFeedback("");
       }
     } catch {
-      setFeedback("Không mở được thư viện ảnh. Vui lòng thử lại.");
+      setFeedback(t("Không mở được thư viện ảnh. Vui lòng thử lại."));
     }
   };
 
   const saveProfile = async () => {
     // Kiểm tra dữ liệu tại giao diện trước khi gửi yêu cầu cập nhật hồ sơ.
     if (!fullName.trim() || !email.trim() || !phone.trim()) {
-      setFeedback("Vui lòng nhập đầy đủ họ tên, email và số điện thoại.");
+      setFeedback(t("Vui lòng nhập đầy đủ họ tên, email và số điện thoại."));
       return;
     }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
-      setFeedback("Email chưa đúng định dạng.");
+      setFeedback(t("Email chưa đúng định dạng."));
       return;
     }
     if (!/^[0-9+()\-\s]{9,15}$/.test(phone.trim())) {
-      setFeedback("Số điện thoại chưa hợp lệ.");
+      setFeedback(t("Số điện thoại chưa hợp lệ."));
       return;
     }
     if (birthDate.trim()) {
       const dateMatch = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(birthDate.trim());
       if (!dateMatch) {
-        setFeedback("Ngày sinh dùng định dạng DD/MM/YYYY.");
+        setFeedback(t("Ngày sinh dùng định dạng DD/MM/YYYY."));
         return;
       }
       const [, day, month, year] = dateMatch;
@@ -507,7 +508,7 @@ function InlineProfileEditor({
         parsedDate.getDate() !== Number(day) ||
         parsedDate > new Date()
       ) {
-        setFeedback("Ngày sinh không hợp lệ.");
+        setFeedback(t("Ngày sinh không hợp lệ."));
         return;
       }
     }
@@ -525,10 +526,10 @@ function InlineProfileEditor({
           avatarUri,
         }),
       );
-      setFeedback("Thông tin cá nhân đã được cập nhật.");
+      setFeedback(t("Thông tin cá nhân đã được cập nhật."));
     } catch (error) {
       setFeedback(
-        error instanceof Error ? error.message : "Không lưu được thông tin.",
+        error instanceof Error ? t(error.message) : t("Không lưu được thông tin."),
       );
     } finally {
       setIsSaving(false);
@@ -537,9 +538,9 @@ function InlineProfileEditor({
 
   return (
     <View style={styles.inlinePanel}>
-      <Text style={styles.inlineSectionTitle}>Thông tin cá nhân</Text>
+      <Text style={styles.inlineSectionTitle}>{t("Thông tin cá nhân")}</Text>
       <Text style={styles.inlineSectionDescription}>
-        Cập nhật thông tin cá nhân hiển thị trên tài khoản và đơn hàng.
+        {t("Cập nhật thông tin cá nhân hiển thị trên tài khoản và đơn hàng.")}
       </Text>
       <View style={styles.avatarEditorRow}>
         <View style={styles.avatarEditorPreview}>
@@ -553,26 +554,26 @@ function InlineProfileEditor({
           )}
         </View>
         <View style={styles.avatarEditorCopy}>
-          <Text style={styles.inlineFieldLabel}>Ảnh đại diện</Text>
+          <Text style={styles.inlineFieldLabel}>{t("Ảnh đại diện")}</Text>
           <Text style={styles.inlineSectionDescription}>
-            Chọn ảnh từ thư viện trên thiết bị.
+            {t("Chọn ảnh từ thư viện trên thiết bị.")}
           </Text>
           <Pressable
             style={styles.inlineSecondaryButton}
             onPress={chooseAvatar}
           >
-            <Text style={styles.inlineSecondaryButtonText}>Chọn ảnh</Text>
+            <Text style={styles.inlineSecondaryButtonText}>{t("Chọn ảnh")}</Text>
           </Pressable>
         </View>
       </View>
-      <Text style={styles.inlineFieldLabel}>Họ và tên</Text>
+      <Text style={styles.inlineFieldLabel}>{t("Họ và tên")}</Text>
       <TextInput
         value={fullName}
         onChangeText={setFullName}
-        placeholder="Họ và tên"
+        placeholder={t("Họ và tên")}
         style={styles.inlineInput}
       />
-      <Text style={styles.inlineFieldLabel}>Email</Text>
+      <Text style={styles.inlineFieldLabel}>{t("Email")}</Text>
       <TextInput
         value={email}
         onChangeText={setEmail}
@@ -582,28 +583,28 @@ function InlineProfileEditor({
         autoCorrect={false}
         style={styles.inlineInput}
       />
-      <Text style={styles.inlineFieldLabel}>Số điện thoại</Text>
+      <Text style={styles.inlineFieldLabel}>{t("Số điện thoại")}</Text>
       <TextInput
         value={phone}
         onChangeText={setPhone}
-        placeholder="Số điện thoại"
+        placeholder={t("Số điện thoại")}
         keyboardType="phone-pad"
         style={styles.inlineInput}
       />
-      <Text style={styles.inlineFieldLabel}>Ngày sinh</Text>
+      <Text style={styles.inlineFieldLabel}>{t("Ngày sinh")}</Text>
       <TextInput
         value={birthDate}
         onChangeText={setBirthDate}
         placeholder="DD/MM/YYYY"
         style={styles.inlineInput}
       />
-      <Text style={styles.inlineFieldLabel}>Giới tính</Text>
+      <Text style={styles.inlineFieldLabel}>{t("Giới tính")}</Text>
       <View style={styles.genderOptions}>
         {(
           [
-            ["female", "Nữ"],
-            ["male", "Nam"],
-            ["other", "Khác"],
+            ["female", t("Nữ")],
+            ["male", t("Nam")],
+            ["other", t("Khác")],
           ] as const
         ).map(([value, label]) => (
           <Pressable
@@ -631,7 +632,7 @@ function InlineProfileEditor({
         <Text
           style={[
             styles.inlineFeedback,
-            feedback.includes("đã được cập nhật") && styles.inlineSuccess,
+            feedback === t("Thông tin cá nhân đã được cập nhật.") && styles.inlineSuccess,
           ]}
         >
           {feedback}
@@ -644,7 +645,7 @@ function InlineProfileEditor({
           disabled={isSaving}
         >
           <Text style={styles.inlinePrimaryButtonText}>
-            {isSaving ? "Đang lưu..." : "Lưu thay đổi"}
+            {isSaving ? t("Đang lưu...") : t("Lưu thay đổi")}
           </Text>
         </Pressable>
       </View>
@@ -659,6 +660,7 @@ function InlineAccountSettings({
   userId: string;
   onAccountDeleted: () => void;
 }) {
+  const { t } = useLanguage();
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -677,21 +679,21 @@ function InlineAccountSettings({
         if (isMounted) setPromoEmails(enabled);
       })
       .catch(() => {
-        if (isMounted) setFeedback("Không tải được tùy chọn thông báo.");
+        if (isMounted) setFeedback(t("Không tải được tùy chọn thông báo."));
       });
     return () => {
       isMounted = false;
     };
-  }, [userId]);
+  }, [t, userId]);
 
   const savePassword = async () => {
     // Chỉ đổi mật khẩu khi người dùng đã nhập đủ và hai mật khẩu mới trùng nhau.
     if (!currentPassword || !newPassword || !confirmPassword) {
-      setFeedback("Vui lòng nhập đủ mật khẩu hiện tại và mật khẩu mới.");
+      setFeedback(t("Vui lòng nhập đủ mật khẩu hiện tại và mật khẩu mới."));
       return;
     }
     if (newPassword !== confirmPassword) {
-      setFeedback("Mật khẩu xác nhận không khớp.");
+      setFeedback(t("Mật khẩu xác nhận không khớp."));
       return;
     }
 
@@ -702,10 +704,10 @@ function InlineAccountSettings({
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
-      setFeedback("Mật khẩu đã được thay đổi.");
+      setFeedback(t("Mật khẩu đã được thay đổi."));
     } catch (error) {
       setFeedback(
-        error instanceof Error ? error.message : "Không đổi được mật khẩu.",
+        error instanceof Error ? t(error.message) : t("Không đổi được mật khẩu."),
       );
     } finally {
       setIsSavingPassword(false);
@@ -720,38 +722,38 @@ function InlineAccountSettings({
       setFeedback("");
     } catch {
       setPromoEmails(!enabled);
-      setFeedback("Không lưu được tùy chọn email khuyến mãi.");
+      setFeedback(t("Không lưu được tùy chọn email khuyến mãi."));
     }
   };
 
   const confirmAccountDeletion = () => {
     // Yêu cầu xác thực bằng mật khẩu và cụm xác nhận trước thao tác không thể hoàn tác.
-    if (!deletePassword || deleteConfirmation !== "XOA TAI KHOAN") {
+    if (!deletePassword || deleteConfirmation !== t("XOA TAI KHOAN")) {
       setFeedback(
-        'Nhập mật khẩu và chính xác cụm "XOA TAI KHOAN" để tiếp tục.',
+        t('Nhập mật khẩu và chính xác cụm "XOA TAI KHOAN" để tiếp tục.'),
       );
       return;
     }
 
     Alert.alert(
-      "Xóa tài khoản vĩnh viễn?",
-      "Tài khoản, địa chỉ đã lưu và tùy chọn email khuyến mãi của bạn sẽ bị xóa khỏi thiết bị này. Thao tác này không thể hoàn tác.",
+      t("Xóa tài khoản vĩnh viễn?"),
+      t("Tài khoản, địa chỉ đã lưu và tùy chọn email khuyến mãi của bạn sẽ bị xóa khỏi thiết bị này. Thao tác này không thể hoàn tác."),
       [
-        { text: "Giữ tài khoản", style: "cancel" },
+        { text: t("Giữ tài khoản"), style: "cancel" },
         {
-          text: "Xóa tài khoản",
+          text: t("Xóa tài khoản"),
           style: "destructive",
           onPress: async () => {
             setIsDeletingAccount(true);
             setFeedback("");
             try {
-              await deleteCurrentAccount(deletePassword, deleteConfirmation);
+              await deleteCurrentAccount(deletePassword, "XOA TAI KHOAN");
               onAccountDeleted();
             } catch (error) {
               setFeedback(
                 error instanceof Error
                   ? error.message
-                  : "Không thể xóa tài khoản.",
+                  : t("Không thể xóa tài khoản."),
               );
               setIsDeletingAccount(false);
             }
@@ -764,31 +766,31 @@ function InlineAccountSettings({
   return (
     <View style={styles.inlineSectionWrap}>
       <View style={styles.inlinePanel}>
-        <Text style={styles.inlineSectionTitle}>Đổi mật khẩu</Text>
+        <Text style={styles.inlineSectionTitle}>{t("Đổi mật khẩu")}</Text>
         <Text style={styles.inlineSectionDescription}>
-          Dùng mật khẩu hiện tại để đặt mật khẩu mới cho tài khoản.
+          {t("Dùng mật khẩu hiện tại để đặt mật khẩu mới cho tài khoản.")}
         </Text>
-        <Text style={styles.inlineFieldLabel}>Mật khẩu hiện tại</Text>
+        <Text style={styles.inlineFieldLabel}>{t("Mật khẩu hiện tại")}</Text>
         <TextInput
           value={currentPassword}
           onChangeText={setCurrentPassword}
-          placeholder="Nhập mật khẩu hiện tại"
+          placeholder={t("Nhập mật khẩu hiện tại")}
           secureTextEntry
           style={styles.inlineInput}
         />
-        <Text style={styles.inlineFieldLabel}>Mật khẩu mới</Text>
+        <Text style={styles.inlineFieldLabel}>{t("Mật khẩu mới")}</Text>
         <TextInput
           value={newPassword}
           onChangeText={setNewPassword}
-          placeholder="Ít nhất 6 ký tự"
+          placeholder={t("Ít nhất 6 ký tự")}
           secureTextEntry
           style={styles.inlineInput}
         />
-        <Text style={styles.inlineFieldLabel}>Xác nhận mật khẩu mới</Text>
+        <Text style={styles.inlineFieldLabel}>{t("Xác nhận mật khẩu mới")}</Text>
         <TextInput
           value={confirmPassword}
           onChangeText={setConfirmPassword}
-          placeholder="Nhập lại mật khẩu mới"
+          placeholder={t("Nhập lại mật khẩu mới")}
           secureTextEntry
           style={styles.inlineInput}
         />
@@ -799,7 +801,7 @@ function InlineAccountSettings({
             disabled={isSavingPassword}
           >
             <Text style={styles.inlinePrimaryButtonText}>
-              {isSavingPassword ? "Đang cập nhật..." : "Đổi mật khẩu"}
+              {isSavingPassword ? t("Đang cập nhật...") : t("Đổi mật khẩu")}
             </Text>
           </Pressable>
         </View>
@@ -808,9 +810,9 @@ function InlineAccountSettings({
       <View style={styles.inlinePanel}>
         <View style={styles.inlineSwitchRow}>
           <View style={styles.inlineSectionCopy}>
-            <Text style={styles.inlineFieldLabel}>Email khuyến mãi</Text>
+            <Text style={styles.inlineFieldLabel}>{t("Email khuyến mãi")}</Text>
             <Text style={styles.inlineSectionDescription}>
-              Cho phép nhận thông tin ưu đãi qua email.
+              {t("Cho phép nhận thông tin ưu đãi qua email.")}
             </Text>
           </View>
           <Switch
@@ -826,18 +828,18 @@ function InlineAccountSettings({
             color="#946200"
           />
           <Text style={styles.inlineNoticeText}>
-            Tùy chọn được lưu trên thiết bị này; gửi email cần dịch vụ backend.
+            {t("Tùy chọn được lưu trên thiết bị này; gửi email cần dịch vụ backend.")}
           </Text>
         </View>
       </View>
 
       <View style={styles.inlinePanel}>
-        <Text style={styles.inlineSectionTitle}>Bảo mật tài khoản</Text>
+        <Text style={styles.inlineSectionTitle}>{t("Bảo mật tài khoản")}</Text>
         <VerificationStatus
           label="Email"
-          value={userId ? "Chưa xác minh" : "Không khả dụng"}
+          value={t(userId ? "Chưa xác minh" : "Không khả dụng")}
         />
-        <VerificationStatus label="Số điện thoại" value="Chưa xác minh" />
+        <VerificationStatus label={t("Số điện thoại")} value={t("Chưa xác minh")} />
         <View style={styles.inlineNotice}>
           <Ionicons
             name="information-circle-outline"
@@ -845,45 +847,31 @@ function InlineAccountSettings({
             color="#946200"
           />
           <Text style={styles.inlineNoticeText}>
-            Xác minh email hoặc số điện thoại cần backend gửi mã xác thực; bản
-            demo chưa hỗ trợ.
+            {t("Xác minh email hoặc số điện thoại cần backend gửi mã xác thực; bản demo chưa hỗ trợ.")}
           </Text>
         </View>
       </View>
 
-      <View style={styles.inlinePanel}>
-        <Text style={styles.inlineSectionTitle}>Ngôn ngữ</Text>
-        <View style={styles.languageRow}>
-          <Text style={styles.inlineFieldLabel}>Ngôn ngữ giao diện</Text>
-          <Text style={styles.languageValue}>Tiếng Việt</Text>
-        </View>
-        <Text style={styles.inlineSectionDescription}>
-          BVP Shop hiện chỉ có giao diện tiếng Việt nên chưa có lựa chọn ngôn
-          ngữ khác.
-        </Text>
-      </View>
-
       <View style={styles.dangerPanel}>
-        <Text style={styles.dangerTitle}>Xóa tài khoản</Text>
+        <Text style={styles.dangerTitle}>{t("Xóa tài khoản")}</Text>
         <Text style={styles.inlineSectionDescription}>
-          Xóa tài khoản và dữ liệu gắn với tài khoản trên thiết bị này. Cần nhập
-          lại mật khẩu và xác nhận rõ ràng.
+          {t("Xóa tài khoản và dữ liệu gắn với tài khoản trên thiết bị này. Cần nhập lại mật khẩu và xác nhận rõ ràng.")}
         </Text>
-        <Text style={styles.inlineFieldLabel}>Mật khẩu hiện tại</Text>
+        <Text style={styles.inlineFieldLabel}>{t("Mật khẩu hiện tại")}</Text>
         <TextInput
           value={deletePassword}
           onChangeText={setDeletePassword}
-          placeholder="Nhập mật khẩu để xác nhận"
+          placeholder={t("Nhập mật khẩu để xác nhận")}
           secureTextEntry
           style={styles.inlineInput}
         />
         <Text style={styles.inlineFieldLabel}>
-          Nhập XOA TAI KHOAN để xác nhận
+          {t("Nhập XOA TAI KHOAN để xác nhận")}
         </Text>
         <TextInput
           value={deleteConfirmation}
           onChangeText={setDeleteConfirmation}
-          placeholder="XOA TAI KHOAN"
+          placeholder={t("XOA TAI KHOAN")}
           autoCapitalize="characters"
           style={styles.inlineInput}
         />
@@ -893,7 +881,7 @@ function InlineAccountSettings({
           disabled={isDeletingAccount}
         >
           <Text style={styles.deleteAccountButtonText}>
-            {isDeletingAccount ? "Đang xóa..." : "Xóa tài khoản vĩnh viễn"}
+            {isDeletingAccount ? t("Đang xóa...") : t("Xóa tài khoản vĩnh viễn")}
           </Text>
         </Pressable>
       </View>
@@ -910,12 +898,14 @@ function VerificationStatus({
   label: string;
   value: string;
 }) {
+  const { t } = useLanguage();
+
   return (
     <View style={styles.verificationRow}>
-      <Text style={styles.verificationLabel}>{label}</Text>
+      <Text style={styles.verificationLabel}>{t(label)}</Text>
       <View style={styles.verificationValueGroup}>
         <Ionicons name="alert-circle-outline" size={16} color="#946200" />
-        <Text style={styles.verificationValue}>{value}</Text>
+        <Text style={styles.verificationValue}>{t(value)}</Text>
       </View>
     </View>
   );
@@ -935,12 +925,12 @@ function InlineAddressSection({ userId }: { userId: string }) {
         if (isMounted) setAddresses(savedAddresses);
       })
       .catch(() => {
-        if (isMounted) setFeedback("Không tải được danh sách địa chỉ.");
+        if (isMounted) setFeedback(t("Không tải được danh sách địa chỉ."));
       });
     return () => {
       isMounted = false;
     };
-  }, [userId]);
+  }, [t, userId]);
 
   const updateField = (
     key: "receiver" | "phone" | "province" | "district" | "ward" | "detail",
@@ -971,7 +961,7 @@ function InlineAddressSection({ userId }: { userId: string }) {
       !form.ward.trim() ||
       !form.detail.trim()
     ) {
-      setFeedback("Vui lòng điền đầy đủ thông tin địa chỉ.");
+      setFeedback(t("Vui lòng điền đầy đủ thông tin địa chỉ."));
       return;
     }
 
@@ -981,23 +971,23 @@ function InlineAddressSection({ userId }: { userId: string }) {
       setForm(null);
       setFeedback("");
     } catch {
-      setFeedback("Không lưu được địa chỉ. Vui lòng thử lại.");
+      setFeedback(t("Không lưu được địa chỉ. Vui lòng thử lại."));
     } finally {
       setIsSaving(false);
     }
   };
 
   const confirmDelete = (address: Address) => {
-    Alert.alert("Xóa địa chỉ", `Xóa địa chỉ của ${address.receiver}?`, [
-      { text: "Hủy", style: "cancel" },
+    Alert.alert(t("Xóa địa chỉ"), `${t("Xóa địa chỉ của")} ${address.receiver}?`, [
+      { text: t("Hủy"), style: "cancel" },
       {
-        text: "Xóa",
+        text: t("Xóa"),
         style: "destructive",
         onPress: async () => {
           try {
             setAddresses(await deleteAddress(address.id, userId));
           } catch {
-            setFeedback("Không xóa được địa chỉ. Vui lòng thử lại.");
+              setFeedback(t("Không xóa được địa chỉ. Vui lòng thử lại."));
           }
         },
       },
@@ -1029,9 +1019,9 @@ function InlineAddressSection({ userId }: { userId: string }) {
     <View style={styles.inlineSectionWrap}>
       <View style={styles.inlineSectionToolbar}>
         <View style={styles.inlineSectionCopy}>
-          <Text style={styles.inlineSectionTitle}>Địa chỉ đã lưu</Text>
+          <Text style={styles.inlineSectionTitle}>{t("Địa chỉ đã lưu")}</Text>
           <Text style={styles.inlineSectionDescription}>
-            Chọn địa chỉ nhận hàng mặc định hoặc cập nhật danh sách của bạn.
+            {t("Chọn địa chỉ nhận hàng mặc định hoặc cập nhật danh sách của bạn.")}
           </Text>
         </View>
         {!form && (
@@ -1040,7 +1030,7 @@ function InlineAddressSection({ userId }: { userId: string }) {
             onPress={startNewAddress}
           >
             <Ionicons name="add" size={18} color="#fff" />
-            <Text style={styles.inlinePrimaryButtonText}>Thêm địa chỉ</Text>
+            <Text style={styles.inlinePrimaryButtonText}>{t("Thêm địa chỉ")}</Text>
           </Pressable>
         )}
       </View>
@@ -1049,16 +1039,16 @@ function InlineAddressSection({ userId }: { userId: string }) {
         <View style={styles.inlinePanel}>
           <Text style={styles.inlineSectionTitle}>
             {addresses.some((address) => address.id === form.id)
-              ? "Chỉnh sửa địa chỉ"
-              : "Địa chỉ mới"}
+              ? t("Chỉnh sửa địa chỉ")
+              : t("Địa chỉ mới")}
           </Text>
           {addressFields.map((field) => (
             <View key={field.key}>
-              <Text style={styles.inlineFieldLabel}>{field.label}</Text>
+              <Text style={styles.inlineFieldLabel}>{t(field.label)}</Text>
               <TextInput
                 value={form[field.key]}
                 onChangeText={(value) => updateField(field.key, value)}
-                placeholder={field.placeholder}
+                placeholder={t(field.placeholder)}
                 placeholderTextColor="#999"
                 style={styles.inlineInput}
                 keyboardType={field.key === "phone" ? "phone-pad" : "default"}
@@ -1067,7 +1057,7 @@ function InlineAddressSection({ userId }: { userId: string }) {
           ))}
           <View style={styles.inlineSwitchRow}>
             <Text style={styles.inlineFieldLabel}>
-              Đặt làm địa chỉ mặc định
+              {t("Đặt làm địa chỉ mặc định")}
             </Text>
             <Switch
               value={form.isDefault}
@@ -1095,7 +1085,7 @@ function InlineAddressSection({ userId }: { userId: string }) {
               disabled={isSaving}
             >
               <Text style={styles.inlinePrimaryButtonText}>
-                {isSaving ? "Đang lưu..." : "Lưu địa chỉ"}
+                {isSaving ? t("Đang lưu...") : t("Lưu địa chỉ")}
               </Text>
             </Pressable>
           </View>
@@ -1107,8 +1097,8 @@ function InlineAddressSection({ userId }: { userId: string }) {
       {addresses.length === 0 && !form ? (
         <InlineEmptySection
           icon="location-outline"
-          title="Bạn chưa lưu địa chỉ nào"
-          description="Thêm địa chỉ để thuận tiện cho lần đặt hàng tiếp theo."
+          title={t("Bạn chưa lưu địa chỉ nào")}
+          description={t("Thêm địa chỉ để thuận tiện cho lần đặt hàng tiếp theo.")}
         />
       ) : (
         addresses.map((address) => (
@@ -1142,7 +1132,7 @@ function InlineAddressSection({ userId }: { userId: string }) {
                         ),
                       );
                     } catch {
-                      setFeedback("Không thể đổi địa chỉ mặc định.");
+                      setFeedback(t("Không thể đổi địa chỉ mặc định."));
                     }
                   }}
                 >
@@ -1169,18 +1159,22 @@ function InlineEmptySection({
   title: string;
   description: string;
 }) {
+  const { t } = useLanguage();
+
   return (
     <View style={styles.inlineEmptyPanel}>
       <View style={styles.inlineEmptyIcon}>
         <Ionicons name={icon} size={27} color="#d32f2f" />
       </View>
-      <Text style={styles.inlineEmptyTitle}>{title}</Text>
-      <Text style={styles.inlineSectionDescription}>{description}</Text>
+      <Text style={styles.inlineEmptyTitle}>{t(title)}</Text>
+      <Text style={styles.inlineSectionDescription}>{t(description)}</Text>
     </View>
   );
 }
 
 function InlineWalletSection() {
+  const { t } = useLanguage();
+
   return (
     <View style={styles.inlinePanel}>
       <View style={styles.inlineWalletHeader}>
@@ -1188,14 +1182,14 @@ function InlineWalletSection() {
           <Ionicons name="wallet-outline" size={25} color="#d32f2f" />
         </View>
         <View style={styles.inlineSectionCopy}>
-          <Text style={styles.inlineFieldLabel}>Số dư ví hiện tại</Text>
-          <Text style={styles.inlineWalletBalance}>0đ</Text>
+          <Text style={styles.inlineFieldLabel}>{t("Số dư ví hiện tại")}</Text>
+          <Text style={styles.inlineWalletBalance}>{t("0đ")}</Text>
         </View>
       </View>
       <View style={styles.inlineNotice}>
         <Ionicons name="information-circle-outline" size={19} color="#946200" />
         <Text style={styles.inlineNoticeText}>
-          Ví điện tử và phương thức thanh toán chưa được kết nối trong bản demo.
+          {t("Ví điện tử và phương thức thanh toán chưa được kết nối trong bản demo.")}
         </Text>
       </View>
     </View>
@@ -1622,22 +1616,6 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   verificationValue: { color: "#946200", fontSize: 12, fontWeight: "600" },
-  languageRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    flexWrap: "wrap",
-    gap: 10,
-  },
-  languageValue: {
-    color: "#555",
-    fontSize: 12,
-    fontWeight: "700",
-    paddingHorizontal: 11,
-    paddingVertical: 7,
-    borderRadius: 16,
-    backgroundColor: "#f3f3f3",
-  },
   dangerPanel: {
     backgroundColor: "#fffafa",
     borderWidth: 1,

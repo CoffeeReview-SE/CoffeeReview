@@ -160,6 +160,95 @@ const translations: Record<string, string> = {
   "Bảo mật tài khoản": "Account security",
   "Ngôn ngữ giao diện": "Interface language",
   "Xóa tài khoản": "Delete account",
+  "Ảnh đại diện": "Profile picture",
+  "Cập nhật thông tin cá nhân hiển thị trên tài khoản và đơn hàng.":
+    "Update the personal information shown on your account and orders.",
+  "Chọn ảnh từ thư viện trên thiết bị.": "Choose a photo from your device library.",
+  "Đăng xuất thất bại": "Unable to log out",
+  "Không thể đăng xuất lúc này.": "Unable to log out right now.",
+  "Đang lưu...": "Saving...",
+  "Đang cập nhật...": "Updating...",
+  "Đang xóa...": "Deleting...",
+  "Thông tin cá nhân đã được cập nhật.": "Personal information updated.",
+  "Vui lòng nhập đầy đủ họ tên, email và số điện thoại.":
+    "Please enter your full name, email, and phone number.",
+  "Email chưa đúng định dạng.": "The email format is invalid.",
+  "Số điện thoại chưa hợp lệ.": "The phone number is invalid.",
+  "Ngày sinh dùng định dạng DD/MM/YYYY.": "Use DD/MM/YYYY for the date of birth.",
+  "Ngày sinh không hợp lệ.": "The date of birth is invalid.",
+  "Ảnh quá lớn. Hãy chọn ảnh khác có dung lượng nhỏ hơn.":
+    "This photo is too large. Choose a smaller one.",
+  "Không mở được thư viện ảnh. Vui lòng thử lại.":
+    "Could not open the photo library. Please try again.",
+  "Không lưu được thông tin.": "Could not save the information.",
+  "Email": "Email",
+  "Không tải được tùy chọn thông báo.": "Could not load notification preferences.",
+  "Vui lòng nhập đủ mật khẩu hiện tại và mật khẩu mới.":
+    "Enter your current and new passwords.",
+  "Mật khẩu xác nhận không khớp.": "The passwords do not match.",
+  "Mật khẩu đã được thay đổi.": "Password changed.",
+  "Không đổi được mật khẩu.": "Could not change the password.",
+  "Không lưu được tùy chọn email khuyến mãi.":
+    "Could not save promotional email preferences.",
+  'Nhập mật khẩu và chính xác cụm "XOA TAI KHOAN" để tiếp tục.':
+    'Enter your password and the exact phrase "DELETE ACCOUNT" to continue.',
+  "XOA TAI KHOAN": "DELETE ACCOUNT",
+  "Nhập XOA TAI KHOAN để xác nhận": "Enter DELETE ACCOUNT to confirm",
+  "Xóa tài khoản vĩnh viễn?": "Permanently delete your account?",
+  "Xóa tài khoản vĩnh viễn": "Delete account permanently",
+  "Mục này sẽ được hoàn thiện ở bước tiếp theo.":
+    "This section will be completed in a future update.",
+  "Tài khoản, địa chỉ đã lưu và tùy chọn email khuyến mãi của bạn sẽ bị xóa khỏi thiết bị này. Thao tác này không thể hoàn tác.":
+    "Your account, saved addresses, and promotional email preferences will be deleted from this device. This cannot be undone.",
+  "Giữ tài khoản": "Keep account",
+  "Không thể xóa tài khoản.": "Could not delete the account.",
+  "Dùng mật khẩu hiện tại để đặt mật khẩu mới cho tài khoản.":
+    "Use your current password to set a new password.",
+  "Nhập mật khẩu mới": "Enter a new password",
+  "Cho phép nhận thông tin ưu đãi qua email.":
+    "Receive special offers by email.",
+  "Tùy chọn được lưu trên thiết bị này; gửi email cần dịch vụ backend.":
+    "This preference is saved on this device. Sending email requires a backend service.",
+  "Chưa xác minh": "Not verified",
+  "Không khả dụng": "Unavailable",
+  "Xác minh email hoặc số điện thoại cần backend gửi mã xác thực; bản demo chưa hỗ trợ.":
+    "Email or phone verification requires a backend verification code, which this demo does not support.",
+  "Xóa tài khoản và dữ liệu gắn với tài khoản trên thiết bị này. Cần nhập lại mật khẩu và xác nhận rõ ràng.":
+    "Delete this account and its data from this device. You must re-enter your password and confirm the action.",
+  "Địa chỉ của": "Address for",
+  "Xóa địa chỉ của": "Delete the address for",
+  "Không tải được danh sách địa chỉ.": "Could not load addresses.",
+  "Vui lòng điền đầy đủ thông tin địa chỉ.": "Complete all address fields.",
+  "Không lưu được địa chỉ. Vui lòng thử lại.":
+    "Could not save the address. Please try again.",
+  "Không xóa được địa chỉ. Vui lòng thử lại.":
+    "Could not delete the address. Please try again.",
+  "Chọn địa chỉ nhận hàng mặc định hoặc cập nhật danh sách của bạn.":
+    "Choose a default delivery address or update your address list.",
+  "Chỉnh sửa địa chỉ": "Edit address",
+  "Bạn chưa lưu địa chỉ nào": "You have no saved addresses",
+  "Thêm địa chỉ để thuận tiện cho lần đặt hàng tiếp theo.":
+    "Add an address to make your next order easier.",
+  "Không thể đổi địa chỉ mặc định.": "Could not set the default address.",
+  "Ví điện tử và phương thức thanh toán chưa được kết nối trong bản demo.":
+    "Wallet and payment methods are not connected in this demo.",
+  "Bạn chưa đăng nhập.": "You are not logged in.",
+  "Mật khẩu hiện tại không đúng.": "The current password is incorrect.",
+  "Mật khẩu mới phải có ít nhất 6 ký tự.":
+    "The new password must be at least 6 characters.",
+  "Email hoặc số điện thoại đã được đăng ký.":
+    "This email or phone number is already registered.",
+  "Email hoặc số điện thoại đã được tài khoản khác sử dụng.":
+    "This email or phone number is used by another account.",
+  "Thông tin đăng nhập không đúng. Nếu chưa có tài khoản, hãy đăng ký trước.":
+    "The login details are incorrect. Sign up if you do not have an account.",
+  'Vui lòng nhập chính xác "XOA TAI KHOAN" để xác nhận.':
+    'Enter "DELETE ACCOUNT" exactly to confirm.',
+  "TP. Hồ Chí Minh": "Ho Chi Minh City",
+  "Quận 1": "District 1",
+  "Phường Bến Nghé": "Ben Nghe Ward",
+  "Số nhà, tên đường...": "House number, street...",
+  "0đ": "0₫",
   "Nhập mật khẩu để xác nhận": "Enter password to confirm",
   "Địa chỉ đã lưu": "Saved addresses",
   "Thêm địa chỉ": "Add address",
@@ -191,6 +280,7 @@ const translations: Record<string, string> = {
   "Xem các sản phẩm bạn đã chọn": "View the products you selected",
   "Quản lý địa chỉ nhận hàng": "Manage delivery addresses",
   "Sản phẩm yêu thích": "Favorite products",
+  "Các sản phẩm bạn đã lưu": "Your saved products",
   "Phương thức thanh toán": "Payment methods",
   "Mã giảm giá": "Coupons",
   "Ưu đãi dành cho bạn": "Offers for you",
