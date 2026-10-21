@@ -1,6 +1,9 @@
+
 import React from "react";
 import {
+  Alert,
   Image,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -21,6 +24,7 @@ import { useLanguage } from "@/Core/contexts/language-context";
 
 function HoverButton({ children, style, hoverStyle, ...props }: any) {
   const [hovered, setHovered] = React.useState(false);
+
   return (
     <Pressable
       {...props}
@@ -43,6 +47,7 @@ type OrderStatus =
   | "Đang giao"
   | "Hoàn thành"
   | "Đã hủy";
+
 type Order = {
   id: string;
   date: string;
@@ -51,7 +56,7 @@ type Order = {
   status: Exclude<OrderStatus, "Tất cả">;
 };
 
-const orders: Order[] = [
+const initialOrders: Order[] = [
   {
     id: "DH26091001",
     date: "10/10/2026",
@@ -99,37 +104,116 @@ export default function OrdersScreen() {
   const { t } = useLanguage();
   const { width } = useWindowDimensions();
   const isMobile = width < 600;
+
+  const [orders, setOrders] = React.useState<Order[]>(initialOrders);
   const [activeTab, setActiveTab] = React.useState<OrderStatus>("Tất cả");
   const [search, setSearch] = React.useState("");
 
   const filteredOrders = orders.filter((order) => {
     const matchesTab = activeTab === "Tất cả" || order.status === activeTab;
     const query = search.trim().toLowerCase();
+
     const matchesSearch =
       !query ||
       order.id.toLowerCase().includes(query) ||
       order.items.toLowerCase().includes(query);
+
     return matchesTab && matchesSearch;
   });
 
+  /* ================================================= */
+  /*              XỬ LÝ HỦY ĐƠN HÀNG                 */
+  /* ================================================= */
+
+  const handleCancelOrder = (orderId: string) => {
+    const selectedOrder = orders.find((order) => order.id === orderId);
+
+    if (!selectedOrder) {
+      return;
+    }
+
+    // Chỉ cho phép hủy đơn đang chờ xác nhận.
+    if (selectedOrder.status !== "Chờ xác nhận") {
+      const message =
+        selectedOrder.status === "Đã hủy"
+          ? "Đơn hàng này đã được hủy trước đó."
+          : "Không thể hủy đơn hàng này vì trạng thái hiện tại không cho phép hủy.";
+
+      if (Platform.OS === "web") {
+        window.alert(message);
+      } else {
+        Alert.alert("Không thể hủy đơn", message);
+      }
+
+      return;
+    }
+
+    // Cập nhật trạng thái sau khi khách hàng xác nhận.
+    const confirmCancel = () => {
+      setOrders((previousOrders) =>
+        previousOrders.map((order) =>
+          order.id === orderId
+            ? { ...order, status: "Đã hủy" }
+            : order,
+        ),
+      );
+
+      const message = `Đơn hàng ${orderId} đã được hủy thành công.`;
+
+      if (Platform.OS === "web") {
+        window.alert(message);
+      } else {
+        Alert.alert("Hủy đơn thành công", message);
+      }
+    };
+
+    // Web sử dụng confirm; Android/iOS sử dụng Alert.
+    if (Platform.OS === "web") {
+      const confirmed = window.confirm(
+        `Bạn có chắc chắn muốn hủy đơn hàng ${orderId}?`,
+      );
+
+      if (confirmed) {
+        confirmCancel();
+      }
+
+      return;
+    }
+
+    Alert.alert(
+      "Xác nhận hủy đơn",
+      `Bạn có chắc chắn muốn hủy đơn hàng ${orderId}?`,
+      [
+        {
+          text: "Không",
+          style: "cancel",
+        },
+        {
+          text: "Xác nhận hủy",
+          style: "destructive",
+          onPress: confirmCancel,
+        },
+      ],
+    );
+  };
+
   return (
     <View style={styles.container}>
-      {/* ================================================= */}
-      {/*                     HEADER                        */}
-      {/* ================================================= */}
+      {/* HEADER */}
       <View style={isMobile ? styles.phoneHeader : styles.header}>
-        {/* Logo giống trang chủ */}
         <HoverButton style={styles.brandRow} onPress={() => router.push("/")}>
           <Image
             source={require("@/assets/image/logo.jpg")}
             style={isMobile ? styles.phoneLogoImage : styles.logoImage}
             resizeMode="cover"
           />
+
           <View>
             <Text style={styles.logoText}>{t("BVP Shop")}</Text>
+
             {!isMobile && (
               <Text style={styles.headerSubtitle}>
-                  {t("Mua sắm dễ dàng · Giao hàng tận nơi")}
+                {t("Mua sắm dễ dàng · Giao hàng tận nơi")}
               </Text>
             )}
           </View>
@@ -137,6 +221,7 @@ export default function OrdersScreen() {
 
         <View style={styles.headerActions}>
           <LanguageSelector />
+
           {!isMobile && (
             <HoverButton
               style={styles.headerAction}
@@ -147,6 +232,7 @@ export default function OrdersScreen() {
               <Text style={styles.headerActionText}>{t("Giỏ hàng")}</Text>
             </HoverButton>
           )}
+
           <HoverButton
             style={[styles.headerAction, isMobile && styles.phoneHeaderAction]}
             hoverStyle={styles.headerActionHover}
@@ -155,6 +241,7 @@ export default function OrdersScreen() {
             accessibilityLabel="Tài khoản"
           >
             <Ionicons name="person-outline" size={23} color="#ffffff" />
+
             {!isMobile && (
               <Text style={styles.headerActionText}>{t("Tài khoản")}</Text>
             )}
@@ -162,10 +249,7 @@ export default function OrdersScreen() {
         </View>
       </View>
 
-      {/* ================================================= */}
-      {/*                 NỘI DUNG ĐƠN HÀNG                */}
-      {/* ================================================= */}
-
+      {/* NỘI DUNG ĐƠN HÀNG */}
       <ScrollView
         style={styles.contentScroll}
         contentContainerStyle={
@@ -177,10 +261,12 @@ export default function OrdersScreen() {
           <View style={styles.headingIcon}>
             <Ionicons name="receipt-outline" size={24} color="red" />
           </View>
+
           <View style={styles.headingCopy}>
             <Text style={isMobile ? styles.phonePageTitle : styles.pageTitle}>
               {t("Đơn hàng của tôi")}
             </Text>
+
             <Text style={styles.pageSubtitle}>
               {t("Theo dõi và quản lý các đơn hàng của bạn")}
             </Text>
@@ -194,16 +280,22 @@ export default function OrdersScreen() {
             value={`${orders.length}`}
             isMobile={isMobile}
           />
+
           <SummaryCard
             icon="time-outline"
             label={t("Chờ xác nhận")}
-            value={`${orders.filter((o) => o.status === "Chờ xác nhận").length}`}
+            value={`${
+              orders.filter((order) => order.status === "Chờ xác nhận").length
+            }`}
             isMobile={isMobile}
           />
+
           <SummaryCard
             icon="bicycle-outline"
             label={t("Đang giao")}
-            value={`${orders.filter((o) => o.status === "Đang giao").length}`}
+            value={`${
+              orders.filter((order) => order.status === "Đang giao").length
+            }`}
             isMobile={isMobile}
           />
         </View>
@@ -212,14 +304,17 @@ export default function OrdersScreen() {
           <View style={isMobile ? styles.phonePanelHeader : styles.panelHeader}>
             <View>
               <Text style={styles.panelTitle}>{t("Danh sách đơn hàng")}</Text>
+
               <Text style={styles.panelSubtitle}>
                 {t("Bạn có ")}
                 {filteredOrders.length}
                 {t(" đơn hàng phù hợp")}
               </Text>
             </View>
+
             <View style={styles.searchBar}>
               <Ionicons name="search-outline" size={19} color="#777" />
+
               <TextInput
                 value={search}
                 onChangeText={setSearch}
@@ -227,6 +322,7 @@ export default function OrdersScreen() {
                 placeholderTextColor="#888"
                 style={styles.searchInput}
               />
+
               {search.length > 0 && (
                 <Pressable onPress={() => setSearch("")}>
                   <Ionicons name="close-circle" size={18} color="#999" />
@@ -242,6 +338,7 @@ export default function OrdersScreen() {
           >
             {tabs.map((tab) => {
               const selected = activeTab === tab;
+
               return (
                 <HoverButton
                   key={tab}
@@ -254,6 +351,7 @@ export default function OrdersScreen() {
                   >
                     {t(tab)}
                   </Text>
+
                   {tab === "Tất cả" && (
                     <Text
                       style={[
@@ -271,15 +369,26 @@ export default function OrdersScreen() {
 
           <View style={styles.orderList}>
             {filteredOrders.map((order) => (
-              <OrderCard key={order.id} order={order} isMobile={isMobile} />
+              <OrderCard
+                key={order.id}
+                order={order}
+                isMobile={isMobile}
+                onCancel={handleCancelOrder}
+              />
             ))}
+
             {filteredOrders.length === 0 && (
               <View style={styles.emptyState}>
                 <Ionicons name="file-tray-outline" size={44} color="#bbb" />
-                <Text style={styles.emptyTitle}>{t("Không tìm thấy đơn hàng")}</Text>
+
+                <Text style={styles.emptyTitle}>
+                  {t("Không tìm thấy đơn hàng")}
+                </Text>
+
                 <Text style={styles.emptyDescription}>
                   {t("Thử thay đổi từ khóa hoặc trạng thái lọc.")}
                 </Text>
+
                 <HoverButton
                   style={styles.resetButton}
                   hoverStyle={styles.buttonHover}
@@ -288,16 +397,20 @@ export default function OrdersScreen() {
                     setActiveTab("Tất cả");
                   }}
                 >
-                  <Text style={styles.resetButtonText}>{t("Xóa bộ lọc")}</Text>
+                  <Text style={styles.resetButtonText}>
+                    {t("Xóa bộ lọc")}
+                  </Text>
                 </HoverButton>
               </View>
             )}
           </View>
         </View>
+
         <Text style={styles.footerNote}>
           {t("BVP Shop · Cảm ơn bạn đã mua sắm cùng chúng tôi!")}
         </Text>
       </ScrollView>
+
       <AiConsultationWidget onPress={() => router.push("/chat")} />
     </View>
   );
@@ -323,8 +436,10 @@ function SummaryCard({
       <View style={styles.summaryIcon}>
         <Ionicons name={icon} size={isMobile ? 19 : 22} color="red" />
       </View>
+
       <View style={styles.summaryCopy}>
         <Text style={styles.summaryLabel}>{label}</Text>
+
         <Text style={isMobile ? styles.phoneSummaryValue : styles.summaryValue}>
           {value}
         </Text>
@@ -337,9 +452,18 @@ function SummaryCard({
 /*                 THẺ CHI TIẾT ĐƠN HÀNG             */
 /* ================================================= */
 
-function OrderCard({ order, isMobile }: { order: Order; isMobile: boolean }) {
+function OrderCard({
+  order,
+  isMobile,
+  onCancel,
+}: {
+  order: Order;
+  isMobile: boolean;
+  onCancel: (orderId: string) => void;
+}) {
   const { t } = useLanguage();
   const [expanded, setExpanded] = React.useState(false);
+
   const statusStyle =
     order.status === "Hoàn thành"
       ? styles.statusSuccess
@@ -348,6 +472,7 @@ function OrderCard({ order, isMobile }: { order: Order; isMobile: boolean }) {
         : order.status === "Đã hủy"
           ? styles.statusCancelled
           : styles.statusPending;
+
   const statusIcon =
     order.status === "Hoàn thành"
       ? "checkmark-circle"
@@ -364,14 +489,17 @@ function OrderCard({ order, isMobile }: { order: Order; isMobile: boolean }) {
           <View style={styles.orderIcon}>
             <Ionicons name="cube-outline" size={20} color="red" />
           </View>
+
           <View style={styles.orderIdCopy}>
             <Text style={styles.orderId}>{order.id}</Text>
+
             <Text style={styles.orderDate}>
               {t("Đặt ngày ")}
               {order.date}
             </Text>
           </View>
         </View>
+
         <View style={[styles.statusBadge, statusStyle]}>
           <Ionicons
             name={statusIcon as keyof typeof Ionicons.glyphMap}
@@ -386,6 +514,7 @@ function OrderCard({ order, isMobile }: { order: Order; isMobile: boolean }) {
                     : "#a86a00"
             }
           />
+
           <Text
             style={[
               styles.statusText,
@@ -402,37 +531,55 @@ function OrderCard({ order, isMobile }: { order: Order; isMobile: boolean }) {
           </Text>
         </View>
       </View>
+
       <View style={styles.orderDivider} />
+
       <View style={isMobile ? styles.phoneOrderDetails : styles.orderDetails}>
         <View style={styles.productSummary}>
           <View style={styles.productPlaceholder}>
-            <Ionicons name="hardware-chip-outline" size={26} color="#777" />
+            <Ionicons
+              name="hardware-chip-outline"
+              size={26}
+              color="#777"
+            />
           </View>
+
           <View style={styles.productCopy}>
-            <Text style={styles.productSummaryTitle}>{t("Sản phẩm trong đơn")}</Text>
+            <Text style={styles.productSummaryTitle}>
+              {t("Sản phẩm trong đơn")}
+            </Text>
+
             <Text style={styles.productSummaryText}>{t(order.items)}</Text>
           </View>
         </View>
+
         <View style={styles.orderTotalBlock}>
           <Text style={styles.totalLabel}>{t("Tổng thanh toán")}</Text>
           <Text style={styles.orderTotal}>{order.total}</Text>
         </View>
       </View>
+
       {expanded && (
         <View style={styles.expandedDetails}>
-          <Text style={styles.expandedTitle}>{t("Thông tin đơn hàng")}</Text>
+          <Text style={styles.expandedTitle}>
+            {t("Thông tin đơn hàng")}
+          </Text>
+
           <Text style={styles.expandedText}>
             {t("Mã đơn: ")}
             {order.id}
           </Text>
+
           <Text style={styles.expandedText}>
             {t("Ngày đặt: ")}
             {order.date}
           </Text>
+
           <Text style={styles.expandedText}>
             {t("Trạng thái hiện tại: ")}
             {t(order.status)}
           </Text>
+
           <Text style={styles.expandedText}>
             {t(
               "Địa chỉ giao hàng và thông tin vận chuyển sẽ được hiển thị khi kết nối dữ liệu đơn hàng.",
@@ -440,11 +587,17 @@ function OrderCard({ order, isMobile }: { order: Order; isMobile: boolean }) {
           </Text>
         </View>
       )}
+
       <View style={styles.orderBottomRow}>
         <Text style={styles.orderBottomHint}>
-          <Ionicons name="shield-checkmark-outline" size={14} color="#777" />{" "}
+          <Ionicons
+            name="shield-checkmark-outline"
+            size={14}
+            color="#777"
+          />{" "}
           {t("Giao dịch an toàn")}
         </Text>
+
         <View style={styles.orderButtons}>
           <HoverButton
             onPress={() => setExpanded(!expanded)}
@@ -454,18 +607,39 @@ function OrderCard({ order, isMobile }: { order: Order; isMobile: boolean }) {
             <Text style={styles.detailButtonText}>
               {expanded ? t("Thu gọn") : t("Chi tiết")}
             </Text>
+
             <Ionicons
               name={expanded ? "chevron-up" : "chevron-forward"}
               size={15}
               color="#444"
             />
           </HoverButton>
+
+          {order.status === "Chờ xác nhận" && (
+            <HoverButton
+              onPress={() => onCancel(order.id)}
+              style={styles.cancelButton}
+              hoverStyle={styles.cancelButtonHover}
+            >
+              <Ionicons
+                name="close-circle-outline"
+                size={15}
+                color="#c62828"
+              />
+
+              <Text style={styles.cancelButtonText}>
+                {t("Hủy đơn hàng")}
+              </Text>
+            </HoverButton>
+          )}
+
           {order.status === "Hoàn thành" && (
             <HoverButton
               style={styles.buyAgainButton}
               hoverStyle={styles.buttonHover}
             >
               <Ionicons name="refresh-outline" size={15} color="#ffffff" />
+
               <Text style={styles.buyAgainText}>{t("Mua lại")}</Text>
             </HoverButton>
           )}
@@ -482,6 +656,7 @@ function OrderCard({ order, isMobile }: { order: Order; isMobile: boolean }) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#f5f5f5" },
   contentScroll: { flex: 1 },
+
   header: {
     backgroundColor: "red",
     paddingHorizontal: 28,
@@ -524,6 +699,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
     fontWeight: "500",
   },
+
   desktopContent: {
     paddingHorizontal: 24,
     paddingTop: 26,
@@ -553,6 +729,7 @@ const styles = StyleSheet.create({
   pageTitle: { fontSize: 28, fontWeight: "800", color: "#222" },
   phonePageTitle: { fontSize: 22, fontWeight: "800", color: "#222" },
   pageSubtitle: { fontSize: 13, color: "#777", marginTop: 4 },
+
   summaryRow: { flexDirection: "row", gap: 12, marginBottom: 20 },
   summaryCard: {
     flex: 1,
@@ -600,6 +777,7 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     marginTop: 2,
   },
+
   ordersPanel: {
     backgroundColor: "#ffffff",
     borderRadius: 18,
@@ -646,6 +824,7 @@ const styles = StyleSheet.create({
     color: "#333",
     outlineStyle: "none" as any,
   },
+
   tabsRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -681,6 +860,7 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   tabCountActive: { color: "red", backgroundColor: "#ffffff" },
+
   orderList: { paddingHorizontal: 18, paddingBottom: 18, gap: 12 },
   orderCard: {
     backgroundColor: "#ffffff",
@@ -735,7 +915,12 @@ const styles = StyleSheet.create({
   statusTextShipping: { color: "#1769aa" },
   statusTextCancelled: { color: "#c62828" },
   statusTextPending: { color: "#a86a00" },
-  orderDivider: { height: 1, backgroundColor: "#eeeeee", marginVertical: 14 },
+  orderDivider: {
+    height: 1,
+    backgroundColor: "#eeeeee",
+    marginVertical: 14,
+  },
+
   orderDetails: {
     flexDirection: "row",
     alignItems: "center",
@@ -769,7 +954,13 @@ const styles = StyleSheet.create({
   },
   orderTotalBlock: { alignItems: "flex-end", minWidth: 130 },
   totalLabel: { color: "#888", fontSize: 11 },
-  orderTotal: { color: "red", fontSize: 18, fontWeight: "800", marginTop: 5 },
+  orderTotal: {
+    color: "red",
+    fontSize: 18,
+    fontWeight: "800",
+    marginTop: 5,
+  },
+
   expandedDetails: {
     backgroundColor: "#fafafa",
     borderRadius: 10,
@@ -784,6 +975,7 @@ const styles = StyleSheet.create({
     marginBottom: 3,
   },
   expandedText: { color: "#666", fontSize: 12, lineHeight: 18 },
+
   orderBottomRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -796,7 +988,12 @@ const styles = StyleSheet.create({
     borderTopColor: "#f0f0f0",
   },
   orderBottomHint: { color: "#888", fontSize: 11 },
-  orderButtons: { flexDirection: "row", alignItems: "center", gap: 8 },
+  orderButtons: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    flexWrap: "wrap",
+  },
   detailButton: {
     flexDirection: "row",
     alignItems: "center",
@@ -813,6 +1010,29 @@ const styles = StyleSheet.create({
     transform: [{ scale: 1.03 }],
   },
   detailButtonText: { color: "#444", fontSize: 12, fontWeight: "600" },
+
+  cancelButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 5,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#ffcaca",
+    backgroundColor: "#fff5f5",
+  },
+  cancelButtonHover: {
+    backgroundColor: "#ffe5e5",
+    transform: [{ scale: 1.03 }],
+  },
+  cancelButtonText: {
+    color: "#c62828",
+    fontSize: 12,
+    fontWeight: "600",
+  },
+
   buyAgainButton: {
     flexDirection: "row",
     alignItems: "center",
@@ -831,13 +1051,19 @@ const styles = StyleSheet.create({
     shadowRadius: 5,
     elevation: 3,
   },
+
   emptyState: {
     alignItems: "center",
     justifyContent: "center",
     paddingVertical: 38,
     paddingHorizontal: 16,
   },
-  emptyTitle: { color: "#333", fontSize: 16, fontWeight: "700", marginTop: 12 },
+  emptyTitle: {
+    color: "#333",
+    fontSize: 16,
+    fontWeight: "700",
+    marginTop: 12,
+  },
   emptyDescription: {
     color: "#888",
     fontSize: 12,
