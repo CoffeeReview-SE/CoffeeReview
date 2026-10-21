@@ -1,9 +1,6 @@
-
 import React from "react";
 import {
-  Alert,
   Image,
-  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -126,6 +123,11 @@ export default function OrdersScreen() {
 
   const [search, setSearch] = React.useState("");
 
+  // Trạng thái cho pop-up xác nhận hủy đơn hàng và thông báo thành công
+  const [cancelOrderId, setCancelOrderId] = React.useState<string | null>(null);
+  const [successModalMessage, setSuccessModalMessage] = React.useState<string | null>(null);
+  const [notice, setNotice] = React.useState("");
+
   const filteredOrders = orders.filter((order) => {
     const matchesTab =
       activeTab === "Tất cả" ||
@@ -150,12 +152,6 @@ export default function OrdersScreen() {
       return;
     }
 
-    /*
-     * Dữ liệu sản phẩm mẫu cho đơn hàng đã hoàn thành.
-     *
-     * Nếu catalog sản phẩm hiện tại có ID thật của laptop
-     * ASUS Vivobook, hãy thay ID bên dưới bằng ID đó.
-     */
     const product: Product = {
       id: "LAPTOP_ASUS_VIVOBOOK",
       name: "Laptop ASUS Vivobook",
@@ -171,21 +167,17 @@ export default function OrdersScreen() {
     ]);
 
     const message =
-      `${t("Đã thêm ")}${product.name}` +
+      `${t("Đã thêm ")}${t(product.name)}` +
       `${t(" vào giỏ hàng.")}`;
 
-    if (Platform.OS === "web") {
-      window.alert(message);
-    } else {
-      Alert.alert(t("Mua lại thành công"), message);
-    }
+    setSuccessModalMessage(message);
   };
 
   /* ================================================= */
   /*                 XỬ LÝ HỦY ĐƠN                    */
   /* ================================================= */
 
-  const handleCancelOrder = (orderId: string) => {
+  const initiateCancelOrder = (orderId: string) => {
     const selectedOrder = orders.find(
       (order) => order.id === orderId,
     );
@@ -202,75 +194,36 @@ export default function OrdersScreen() {
               "Không thể hủy đơn hàng này vì trạng thái hiện tại không cho phép hủy.",
             );
 
-      if (Platform.OS === "web") {
-        window.alert(message);
-      } else {
-        Alert.alert(t("Không thể hủy đơn"), message);
-      }
-
+      setNotice(message);
       return;
     }
 
-    const confirmCancel = () => {
-      setOrders((previousOrders) =>
-        previousOrders.map((order) =>
-          order.id === orderId
-            ? { ...order, status: "Đã hủy" }
-            : order,
-        ),
-      );
+    // Mở pop-up xác nhận hủy
+    setCancelOrderId(orderId);
+  };
 
-      const message =
-        `${t("Đơn hàng ")}${orderId}` +
-        `${t(" đã được hủy thành công.")}`;
+  const confirmCancelOrder = () => {
+    if (!cancelOrderId) return;
 
-      if (Platform.OS === "web") {
-        window.alert(message);
-      } else {
-        Alert.alert(t("Hủy đơn thành công"), message);
-      }
-    };
-
-    const handleKeepOrder = () => {
-      const message = t("Giữ nguyên đơn hàng.");
-
-      if (Platform.OS === "web") {
-        window.alert(message);
-      } else {
-        Alert.alert(t("Thông báo"), message);
-      }
-    };
-
-    if (Platform.OS === "web") {
-      const confirmed = window.confirm(
-        `${t("Bạn có chắc chắn muốn hủy đơn hàng ")}${orderId}${t("?")}`,
-      );
-
-      if (confirmed) {
-        confirmCancel();
-      } else {
-        handleKeepOrder();
-      }
-
-      return;
-    }
-
-    Alert.alert(
-      t("Xác nhận hủy đơn"),
-      `${t("Bạn có chắc chắn muốn hủy đơn hàng ")}${orderId}${t("?")}`,
-      [
-        {
-          text: t("Không"),
-          style: "cancel",
-          onPress: handleKeepOrder,
-        },
-        {
-          text: t("Xác nhận hủy"),
-          style: "destructive",
-          onPress: confirmCancel,
-        },
-      ],
+    const orderId = cancelOrderId;
+    setOrders((previousOrders) =>
+      previousOrders.map((order) =>
+        order.id === orderId
+          ? {
+              ...order,
+              status: "Đã hủy",
+            }
+          : order,
+      ),
     );
+
+    setCancelOrderId(null);
+
+    const successMessage =
+      `${t("Đơn hàng")} #${orderId} ` +
+      `${t("đã được hủy thành công.")}`;
+
+    setSuccessModalMessage(successMessage);
   };
 
   /* ================================================= */
@@ -281,7 +234,13 @@ export default function OrdersScreen() {
     <View style={styles.container}>
       {/* HEADER */}
 
-      <View style={isMobile ? styles.phoneHeader : styles.header}>
+      <View
+        style={
+          isMobile
+            ? styles.phoneHeader
+            : styles.header
+        }
+      >
         <HoverButton
           style={styles.brandRow}
           onPress={() => router.push("/")}
@@ -312,7 +271,7 @@ export default function OrdersScreen() {
         <View style={styles.headerActions}>
           <LanguageSelector />
 
-          {/* GIỎ HÀNG: HIỂN THỊ CẢ TRÊN MOBILE */}
+          {/* GIỎ HÀNG */}
 
           <HoverButton
             style={[
@@ -346,6 +305,8 @@ export default function OrdersScreen() {
               </Text>
             )}
           </HoverButton>
+
+          {/* TÀI KHOẢN */}
 
           <HoverButton
             style={[
@@ -424,7 +385,8 @@ export default function OrdersScreen() {
             label={t("Chờ xác nhận")}
             value={`${
               orders.filter(
-                (order) => order.status === "Chờ xác nhận",
+                (order) =>
+                  order.status === "Chờ xác nhận",
               ).length
             }`}
             isMobile={isMobile}
@@ -480,7 +442,11 @@ export default function OrdersScreen() {
               />
 
               {search.length > 0 && (
-                <Pressable onPress={() => setSearch("")}>
+                <Pressable
+                  onPress={() => setSearch("")}
+                  accessibilityRole="button"
+                  accessibilityLabel={t("Xóa nội dung tìm kiếm")}
+                >
                   <Ionicons
                     name="close-circle"
                     size={18}
@@ -543,7 +509,7 @@ export default function OrdersScreen() {
                 key={order.id}
                 order={order}
                 isMobile={isMobile}
-                onCancel={handleCancelOrder}
+                onCancel={initiateCancelOrder}
                 onBuyAgain={handleBuyAgain}
               />
             ))}
@@ -585,6 +551,120 @@ export default function OrdersScreen() {
           {t("BVP Shop · Cảm ơn bạn đã mua sắm cùng chúng tôi!")}
         </Text>
       </ScrollView>
+
+      {/* TOAST / THÔNG BÁO LỖI */}
+      {!!notice && (
+        <View style={styles.toast}>
+          <Ionicons
+            name="alert-circle-outline"
+            size={19}
+            color="#c62828"
+          />
+          <Text style={styles.toastText}>{notice}</Text>
+          <Pressable
+            onPress={() => setNotice("")}
+            accessibilityLabel={t("Đóng thông báo")}
+          >
+            <Ionicons
+              name="close"
+              size={18}
+              color="#666"
+            />
+          </Pressable>
+        </View>
+      )}
+
+      {/* MODAL XÁC NHẬN HỦY ĐƠN HÀNG */}
+      {!!cancelOrderId && (
+        <View style={styles.modalBackdrop}>
+          <Pressable
+            style={styles.modalBackdropTouch}
+            onPress={() => setCancelOrderId(null)}
+          />
+
+          <View style={styles.modalCard}>
+            <View style={styles.modalIcon}>
+              <Ionicons
+                name="alert-circle-outline"
+                size={26}
+                color="#c62828"
+              />
+            </View>
+
+            <Text style={styles.modalTitle}>
+              {t("Xác nhận hủy đơn hàng")}
+            </Text>
+
+            <Text style={styles.modalMessage}>
+              {t("Bạn có chắc chắn muốn hủy đơn hàng")} #{cancelOrderId}?
+            </Text>
+
+            <View style={styles.modalActions}>
+              <Pressable
+                style={styles.modalCancelButton}
+                onPress={() => setCancelOrderId(null)}
+              >
+                <Text style={styles.modalCancelText}>
+                  {t("Không")}
+                </Text>
+              </Pressable>
+
+              <Pressable
+                style={styles.modalDeleteButton}
+                onPress={confirmCancelOrder}
+              >
+                <Text style={styles.modalDeleteText}>
+                  {t("Xác nhận hủy")}
+                </Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      )}
+
+      {/* MODAL THÔNG BÁO THÀNH CÔNG (HỦY ĐƠN HOẶC MUA LẠI) */}
+      {!!successModalMessage && (
+        <View style={styles.modalBackdrop}>
+          <Pressable
+            style={styles.modalBackdropTouch}
+            onPress={() => setSuccessModalMessage(null)}
+          />
+
+          <View style={styles.modalCard}>
+            <View
+              style={[
+                styles.modalIcon,
+                styles.modalSuccessIcon,
+              ]}
+            >
+              <Ionicons
+                name="checkmark-circle-outline"
+                size={27}
+                color="#16834a"
+              />
+            </View>
+
+            <Text style={styles.modalTitle}>
+              {t("Hủy đơn hàng thành công")}
+            </Text>
+
+            <Text style={styles.modalMessage}>
+              {successModalMessage}
+            </Text>
+
+            <View style={styles.modalActions}>
+              <Pressable
+                style={[styles.modalCancelButton, { flex: 1 }]}
+                onPress={() => setSuccessModalMessage(null)}
+              >
+                <Text style={styles.modalCancelText}>
+                  {t("Đóng")}
+                </Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      )}
 
       <AiConsultationWidget
         onPress={() => router.push("/chat")}
@@ -778,6 +858,8 @@ function OrderCard({
         </View>
       </View>
 
+      {/* CHI TIẾT ĐƠN HÀNG */}
+
       {expanded && (
         <View style={styles.expandedDetails}>
           <Text style={styles.expandedTitle}>
@@ -806,6 +888,8 @@ function OrderCard({
           </Text>
         </View>
       )}
+
+      {/* CÁC NÚT THAO TÁC */}
 
       <View style={styles.orderBottomRow}>
         <Text style={styles.orderBottomHint}>
@@ -1574,5 +1658,140 @@ const styles = StyleSheet.create({
     color: "#999",
     fontSize: 11,
     marginTop: 18,
+  },
+
+  toast: {
+    position: "absolute",
+    top: 18,
+    right: 16,
+    left: 16,
+    alignSelf: "center",
+    maxWidth: 520,
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    paddingHorizontal: 15,
+    paddingVertical: 13,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 9,
+    borderWidth: 1,
+    borderColor: "#f5c6cb",
+    shadowColor: "#000",
+    shadowOpacity: 0.12,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 5,
+    zIndex: 1100,
+  },
+
+  toastText: {
+    flex: 1,
+    color: "#c62828",
+    fontSize: 13,
+    fontWeight: "600",
+  },
+
+  modalBackdrop: {
+    position: "absolute",
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
+    backgroundColor: "rgba(0,0,0,0.42)",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+    zIndex: 1000,
+  },
+
+  modalBackdropTouch: {
+    position: "absolute",
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
+  },
+
+  modalCard: {
+    width: "100%",
+    maxWidth: 420,
+    backgroundColor: "#ffffff",
+    borderRadius: 18,
+    padding: 24,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOpacity: 0.18,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 8,
+  },
+
+  modalIcon: {
+    width: 58,
+    height: 58,
+    borderRadius: 29,
+    backgroundColor: "#fff0f0",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 14,
+  },
+
+  modalSuccessIcon: {
+    backgroundColor: "#eaf7ef",
+  },
+
+  modalTitle: {
+    color: "#222",
+    fontSize: 20,
+    fontWeight: "800",
+    textAlign: "center",
+  },
+
+  modalMessage: {
+    color: "#666",
+    fontSize: 14,
+    lineHeight: 21,
+    textAlign: "center",
+    marginTop: 10,
+  },
+
+  modalActions: {
+    flexDirection: "row",
+    alignSelf: "stretch",
+    gap: 10,
+    marginTop: 22,
+  },
+
+  modalCancelButton: {
+    flex: 1,
+    minHeight: 44,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "#ddd",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 10,
+  },
+
+  modalCancelText: {
+    color: "#444",
+    fontSize: 14,
+    fontWeight: "700",
+  },
+
+  modalDeleteButton: {
+    flex: 1,
+    minHeight: 44,
+    borderRadius: 10,
+    backgroundColor: "#d90000",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 10,
+  },
+
+  modalDeleteText: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "700",
   },
 });

@@ -356,6 +356,9 @@ const translations: Record<string, string> = {
   "Quận / Huyện": "District",
   "Phường / Xã": "Ward",
   "Địa chỉ chi tiết": "Detailed address",
+  "Xác nhận hủy đơn hàng": "Confirm order cancellation",
+  "Không": "No",
+  "Hủy đơn hàng thành công": "Order cancelled successfully",
 };
 
 type LanguageContextValue = {
