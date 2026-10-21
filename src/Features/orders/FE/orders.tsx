@@ -1,3 +1,4 @@
+
 import React from "react";
 import {
   Alert,
@@ -16,12 +17,21 @@ import { useRouter } from "expo-router";
 import { LanguageSelector } from "@/Core/components/language-selector";
 import { AiConsultationWidget } from "@/Core/components/ai-consultation-widget";
 import { useLanguage } from "@/Core/contexts/language-context";
+import {
+  useCart,
+  type Product,
+} from "@/Core/contexts/cart-context";
 
 /* ================================================= */
-/*                 HOVER BUTTON                      */
+/*                  HOVER BUTTON                     */
 /* ================================================= */
 
-function HoverButton({ children, style, hoverStyle, ...props }: any) {
+function HoverButton({
+  children,
+  style,
+  hoverStyle,
+  ...props
+}: any) {
   const [hovered, setHovered] = React.useState(false);
 
   return (
@@ -31,13 +41,15 @@ function HoverButton({ children, style, hoverStyle, ...props }: any) {
       onHoverOut={() => setHovered(false)}
       style={[style, hovered ? hoverStyle : null]}
     >
-      {typeof children === "function" ? children(hovered) : children}
+      {typeof children === "function"
+        ? children(hovered)
+        : children}
     </Pressable>
   );
 }
 
 /* ================================================= */
-/*                 DỮ LIỆU ĐƠN HÀNG                 */
+/*                  KIỂU DỮ LIỆU                     */
 /* ================================================= */
 
 type OrderStatus =
@@ -95,7 +107,7 @@ const tabs: OrderStatus[] = [
 ];
 
 /* ================================================= */
-/*                 MÀN HÌNH ĐƠN HÀNG                */
+/*                 MÀN HÌNH ĐƠN HÀNG                 */
 /* ================================================= */
 
 export default function OrdersScreen() {
@@ -104,12 +116,21 @@ export default function OrdersScreen() {
   const { width } = useWindowDimensions();
   const isMobile = width < 600;
 
-  const [orders, setOrders] = React.useState<Order[]>(initialOrders);
-  const [activeTab, setActiveTab] = React.useState<OrderStatus>("Tất cả");
+  const { addItems, itemCount } = useCart();
+
+  const [orders, setOrders] =
+    React.useState<Order[]>(initialOrders);
+
+  const [activeTab, setActiveTab] =
+    React.useState<OrderStatus>("Tất cả");
+
   const [search, setSearch] = React.useState("");
 
   const filteredOrders = orders.filter((order) => {
-    const matchesTab = activeTab === "Tất cả" || order.status === activeTab;
+    const matchesTab =
+      activeTab === "Tất cả" ||
+      order.status === activeTab;
+
     const query = search.trim().toLowerCase();
 
     const matchesSearch =
@@ -121,22 +142,65 @@ export default function OrdersScreen() {
   });
 
   /* ================================================= */
-  /*              XỬ LÝ HỦY ĐƠN HÀNG                 */
+  /*                    MUA LẠI                       */
+  /* ================================================= */
+
+  const handleBuyAgain = (order: Order) => {
+    if (order.status !== "Hoàn thành") {
+      return;
+    }
+
+    /*
+     * Dữ liệu sản phẩm mẫu cho đơn hàng đã hoàn thành.
+     *
+     * Nếu catalog sản phẩm hiện tại có ID thật của laptop
+     * ASUS Vivobook, hãy thay ID bên dưới bằng ID đó.
+     */
+    const product: Product = {
+      id: "LAPTOP_ASUS_VIVOBOOK",
+      name: "Laptop ASUS Vivobook",
+      price: 18490000,
+      categoryId: "LAPTOP",
+    };
+
+    addItems([
+      {
+        product,
+        quantity: 1,
+      },
+    ]);
+
+    const message =
+      `${t("Đã thêm ")}${product.name}` +
+      `${t(" vào giỏ hàng.")}`;
+
+    if (Platform.OS === "web") {
+      window.alert(message);
+    } else {
+      Alert.alert(t("Mua lại thành công"), message);
+    }
+  };
+
+  /* ================================================= */
+  /*                 XỬ LÝ HỦY ĐƠN                    */
   /* ================================================= */
 
   const handleCancelOrder = (orderId: string) => {
-    const selectedOrder = orders.find((order) => order.id === orderId);
+    const selectedOrder = orders.find(
+      (order) => order.id === orderId,
+    );
 
     if (!selectedOrder) {
       return;
     }
 
-    // Chỉ cho phép hủy đơn đang chờ xác nhận (Nhánh ngoại lệ: Trạng thái đơn không cho phép hủy)[cite: 7]
     if (selectedOrder.status !== "Chờ xác nhận") {
       const message =
         selectedOrder.status === "Đã hủy"
           ? t("Đơn hàng này đã được hủy trước đó.")
-          : t("Không thể hủy đơn hàng này vì trạng thái hiện tại không cho phép hủy.");
+          : t(
+              "Không thể hủy đơn hàng này vì trạng thái hiện tại không cho phép hủy.",
+            );
 
       if (Platform.OS === "web") {
         window.alert(message);
@@ -147,7 +211,6 @@ export default function OrdersScreen() {
       return;
     }
 
-    // Hàm thực hiện ghi nhận yêu cầu hủy và cập nhật trạng thái[cite: 7]
     const confirmCancel = () => {
       setOrders((previousOrders) =>
         previousOrders.map((order) =>
@@ -157,7 +220,9 @@ export default function OrdersScreen() {
         ),
       );
 
-      const message = `${t("Đơn hàng ")}${orderId}${t(" đã được hủy thành công.")}`;
+      const message =
+        `${t("Đơn hàng ")}${orderId}` +
+        `${t(" đã được hủy thành công.")}`;
 
       if (Platform.OS === "web") {
         window.alert(message);
@@ -166,9 +231,9 @@ export default function OrdersScreen() {
       }
     };
 
-    // Nhánh ngoại lệ Activity: Khách hàng không xác nhận hủy -> Giữ nguyên đơn hàng[cite: 7]
     const handleKeepOrder = () => {
       const message = t("Giữ nguyên đơn hàng.");
+
       if (Platform.OS === "web") {
         window.alert(message);
       } else {
@@ -184,7 +249,7 @@ export default function OrdersScreen() {
       if (confirmed) {
         confirmCancel();
       } else {
-        handleKeepOrder(); // Khớp nhánh "Giữ nguyên đơn hàng"[cite: 7]
+        handleKeepOrder();
       }
 
       return;
@@ -197,7 +262,7 @@ export default function OrdersScreen() {
         {
           text: t("Không"),
           style: "cancel",
-          onPress: handleKeepOrder, // Khớp nhánh "Giữ nguyên đơn hàng"[cite: 7]
+          onPress: handleKeepOrder,
         },
         {
           text: t("Xác nhận hủy"),
@@ -208,19 +273,33 @@ export default function OrdersScreen() {
     );
   };
 
+  /* ================================================= */
+  /*                       GIAO DIỆN                   */
+  /* ================================================= */
+
   return (
     <View style={styles.container}>
       {/* HEADER */}
+
       <View style={isMobile ? styles.phoneHeader : styles.header}>
-        <HoverButton style={styles.brandRow} onPress={() => router.push("/")}>
+        <HoverButton
+          style={styles.brandRow}
+          onPress={() => router.push("/")}
+        >
           <Image
             source={require("@/assets/image/logo.jpg")}
-            style={isMobile ? styles.phoneLogoImage : styles.logoImage}
+            style={
+              isMobile
+                ? styles.phoneLogoImage
+                : styles.logoImage
+            }
             resizeMode="cover"
           />
 
           <View>
-            <Text style={styles.logoText}>{t("BVP Shop")}</Text>
+            <Text style={styles.logoText}>
+              {t("BVP Shop")}
+            </Text>
 
             {!isMobile && (
               <Text style={styles.headerSubtitle}>
@@ -233,48 +312,94 @@ export default function OrdersScreen() {
         <View style={styles.headerActions}>
           <LanguageSelector />
 
-          {!isMobile && (
-            <HoverButton
-              style={styles.headerAction}
-              hoverStyle={styles.headerActionHover}
-              onPress={() => router.push("/cart")}
-            >
-              <Ionicons name="cart-outline" size={23} color="#ffffff" />
-              <Text style={styles.headerActionText}>{t("Giỏ hàng")}</Text>
-            </HoverButton>
-          )}
+          {/* GIỎ HÀNG: HIỂN THỊ CẢ TRÊN MOBILE */}
 
           <HoverButton
-            style={[styles.headerAction, isMobile && styles.phoneHeaderAction]}
+            style={[
+              styles.headerAction,
+              isMobile && styles.phoneHeaderAction,
+            ]}
+            hoverStyle={styles.headerActionHover}
+            onPress={() => router.push("/cart")}
+            accessibilityRole="button"
+            accessibilityLabel={t("Giỏ hàng")}
+          >
+            <View style={styles.cartIconContainer}>
+              <Ionicons
+                name="cart-outline"
+                size={23}
+                color="#ffffff"
+              />
+
+              {itemCount > 0 && (
+                <View style={styles.cartBadge}>
+                  <Text style={styles.cartBadgeText}>
+                    {itemCount > 99 ? "99+" : itemCount}
+                  </Text>
+                </View>
+              )}
+            </View>
+
+            {!isMobile && (
+              <Text style={styles.headerActionText}>
+                {t("Giỏ hàng")}
+              </Text>
+            )}
+          </HoverButton>
+
+          <HoverButton
+            style={[
+              styles.headerAction,
+              isMobile && styles.phoneHeaderAction,
+            ]}
             hoverStyle={styles.headerActionHover}
             onPress={() => router.push("/account")}
             accessibilityRole="button"
             accessibilityLabel={t("Tài khoản")}
           >
-            <Ionicons name="person-outline" size={23} color="#ffffff" />
+            <Ionicons
+              name="person-outline"
+              size={23}
+              color="#ffffff"
+            />
 
             {!isMobile && (
-              <Text style={styles.headerActionText}>{t("Tài khoản")}</Text>
+              <Text style={styles.headerActionText}>
+                {t("Tài khoản")}
+              </Text>
             )}
           </HoverButton>
         </View>
       </View>
 
       {/* NỘI DUNG ĐƠN HÀNG */}
+
       <ScrollView
         style={styles.contentScroll}
         contentContainerStyle={
-          isMobile ? styles.phoneContent : styles.desktopContent
+          isMobile
+            ? styles.phoneContent
+            : styles.desktopContent
         }
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.pageHeading}>
           <View style={styles.headingIcon}>
-            <Ionicons name="receipt-outline" size={24} color="red" />
+            <Ionicons
+              name="receipt-outline"
+              size={24}
+              color="red"
+            />
           </View>
 
           <View style={styles.headingCopy}>
-            <Text style={isMobile ? styles.phonePageTitle : styles.pageTitle}>
+            <Text
+              style={
+                isMobile
+                  ? styles.phonePageTitle
+                  : styles.pageTitle
+              }
+            >
               {t("Đơn hàng của tôi")}
             </Text>
 
@@ -283,6 +408,8 @@ export default function OrdersScreen() {
             </Text>
           </View>
         </View>
+
+        {/* THỐNG KÊ */}
 
         <View style={styles.summaryRow}>
           <SummaryCard
@@ -296,7 +423,9 @@ export default function OrdersScreen() {
             icon="time-outline"
             label={t("Chờ xác nhận")}
             value={`${
-              orders.filter((order) => order.status === "Chờ xác nhận").length
+              orders.filter(
+                (order) => order.status === "Chờ xác nhận",
+              ).length
             }`}
             isMobile={isMobile}
           />
@@ -305,16 +434,28 @@ export default function OrdersScreen() {
             icon="bicycle-outline"
             label={t("Đang giao")}
             value={`${
-              orders.filter((order) => order.status === "Đang giao").length
+              orders.filter(
+                (order) => order.status === "Đang giao",
+              ).length
             }`}
             isMobile={isMobile}
           />
         </View>
 
+        {/* DANH SÁCH ĐƠN HÀNG */}
+
         <View style={styles.ordersPanel}>
-          <View style={isMobile ? styles.phonePanelHeader : styles.panelHeader}>
+          <View
+            style={
+              isMobile
+                ? styles.phonePanelHeader
+                : styles.panelHeader
+            }
+          >
             <View>
-              <Text style={styles.panelTitle}>{t("Danh sách đơn hàng")}</Text>
+              <Text style={styles.panelTitle}>
+                {t("Danh sách đơn hàng")}
+              </Text>
 
               <Text style={styles.panelSubtitle}>
                 {t("Bạn có ")}
@@ -324,7 +465,11 @@ export default function OrdersScreen() {
             </View>
 
             <View style={styles.searchBar}>
-              <Ionicons name="search-outline" size={19} color="#777" />
+              <Ionicons
+                name="search-outline"
+                size={19}
+                color="#777"
+              />
 
               <TextInput
                 value={search}
@@ -336,11 +481,17 @@ export default function OrdersScreen() {
 
               {search.length > 0 && (
                 <Pressable onPress={() => setSearch("")}>
-                  <Ionicons name="close-circle" size={18} color="#999" />
+                  <Ionicons
+                    name="close-circle"
+                    size={18}
+                    color="#999"
+                  />
                 </Pressable>
               )}
             </View>
           </View>
+
+          {/* BỘ LỌC TRẠNG THÁI */}
 
           <ScrollView
             horizontal
@@ -354,11 +505,17 @@ export default function OrdersScreen() {
                 <HoverButton
                   key={tab}
                   onPress={() => setActiveTab(tab)}
-                  style={[styles.tab, selected && styles.tabActive]}
+                  style={[
+                    styles.tab,
+                    selected && styles.tabActive,
+                  ]}
                   hoverStyle={styles.tabHover}
                 >
                   <Text
-                    style={[styles.tabText, selected && styles.tabTextActive]}
+                    style={[
+                      styles.tabText,
+                      selected && styles.tabTextActive,
+                    ]}
                   >
                     {t(tab)}
                   </Text>
@@ -378,6 +535,8 @@ export default function OrdersScreen() {
             })}
           </ScrollView>
 
+          {/* CÁC THẺ ĐƠN HÀNG */}
+
           <View style={styles.orderList}>
             {filteredOrders.map((order) => (
               <OrderCard
@@ -385,12 +544,17 @@ export default function OrdersScreen() {
                 order={order}
                 isMobile={isMobile}
                 onCancel={handleCancelOrder}
+                onBuyAgain={handleBuyAgain}
               />
             ))}
 
             {filteredOrders.length === 0 && (
               <View style={styles.emptyState}>
-                <Ionicons name="file-tray-outline" size={44} color="#bbb" />
+                <Ionicons
+                  name="file-tray-outline"
+                  size={44}
+                  color="#bbb"
+                />
 
                 <Text style={styles.emptyTitle}>
                   {t("Không tìm thấy đơn hàng")}
@@ -422,13 +586,15 @@ export default function OrdersScreen() {
         </Text>
       </ScrollView>
 
-      <AiConsultationWidget onPress={() => router.push("/chat")} />
+      <AiConsultationWidget
+        onPress={() => router.push("/chat")}
+      />
     </View>
   );
 }
 
 /* ================================================= */
-/*                 THẺ THỐNG KÊ                      */
+/*                  THẺ THỐNG KÊ                     */
 /* ================================================= */
 
 function SummaryCard({
@@ -443,15 +609,32 @@ function SummaryCard({
   isMobile: boolean;
 }) {
   return (
-    <View style={[styles.summaryCard, isMobile && styles.phoneSummaryCard]}>
+    <View
+      style={[
+        styles.summaryCard,
+        isMobile && styles.phoneSummaryCard,
+      ]}
+    >
       <View style={styles.summaryIcon}>
-        <Ionicons name={icon} size={isMobile ? 19 : 22} color="red" />
+        <Ionicons
+          name={icon}
+          size={isMobile ? 19 : 22}
+          color="red"
+        />
       </View>
 
       <View style={styles.summaryCopy}>
-        <Text style={styles.summaryLabel}>{label}</Text>
+        <Text style={styles.summaryLabel}>
+          {label}
+        </Text>
 
-        <Text style={isMobile ? styles.phoneSummaryValue : styles.summaryValue}>
+        <Text
+          style={
+            isMobile
+              ? styles.phoneSummaryValue
+              : styles.summaryValue
+          }
+        >
           {value}
         </Text>
       </View>
@@ -467,10 +650,12 @@ function OrderCard({
   order,
   isMobile,
   onCancel,
+  onBuyAgain,
 }: {
   order: Order;
   isMobile: boolean;
   onCancel: (orderId: string) => void;
+  onBuyAgain: (order: Order) => void;
 }) {
   const { t } = useLanguage();
   const [expanded, setExpanded] = React.useState(false);
@@ -493,16 +678,40 @@ function OrderCard({
           ? "close-circle"
           : "time";
 
+  const statusColor =
+    order.status === "Hoàn thành"
+      ? "#16834a"
+      : order.status === "Đang giao"
+        ? "#1769aa"
+        : order.status === "Đã hủy"
+          ? "#c62828"
+          : "#a86a00";
+
+  const statusTextStyle =
+    order.status === "Hoàn thành"
+      ? styles.statusTextSuccess
+      : order.status === "Đang giao"
+        ? styles.statusTextShipping
+        : order.status === "Đã hủy"
+          ? styles.statusTextCancelled
+          : styles.statusTextPending;
+
   return (
     <View style={styles.orderCard}>
       <View style={styles.orderTopRow}>
         <View style={styles.orderIdGroup}>
           <View style={styles.orderIcon}>
-            <Ionicons name="cube-outline" size={20} color="red" />
+            <Ionicons
+              name="cube-outline"
+              size={20}
+              color="red"
+            />
           </View>
 
           <View style={styles.orderIdCopy}>
-            <Text style={styles.orderId}>{order.id}</Text>
+            <Text style={styles.orderId}>
+              {order.id}
+            </Text>
 
             <Text style={styles.orderDate}>
               {t("Đặt ngày ")}
@@ -515,27 +724,13 @@ function OrderCard({
           <Ionicons
             name={statusIcon as keyof typeof Ionicons.glyphMap}
             size={14}
-            color={
-              order.status === "Hoàn thành"
-                ? "#16834a"
-                : order.status === "Đang giao"
-                  ? "#1769aa"
-                  : order.status === "Đã hủy"
-                    ? "#c62828"
-                    : "#a86a00"
-            }
+            color={statusColor}
           />
 
           <Text
             style={[
               styles.statusText,
-              order.status === "Hoàn thành"
-                ? styles.statusTextSuccess
-                : order.status === "Đang giao"
-                  ? styles.statusTextShipping
-                  : order.status === "Đã hủy"
-                    ? styles.statusTextCancelled
-                    : styles.statusTextPending,
+              statusTextStyle,
             ]}
           >
             {t(order.status)}
@@ -545,7 +740,13 @@ function OrderCard({
 
       <View style={styles.orderDivider} />
 
-      <View style={isMobile ? styles.phoneOrderDetails : styles.orderDetails}>
+      <View
+        style={
+          isMobile
+            ? styles.phoneOrderDetails
+            : styles.orderDetails
+        }
+      >
         <View style={styles.productSummary}>
           <View style={styles.productPlaceholder}>
             <Ionicons
@@ -560,13 +761,20 @@ function OrderCard({
               {t("Sản phẩm trong đơn")}
             </Text>
 
-            <Text style={styles.productSummaryText}>{t(order.items)}</Text>
+            <Text style={styles.productSummaryText}>
+              {t(order.items)}
+            </Text>
           </View>
         </View>
 
         <View style={styles.orderTotalBlock}>
-          <Text style={styles.totalLabel}>{t("Tổng thanh toán")}</Text>
-          <Text style={styles.orderTotal}>{order.total}</Text>
+          <Text style={styles.totalLabel}>
+            {t("Tổng thanh toán")}
+          </Text>
+
+          <Text style={styles.orderTotal}>
+            {order.total}
+          </Text>
         </View>
       </View>
 
@@ -616,11 +824,17 @@ function OrderCard({
             hoverStyle={styles.detailButtonHover}
           >
             <Text style={styles.detailButtonText}>
-              {expanded ? t("Thu gọn") : t("Chi tiết")}
+              {expanded
+                ? t("Thu gọn")
+                : t("Chi tiết")}
             </Text>
 
             <Ionicons
-              name={expanded ? "chevron-up" : "chevron-forward"}
+              name={
+                expanded
+                  ? "chevron-up"
+                  : "chevron-forward"
+              }
               size={15}
               color="#444"
             />
@@ -648,10 +862,17 @@ function OrderCard({
             <HoverButton
               style={styles.buyAgainButton}
               hoverStyle={styles.buttonHover}
+              onPress={() => onBuyAgain(order)}
             >
-              <Ionicons name="refresh-outline" size={15} color="#ffffff" />
+              <Ionicons
+                name="refresh-outline"
+                size={15}
+                color="#ffffff"
+              />
 
-              <Text style={styles.buyAgainText}>{t("Mua lại")}</Text>
+              <Text style={styles.buyAgainText}>
+                {t("Mua lại")}
+              </Text>
             </HoverButton>
           )}
         </View>
@@ -661,12 +882,18 @@ function OrderCard({
 }
 
 /* ================================================= */
-/*                     STYLES                        */
+/*                       STYLES                      */
 /* ================================================= */
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f5f5f5" },
-  contentScroll: { flex: 1 },
+  container: {
+    flex: 1,
+    backgroundColor: "#f5f5f5",
+  },
+
+  contentScroll: {
+    flex: 1,
+  },
 
   header: {
     backgroundColor: "red",
@@ -678,37 +905,105 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     gap: 20,
   },
+
   phoneHeader: {
     backgroundColor: "red",
-    paddingHorizontal: 15,
+    paddingHorizontal: 12,
     paddingTop: 50,
     paddingBottom: 16,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+    gap: 8,
   },
-  brandRow: { flexDirection: "row", alignItems: "center", gap: 12 },
-  logoImage: { width: 65, height: 65, borderRadius: 8 },
-  phoneLogoImage: { width: 48, height: 48, borderRadius: 7 },
-  logoText: { color: "#ffffff", fontSize: 24, fontWeight: "800" },
-  headerSubtitle: { color: "#ffe5e5", fontSize: 12, marginTop: 3 },
-  headerActions: { flexDirection: "row", alignItems: "center", gap: 20 },
+
+  brandRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    flexShrink: 1,
+  },
+
+  logoImage: {
+    width: 65,
+    height: 65,
+    borderRadius: 8,
+  },
+
+  phoneLogoImage: {
+    width: 48,
+    height: 48,
+    borderRadius: 7,
+  },
+
+  logoText: {
+    color: "#ffffff",
+    fontSize: 24,
+    fontWeight: "800",
+  },
+
+  headerSubtitle: {
+    color: "#ffe5e5",
+    fontSize: 12,
+    marginTop: 3,
+  },
+
+  headerActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+
   headerAction: {
     alignItems: "center",
+    justifyContent: "center",
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 10,
   },
-  phoneHeaderAction: { paddingHorizontal: 6, paddingVertical: 6 },
+
+  phoneHeaderAction: {
+    paddingHorizontal: 5,
+    paddingVertical: 6,
+  },
+
   headerActionHover: {
     backgroundColor: "rgba(255,255,255,0.16)",
     transform: [{ scale: 1.04 }],
   },
+
   headerActionText: {
     color: "#ffffff",
     fontSize: 11,
     marginTop: 4,
     fontWeight: "500",
+  },
+
+  cartIconContainer: {
+    position: "relative",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  cartBadge: {
+    position: "absolute",
+    top: -7,
+    right: -10,
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: "#ffffff",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 4,
+    borderWidth: 1,
+    borderColor: "red",
+  },
+
+  cartBadgeText: {
+    color: "red",
+    fontSize: 10,
+    fontWeight: "800",
   },
 
   desktopContent: {
@@ -719,13 +1014,20 @@ const styles = StyleSheet.create({
     width: "100%",
     alignSelf: "center",
   },
-  phoneContent: { paddingHorizontal: 12, paddingTop: 18, paddingBottom: 24 },
+
+  phoneContent: {
+    paddingHorizontal: 12,
+    paddingTop: 18,
+    paddingBottom: 24,
+  },
+
   pageHeading: {
     flexDirection: "row",
     alignItems: "center",
     marginBottom: 22,
     gap: 12,
   },
+
   headingIcon: {
     width: 48,
     height: 48,
@@ -736,12 +1038,35 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  headingCopy: { flex: 1 },
-  pageTitle: { fontSize: 28, fontWeight: "800", color: "#222" },
-  phonePageTitle: { fontSize: 22, fontWeight: "800", color: "#222" },
-  pageSubtitle: { fontSize: 13, color: "#777", marginTop: 4 },
 
-  summaryRow: { flexDirection: "row", gap: 12, marginBottom: 20 },
+  headingCopy: {
+    flex: 1,
+  },
+
+  pageTitle: {
+    fontSize: 28,
+    fontWeight: "800",
+    color: "#222",
+  },
+
+  phonePageTitle: {
+    fontSize: 22,
+    fontWeight: "800",
+    color: "#222",
+  },
+
+  pageSubtitle: {
+    fontSize: 13,
+    color: "#777",
+    marginTop: 4,
+  },
+
+  summaryRow: {
+    flexDirection: "row",
+    gap: 12,
+    marginBottom: 20,
+  },
+
   summaryCard: {
     flex: 1,
     minWidth: 0,
@@ -759,6 +1084,7 @@ const styles = StyleSheet.create({
     shadowRadius: 5,
     elevation: 2,
   },
+
   phoneSummaryCard: {
     flexDirection: "column",
     alignItems: "flex-start",
@@ -766,6 +1092,7 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 12,
   },
+
   summaryIcon: {
     width: 42,
     height: 42,
@@ -774,14 +1101,23 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  summaryCopy: { flex: 1 },
-  summaryLabel: { color: "#777", fontSize: 12 },
+
+  summaryCopy: {
+    flex: 1,
+  },
+
+  summaryLabel: {
+    color: "#777",
+    fontSize: 12,
+  },
+
   summaryValue: {
     color: "#222",
     fontSize: 24,
     fontWeight: "800",
     marginTop: 3,
   },
+
   phoneSummaryValue: {
     color: "#222",
     fontSize: 21,
@@ -796,6 +1132,7 @@ const styles = StyleSheet.create({
     borderColor: "#e9e9e9",
     overflow: "hidden",
   },
+
   panelHeader: {
     paddingHorizontal: 20,
     paddingTop: 20,
@@ -805,17 +1142,29 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     gap: 18,
   },
+
   phonePanelHeader: {
     paddingHorizontal: 14,
     paddingTop: 16,
     paddingBottom: 13,
     gap: 13,
   },
-  panelTitle: { color: "#222", fontSize: 19, fontWeight: "700" },
-  panelSubtitle: { color: "#888", fontSize: 12, marginTop: 5 },
+
+  panelTitle: {
+    color: "#222",
+    fontSize: 19,
+    fontWeight: "700",
+  },
+
+  panelSubtitle: {
+    color: "#888",
+    fontSize: 12,
+    marginTop: 5,
+  },
+
   searchBar: {
     height: 42,
-    minWidth: 210,
+    minWidth: 0,
     maxWidth: 310,
     flex: 1,
     flexDirection: "row",
@@ -827,6 +1176,7 @@ const styles = StyleSheet.create({
     borderColor: "#e5e5e5",
     paddingHorizontal: 11,
   },
+
   searchInput: {
     flex: 1,
     height: "100%",
@@ -843,6 +1193,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 18,
     paddingBottom: 14,
   },
+
   tab: {
     flexDirection: "row",
     alignItems: "center",
@@ -855,10 +1206,26 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#eeeeee",
   },
-  tabActive: { backgroundColor: "red", borderColor: "red" },
-  tabHover: { transform: [{ scale: 1.03 }] },
-  tabText: { color: "#555", fontSize: 12, fontWeight: "600" },
-  tabTextActive: { color: "#ffffff" },
+
+  tabActive: {
+    backgroundColor: "red",
+    borderColor: "red",
+  },
+
+  tabHover: {
+    transform: [{ scale: 1.03 }],
+  },
+
+  tabText: {
+    color: "#555",
+    fontSize: 12,
+    fontWeight: "600",
+  },
+
+  tabTextActive: {
+    color: "#ffffff",
+  },
+
   tabCount: {
     color: "#666",
     backgroundColor: "#e8e8e8",
@@ -870,9 +1237,18 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
     overflow: "hidden",
   },
-  tabCountActive: { color: "red", backgroundColor: "#ffffff" },
 
-  orderList: { paddingHorizontal: 18, paddingBottom: 18, gap: 12 },
+  tabCountActive: {
+    color: "red",
+    backgroundColor: "#ffffff",
+  },
+
+  orderList: {
+    paddingHorizontal: 18,
+    paddingBottom: 18,
+    gap: 12,
+  },
+
   orderCard: {
     backgroundColor: "#ffffff",
     borderRadius: 14,
@@ -885,6 +1261,7 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 1,
   },
+
   orderTopRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -892,12 +1269,14 @@ const styles = StyleSheet.create({
     gap: 10,
     flexWrap: "wrap",
   },
+
   orderIdGroup: {
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
     flex: 1,
   },
+
   orderIcon: {
     width: 40,
     height: 40,
@@ -906,9 +1285,23 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  orderIdCopy: { flex: 1 },
-  orderId: { color: "#222", fontSize: 14, fontWeight: "800" },
-  orderDate: { color: "#888", fontSize: 11, marginTop: 4 },
+
+  orderIdCopy: {
+    flex: 1,
+  },
+
+  orderId: {
+    color: "#222",
+    fontSize: 14,
+    fontWeight: "800",
+  },
+
+  orderDate: {
+    color: "#888",
+    fontSize: 11,
+    marginTop: 4,
+  },
+
   statusBadge: {
     flexDirection: "row",
     alignItems: "center",
@@ -917,15 +1310,44 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: 20,
   },
-  statusSuccess: { backgroundColor: "#e9f8ef" },
-  statusShipping: { backgroundColor: "#eaf3ff" },
-  statusCancelled: { backgroundColor: "#fff0f0" },
-  statusPending: { backgroundColor: "#fff5df" },
-  statusText: { fontSize: 11, fontWeight: "700" },
-  statusTextSuccess: { color: "#16834a" },
-  statusTextShipping: { color: "#1769aa" },
-  statusTextCancelled: { color: "#c62828" },
-  statusTextPending: { color: "#a86a00" },
+
+  statusSuccess: {
+    backgroundColor: "#e9f8ef",
+  },
+
+  statusShipping: {
+    backgroundColor: "#eaf3ff",
+  },
+
+  statusCancelled: {
+    backgroundColor: "#fff0f0",
+  },
+
+  statusPending: {
+    backgroundColor: "#fff5df",
+  },
+
+  statusText: {
+    fontSize: 11,
+    fontWeight: "700",
+  },
+
+  statusTextSuccess: {
+    color: "#16834a",
+  },
+
+  statusTextShipping: {
+    color: "#1769aa",
+  },
+
+  statusTextCancelled: {
+    color: "#c62828",
+  },
+
+  statusTextPending: {
+    color: "#a86a00",
+  },
+
   orderDivider: {
     height: 1,
     backgroundColor: "#eeeeee",
@@ -938,13 +1360,18 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     gap: 16,
   },
-  phoneOrderDetails: { gap: 13 },
+
+  phoneOrderDetails: {
+    gap: 13,
+  },
+
   productSummary: {
     flexDirection: "row",
     alignItems: "center",
     gap: 11,
     flex: 1,
   },
+
   productPlaceholder: {
     width: 54,
     height: 54,
@@ -955,16 +1382,34 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#eeeeee",
   },
-  productCopy: { flex: 1 },
-  productSummaryTitle: { color: "#444", fontSize: 12, fontWeight: "700" },
+
+  productCopy: {
+    flex: 1,
+  },
+
+  productSummaryTitle: {
+    color: "#444",
+    fontSize: 12,
+    fontWeight: "700",
+  },
+
   productSummaryText: {
     color: "#777",
     fontSize: 12,
     marginTop: 5,
     lineHeight: 17,
   },
-  orderTotalBlock: { alignItems: "flex-end", minWidth: 130 },
-  totalLabel: { color: "#888", fontSize: 11 },
+
+  orderTotalBlock: {
+    alignItems: "flex-end",
+    minWidth: 130,
+  },
+
+  totalLabel: {
+    color: "#888",
+    fontSize: 11,
+  },
+
   orderTotal: {
     color: "red",
     fontSize: 18,
@@ -979,13 +1424,19 @@ const styles = StyleSheet.create({
     marginTop: 14,
     gap: 5,
   },
+
   expandedTitle: {
     color: "#333",
     fontWeight: "700",
     fontSize: 12,
     marginBottom: 3,
   },
-  expandedText: { color: "#666", fontSize: 12, lineHeight: 18 },
+
+  expandedText: {
+    color: "#666",
+    fontSize: 12,
+    lineHeight: 18,
+  },
 
   orderBottomRow: {
     flexDirection: "row",
@@ -998,13 +1449,19 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: "#f0f0f0",
   },
-  orderBottomHint: { color: "#888", fontSize: 11 },
+
+  orderBottomHint: {
+    color: "#888",
+    fontSize: 11,
+  },
+
   orderButtons: {
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
     flexWrap: "wrap",
   },
+
   detailButton: {
     flexDirection: "row",
     alignItems: "center",
@@ -1016,11 +1473,17 @@ const styles = StyleSheet.create({
     borderColor: "#dddddd",
     backgroundColor: "#ffffff",
   },
+
   detailButtonHover: {
     backgroundColor: "#f7f7f7",
     transform: [{ scale: 1.03 }],
   },
-  detailButtonText: { color: "#444", fontSize: 12, fontWeight: "600" },
+
+  detailButtonText: {
+    color: "#444",
+    fontSize: 12,
+    fontWeight: "600",
+  },
 
   cancelButton: {
     flexDirection: "row",
@@ -1034,10 +1497,12 @@ const styles = StyleSheet.create({
     borderColor: "#ffcaca",
     backgroundColor: "#fff5f5",
   },
+
   cancelButtonHover: {
     backgroundColor: "#ffe5e5",
     transform: [{ scale: 1.03 }],
   },
+
   cancelButtonText: {
     color: "#c62828",
     fontSize: 12,
@@ -1053,7 +1518,13 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     backgroundColor: "red",
   },
-  buyAgainText: { color: "#ffffff", fontSize: 12, fontWeight: "700" },
+
+  buyAgainText: {
+    color: "#ffffff",
+    fontSize: 12,
+    fontWeight: "700",
+  },
+
   buttonHover: {
     transform: [{ scale: 1.04 }],
     shadowColor: "#000",
@@ -1069,18 +1540,21 @@ const styles = StyleSheet.create({
     paddingVertical: 38,
     paddingHorizontal: 16,
   },
+
   emptyTitle: {
     color: "#333",
     fontSize: 16,
     fontWeight: "700",
     marginTop: 12,
   },
+
   emptyDescription: {
     color: "#888",
     fontSize: 12,
     marginTop: 6,
     textAlign: "center",
   },
+
   resetButton: {
     backgroundColor: "red",
     borderRadius: 8,
@@ -1088,7 +1562,13 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     marginTop: 16,
   },
-  resetButtonText: { color: "#ffffff", fontSize: 12, fontWeight: "700" },
+
+  resetButtonText: {
+    color: "#ffffff",
+    fontSize: 12,
+    fontWeight: "700",
+  },
+
   footerNote: {
     textAlign: "center",
     color: "#999",
