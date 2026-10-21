@@ -33,7 +33,7 @@ export function ProductCategoryPicker({
     { id: null, name: t("Tất cả"), productCount: totalProducts },
     ...categories.map((category) => ({
       id: category.id,
-      name: category.name,
+      name: t(category.name),
       productCount: category.productCount,
     })),
   ];

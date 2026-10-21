@@ -5,6 +5,8 @@ import React, {
   useMemo,
   useState,
 } from "react";
+import enLocale from "@/Core/locales/en.json";
+import viLocale from "@/Core/locales/vi.json";
 
 export type Language = "vi" | "en";
 
@@ -367,7 +369,10 @@ const LanguageContext = createContext<LanguageContextValue | null>(null);
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const [language, setLanguage] = useState<Language>("vi");
   const t = useCallback(
-    (text: string) => (language === "en" ? translations[text] ?? text : text),
+    (text: string) =>
+      language === "en"
+        ? translations[text] ?? enLocale[text as keyof typeof enLocale] ?? text
+        : viLocale[text as keyof typeof viLocale] ?? text,
     [language],
   );
   const changeLanguage = useCallback((nextLanguage: Language) => {

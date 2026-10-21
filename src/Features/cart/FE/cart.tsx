@@ -6,6 +6,7 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   View,
   useWindowDimensions,
 } from "react-native";
@@ -14,6 +15,7 @@ import { useRouter } from "expo-router";
 import { LanguageSelector } from "@/Core/components/language-selector";
 import { AiConsultationWidget } from "@/Core/components/ai-consultation-widget";
 import { useLanguage } from "@/Core/contexts/language-context";
+import { useCart, type CartItem } from "@/Core/contexts/cart-context";
 
 /* ================================================= */
 /*                  HOVER BUTTON                     */
@@ -38,67 +40,7 @@ function HoverButton({ children, style, hoverStyle, ...props }: any) {
 /*                  KIỂU DỮ LIỆU                    */
 /* ================================================= */
 
-type CartProduct = {
-  id: string;
-  name: string;
-  variant: string;
-  price: number;
-  originalPrice?: number;
-  quantity: number;
-  icon: keyof typeof Ionicons.glyphMap;
-};
-
-/* ================================================= */
-/*              DỮ LIỆU GIỎ HÀNG MẪU                */
-/* ================================================= */
-
-const initialProducts: CartProduct[] = [
-  {
-    id: "SP001",
-    name: "iPhone 16e 128GB",
-    variant: "Màu đen · Chính hãng VN/A",
-    price: 16990000,
-    originalPrice: 17990000,
-    quantity: 1,
-    icon: "phone-portrait-outline",
-  },
-  {
-    id: "SP002",
-    name: "Tai nghe Bluetooth",
-    variant: "Màu trắng · Bảo hành 12 tháng",
-    price: 790000,
-    originalPrice: 990000,
-    quantity: 2,
-    icon: "headset-outline",
-  },
-  {
-    id: "SP003",
-    name: "Chuột không dây",
-    variant: "Màu xám · Kết nối USB",
-    price: 390000,
-    originalPrice: 490000,
-    quantity: 1,
-    icon: "hardware-chip-outline",
-  },
-  {
-    id: "SP004",
-    name: "Ốp lưng iPhone 16e",
-    variant: "Màu trong suốt · Chống trầy xước",
-    price: 150000,
-    originalPrice: 200000,
-    quantity: 1,
-    icon: "phone-portrait-outline",
-  },
-  {
-    id: "SP005",
-    name: "Sạc nhanh USB-C 20W",
-    variant: "Màu trắng · Bảo hành 12 tháng",
-    price: 350000,
-    originalPrice: 450000,
-    quantity: 1,
-    icon: "flash-outline",
-  },
-];
+type CartProduct = CartItem;
 
 const formatPrice = (price: number) =>
   `${price.toLocaleString("vi-VN")}đ`;
@@ -115,23 +57,21 @@ export default function CartScreen() {
   const { t } = useLanguage();
 
   // Khởi tạo danh sách 5 sản phẩm mẫu khi màn hình được mount.
-  const [products, setProducts] = React.useState<CartProduct[]>(
-    () => [...initialProducts],
-  );
-
-  const [selectedIds, setSelectedIds] = React.useState<string[]>(
-    () => initialProducts.map((product) => product.id),
-  );
+  const { items: products, itemCount, updateQuantity, removeItem, clear } = useCart();
+  const [selectedIds, setSelectedIds] = React.useState<string[] | null>(null);
 
   const [pendingDelete, setPendingDelete] =
     React.useState<CartProduct | null>(null);
 
   const [showCheckoutModal, setShowCheckoutModal] = React.useState(false);
   const [notice, setNotice] = React.useState("");
+  const [customerName, setCustomerName] = React.useState("");
+  const [deliveryAddress, setDeliveryAddress] = React.useState("");
+  const [paymentMethod, setPaymentMethod] = React.useState("Thanh toán khi nhận hàng");
 
-  const selectedProducts = products.filter((product) =>
-    selectedIds.includes(product.id),
-  );
+  const selectedProducts = selectedIds === null
+    ? products
+    : products.filter((product) => selectedIds.includes(product.id));
 
   const subtotal = selectedProducts.reduce(
     (sum, product) => sum + product.price * product.quantity,
@@ -159,39 +99,26 @@ export default function CartScreen() {
   /* ================================================= */
 
   const changeQuantity = (id: string, amount: number) => {
-    setProducts((current) =>
-      current.map((product) =>
-        product.id === id
-          ? {
-              ...product,
-              quantity: Math.max(1, product.quantity + amount),
-            }
-          : product,
-      ),
-    );
+    updateQuantity(id, amount);
   };
 
   const removeProduct = (id: string) => {
-    setProducts((current) =>
-      current.filter((product) => product.id !== id),
-    );
-
-    setSelectedIds((current) =>
-      current.filter((item) => item !== id),
-    );
+    removeItem(id);
+    setSelectedIds((current) => current === null ? null : current.filter((item) => item !== id));
   };
 
   const toggleSelected = (id: string) => {
-    setSelectedIds((current) =>
-      current.includes(id)
+    setSelectedIds((current) => {
+      if (current === null) return products.filter((product) => product.id !== id).map((product) => product.id);
+      return current.includes(id)
         ? current.filter((item) => item !== id)
-        : [...current, id],
-    );
+        : [...current, id];
+    });
   };
 
   const toggleSelectAll = () => {
     setSelectedIds((current) =>
-      current.length === products.length
+      current === null || current.length === products.length
         ? []
         : products.map((product) => product.id),
     );
@@ -255,7 +182,7 @@ export default function CartScreen() {
             hoverStyle={styles.headerActionHover}
             onPress={() => router.push("/account")}
             accessibilityRole="button"
-            accessibilityLabel="Tài khoản"
+            accessibilityLabel={t("Tài khoản")}
           >
             <Ionicons
               name="person-outline"
@@ -303,7 +230,7 @@ export default function CartScreen() {
             </Text>
 
             <Text style={styles.pageSubtitle}>
-              Kiểm tra sản phẩm và thông tin trước khi đặt hàng
+              {t("Kiểm tra sản phẩm và thông tin trước khi đặt hàng")}
             </Text>
           </View>
         </View>
@@ -330,7 +257,7 @@ export default function CartScreen() {
                 </Text>
 
                 <Text style={styles.panelSubtitle}>
-                  {products.length} {t("sản phẩm")} · {t("Đã chọn")}{" "}
+                  {itemCount} {t("sản phẩm")} · {t("Đã chọn")}{" "}
                   {selectedProducts.length}
                 </Text>
               </View>
@@ -343,7 +270,7 @@ export default function CartScreen() {
                 >
                   <Ionicons
                     name={
-                      selectedIds.length === products.length
+                      selectedIds === null || selectedIds.length === products.length
                         ? "checkbox"
                         : "square-outline"
                     }
@@ -352,7 +279,7 @@ export default function CartScreen() {
                   />
 
                   <Text style={styles.selectAllText}>
-                    {selectedIds.length === products.length
+                    {selectedIds === null || selectedIds.length === products.length
                       ? t("Bỏ chọn tất cả")
                       : t("Chọn tất cả")}
                   </Text>
@@ -363,7 +290,7 @@ export default function CartScreen() {
             {/* DANH SÁCH SẢN PHẨM */}
 
             {products.map((product) => {
-              const selected = selectedIds.includes(product.id);
+              const selected = selectedIds === null || selectedIds.includes(product.id);
 
               return (
                 <View
@@ -403,11 +330,11 @@ export default function CartScreen() {
 
                   <View style={styles.productInfo}>
                     <Text style={styles.productName}>
-                      {product.name}
+                      {t(product.name)}
                     </Text>
 
                     <Text style={styles.productVariant}>
-                      {product.variant}
+                      {t(product.variant)}
                     </Text>
 
                     <View
@@ -472,7 +399,7 @@ export default function CartScreen() {
                         <Pressable
                           onPress={() => setPendingDelete(product)}
                           style={styles.removeButton}
-                          accessibilityLabel={`Xóa ${product.name}`}
+                          accessibilityLabel={`${t("Xóa")} ${t(product.name)}`}
                         >
                           <Ionicons
                             name="trash-outline"
@@ -510,8 +437,7 @@ export default function CartScreen() {
                 </Text>
 
                 <Text style={styles.emptyDescription}>
-                  Hãy khám phá các sản phẩm và thêm món đồ bạn yêu
-                  thích vào giỏ hàng.
+                  {t("Hãy khám phá các sản phẩm và thêm món đồ bạn yêu thích vào giỏ hàng.")}
                 </Text>
 
                 <HoverButton
@@ -545,7 +471,7 @@ export default function CartScreen() {
                 />
 
                 <Text style={styles.continueShoppingText}>
-                  Tiếp tục mua sắm
+                  {t("Tiếp tục mua sắm")}
                 </Text>
               </HoverButton>
             )}
@@ -565,12 +491,12 @@ export default function CartScreen() {
 
             <View style={styles.summaryLine}>
               <Text style={styles.summaryLabel}>
-                Tạm tính (
+                {t("Tạm tính (")}
                 {selectedProducts.reduce(
                   (sum, product) => sum + product.quantity,
                   0,
                 )}{" "}
-                sản phẩm)
+                {t("sản phẩm)")}
               </Text>
 
               <Text style={styles.summaryValue}>
@@ -603,7 +529,7 @@ export default function CartScreen() {
                 }
               >
                 {shipping === 0
-                  ? "Miễn phí"
+                  ? t("Miễn phí")
                   : formatPrice(shipping)}
               </Text>
             </View>
@@ -637,7 +563,7 @@ export default function CartScreen() {
                 </Text>
 
                 <Text style={styles.deliveryDescription}>
-                  Cho đơn hàng từ 5.000.000đ
+                  {t("Cho đơn hàng từ 5.000.000đ")}
                 </Text>
               </View>
             </View>
@@ -671,14 +597,14 @@ export default function CartScreen() {
               />
 
               <Text style={styles.secureText}>
-                Thông tin của bạn được bảo mật
+                {t("Thông tin của bạn được bảo mật")}
               </Text>
             </View>
           </View>
         </View>
 
         <Text style={styles.footerNote}>
-          BVP Shop · Cảm ơn bạn đã mua sắm cùng chúng tôi!
+          {t("BVP Shop · Cảm ơn bạn đã mua sắm cùng chúng tôi!")}
         </Text>
       </ScrollView>
 
@@ -726,12 +652,11 @@ export default function CartScreen() {
             </View>
 
             <Text style={styles.modalTitle}>
-              Xóa sản phẩm?
+              {t("Xóa sản phẩm?")}
             </Text>
 
             <Text style={styles.modalMessage}>
-              Bạn có chắc muốn xóa “{pendingDelete.name}” khỏi giỏ
-              hàng không?
+              {t("Bạn có chắc muốn xóa “")}{pendingDelete.name}{t("” khỏi giỏ hàng không?")}
             </Text>
 
             <View style={styles.modalActions}>
@@ -749,7 +674,7 @@ export default function CartScreen() {
                 onPress={() => {
                   removeProduct(pendingDelete.id);
                   setPendingDelete(null);
-                  setNotice("Đã xóa sản phẩm khỏi giỏ hàng");
+                  setNotice(t("Đã xóa sản phẩm khỏi giỏ hàng"));
                 }}
               >
                 <Text style={styles.modalDeleteText}>
@@ -785,15 +710,34 @@ export default function CartScreen() {
             </View>
 
             <Text style={styles.modalTitle}>
-              Tiến hành đặt hàng
+              {t("Tiến hành đặt hàng")}
             </Text>
 
-            <Text style={styles.modalMessage}>
-              Đây là giao diện mẫu. Bạn đã chọn{" "}
-              {selectedProducts.length} sản phẩm với tổng tiền{" "}
-              {formatPrice(total)}. Có thể kết nối chức năng đặt hàng
-              với API sau.
-            </Text>
+            <Text style={styles.checkoutSectionTitle}>{t("Sản phẩm đã chọn")}</Text>
+            <ScrollView style={styles.selectedProducts} nestedScrollEnabled>
+              {selectedProducts.map((product) => (
+                <View key={product.id} style={styles.selectedProductRow}>
+                  <Ionicons name={product.icon} size={22} color="#c62828" />
+                  <View style={styles.selectedProductCopy}>
+                    <Text style={styles.selectedProductName}>{t(product.name)}</Text>
+                    <Text style={styles.selectedProductMeta}>
+                      {product.quantity} x {formatPrice(product.price)}
+                    </Text>
+                  </View>
+                </View>
+              ))}
+            </ScrollView>
+            <Text style={styles.checkoutSectionTitle}>{t("Thông tin giao hàng")}</Text>
+            <TextInput style={styles.checkoutInput} value={customerName} onChangeText={setCustomerName} placeholder={t("Họ và tên")} />
+            <TextInput style={styles.checkoutInput} value={deliveryAddress} onChangeText={setDeliveryAddress} placeholder={t("Địa chỉ giao hàng")} />
+            <Text style={styles.paymentLabel}>{t("Hình thức thanh toán")}</Text>
+            {["Thanh toán khi nhận hàng", "Chuyển khoản ngân hàng"].map((method) => (
+              <Pressable key={method} style={styles.paymentOption} onPress={() => setPaymentMethod(method)}>
+                <Ionicons name={paymentMethod === method ? "radio-button-on" : "radio-button-off"} size={20} color="#c62828" />
+                <Text>{t(method)}</Text>
+              </Pressable>
+            ))}
+            <Text style={styles.checkoutTotal}>{t("Tổng thanh toán")}: {formatPrice(total)}</Text>
 
             <View style={styles.modalActions}>
               <Pressable
@@ -808,14 +752,18 @@ export default function CartScreen() {
               <Pressable
                 style={styles.modalDeleteButton}
                 onPress={() => {
+                  if (!customerName.trim() || !deliveryAddress.trim()) {
+                    setNotice(t("Vui lòng nhập họ tên và địa chỉ giao hàng"));
+                    return;
+                  }
                   setShowCheckoutModal(false);
-                  setNotice(
-                    "Thông tin đơn hàng đã sẵn sàng để kết nối API",
-                  );
+                  clear();
+                  setSelectedIds([]);
+                  setNotice(t("Đặt hàng thành công"));
                 }}
               >
                 <Text style={styles.modalDeleteText}>
-                  {t("Đã hiểu")}
+                  {t("Xác nhận đặt hàng")}
                 </Text>
               </Pressable>
             </View>
@@ -832,6 +780,46 @@ export default function CartScreen() {
 /* ================================================= */
 
 const styles = StyleSheet.create({
+  checkoutInput: {
+    width: "100%",
+    borderWidth: 1,
+    borderColor: "#ddd",
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    marginBottom: 9,
+    color: "#222",
+  },
+  checkoutSectionTitle: {
+    alignSelf: "flex-start",
+    color: "#333",
+    fontSize: 14,
+    fontWeight: "800",
+    marginTop: 18,
+    marginBottom: 8,
+  },
+  selectedProducts: {
+    width: "100%",
+    maxHeight: 125,
+    borderWidth: 1,
+    borderColor: "#eee",
+    borderRadius: 8,
+    padding: 8,
+  },
+  selectedProductRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 9,
+    paddingVertical: 6,
+    borderBottomWidth: 1,
+    borderBottomColor: "#f2f2f2",
+  },
+  selectedProductCopy: { flex: 1 },
+  selectedProductName: { color: "#333", fontWeight: "700", fontSize: 13 },
+  selectedProductMeta: { color: "#777", fontSize: 12, marginTop: 2 },
+  paymentLabel: { alignSelf: "flex-start", color: "#333", fontWeight: "700", marginTop: 4, marginBottom: 6 },
+  paymentOption: { width: "100%", flexDirection: "row", alignItems: "center", gap: 8, paddingVertical: 6 },
+  checkoutTotal: { alignSelf: "flex-start", color: "#c62828", fontWeight: "800", marginTop: 8 },
   container: {
     flex: 1,
     backgroundColor: "#f5f5f5",

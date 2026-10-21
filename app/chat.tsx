@@ -2,7 +2,6 @@ import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import { ActivityIndicator, FlatList, KeyboardAvoidingView, Linking, Platform, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
-import { chatApiUrl } from "@/Core/services/chat-api";
 import { AiStatusBadge } from "@/Core/components/ai-status-badge";
 import { useAiStatus } from "@/Core/hooks/use-ai-status";
 
@@ -27,16 +26,12 @@ export default function ChatScreen() {
     const history = [...messages, userMessage];
     setMessages(history);
     setInput("");
-    setLoading(true);
-    try {
-      const response = await fetch(chatApiUrl, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ messages: history.filter((message) => message.id !== "welcome").map(({ role, content }) => ({ role, content })) }) });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Không thể xử lý câu hỏi lúc này.");
-      setMessages((current) => [...current, { id: `answer-${messageCounter.current}`, role: "assistant", content: data.answer, sources: data.sources || [] }]);
-    } catch (error) {
-      const message = error instanceof TypeError ? "Không kết nối được backend. Kiểm tra backend đang chạy và EXPO_PUBLIC_CHAT_API_URL trỏ đúng địa chỉ máy chủ." : (error as Error).message;
-      setMessages((current) => [...current, { id: `error-${messageCounter.current}`, role: "assistant", content: message }]);
-    } finally { setLoading(false); }
+    setLoading(false);
+    setMessages((current) => [...current, {
+      id: `answer-${messageCounter.current}`,
+      role: "assistant",
+      content: "Trợ lý hiện đang ở chế độ giao diện mẫu. Tính năng kết nối máy chủ đã được tắt.",
+    }]);
   }
 
   return (

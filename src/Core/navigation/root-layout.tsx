@@ -1,9 +1,11 @@
 import { DefaultTheme, Stack, ThemeProvider } from "expo-router";
 import { LanguageProvider } from "@/Core/contexts/language-context";
+import { CartProvider } from "@/Core/contexts/cart-context";
 
 export default function RootLayout() {
   return (
     <LanguageProvider>
+      <CartProvider>
       <ThemeProvider value={DefaultTheme}>
         <Stack screenOptions={{ headerShown: false }}>
           <Stack.Screen name="index" options={{ headerShown: false }} />
@@ -17,6 +19,7 @@ export default function RootLayout() {
           <Stack.Screen name="explore" options={{ headerShown: false }} />
           <Stack.Screen name="chat" options={{ headerShown: false }} />
           <Stack.Screen name="product_detail" options={{ headerShown: false }} />
+          <Stack.Screen name="products" options={{ headerShown: false }} />
           <Stack.Screen name="main_Admin" />
           <Stack.Screen name="order_management" />
           <Stack.Screen name="product_management" />
@@ -25,6 +28,7 @@ export default function RootLayout() {
           <Stack.Screen name="stock_movements" />
         </Stack>
       </ThemeProvider>
+      </CartProvider>
     </LanguageProvider>
   );
 }

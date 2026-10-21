@@ -16,6 +16,7 @@ import { LanguageSelector } from "@/Core/components/language-selector";
 import { AiConsultationWidget } from "@/Core/components/ai-consultation-widget";
 import { ProductCategoryPicker } from "@/Core/components/product-category-picker";
 import { useLanguage } from "@/Core/contexts/language-context";
+import { useCart } from "@/Core/contexts/cart-context";
 import { useProductCategories } from "@/Core/hooks/use-product-categories";
 import { useProducts } from "@/Core/hooks/use-products";
 
@@ -84,6 +85,8 @@ function PhoneLayout() {
   const { t, language } = useLanguage();
   const { products, error } = useProducts(true, language);
   const { categories } = useProductCategories(true, language);
+  const { itemCount, addItem } = useCart();
+  const [notice, setNotice] = React.useState("");
   const [selectedCategoryId, setSelectedCategoryId] = React.useState<string | null>(null);
   const pricedProducts = products.filter((product) => product.price > 0);
   const visibleProducts = selectedCategoryId
@@ -129,6 +132,7 @@ function PhoneLayout() {
                     size={22}
                     color={hovered ? "red" : "#ffffff"}
                   />
+                  {itemCount > 0 && <Text style={styles.cartBadge}>{itemCount}</Text>}
                 </View>
 
                 <Text style={styles.phoneIconText}>{t("Giỏ hàng")}</Text>
@@ -225,16 +229,16 @@ function PhoneLayout() {
           {/* bên trái */}
           <View style={styles.phoneBannerLeft}>
             <Text style={styles.phoneBannerSmallTitle}>
-              MUA SẮM DỄ DÀNG - TIỆN LỢI MỖI NGÀY
+              {t("MUA SẮM DỄ DÀNG - TIỆN LỢI MỖI NGÀY")}
             </Text>
 
             <Text style={styles.phoneBannerTitle}>
-              Sản phẩm chất lượng{"\n"}
-              <Text style={styles.bannerTitleHighlight}>Giá tốt mỗi ngày</Text>
+              {t("Sản phẩm chất lượng")}{"\n"}
+              <Text style={styles.bannerTitleHighlight}>{t("Giá tốt mỗi ngày")}</Text>
             </Text>
 
             <Text style={styles.phoneBannerDescription}>
-              Khám phá hàng ngàn sản phẩm chính hãng với nhiều ưu đãi hấp dẫn.
+              {t("Khám phá hàng ngàn sản phẩm chính hãng với nhiều ưu đãi hấp dẫn.")}
             </Text>
 
             {/* Mua ngay */}
@@ -279,6 +283,7 @@ function PhoneLayout() {
             <HoverButton
               style={styles.viewAllButton}
               hoverStyle={styles.viewAllHover}
+              onPress={() => router.push("/products")}
             >
               <Text style={styles.viewAll}>{t("Xem tất cả")}</Text>
             </HoverButton>
@@ -292,13 +297,17 @@ function PhoneLayout() {
               onPress={() => router.push({ pathname: "/product_detail", params: { productId: product.id } })}
             >
               <View style={[styles.phoneProductImage, styles.productPlaceholder]}><Ionicons name={categoryIcon(product.categoryId, product.name)} size={58} color="#d9273e" /></View>
-              <Text style={styles.phoneProductName} numberOfLines={2}>{product.name}</Text>
+              <Text style={styles.phoneProductName} numberOfLines={2}>{t(product.name)}</Text>
               <Text style={styles.phonePrice}>{product.price.toLocaleString("vi-VN")} đ</Text>
               <Text style={styles.phoneStock}>{product.stock > 0 ? `${product.stock} ${t("sản phẩm")}` : t("Hết hàng")}</Text>
 
               <HoverButton
                 style={styles.addCartButton}
                 hoverStyle={styles.buttonHover}
+                onPress={() => {
+                  addItem(product);
+                  setNotice(t("Đã thêm vào giỏ hàng"));
+                }}
               >
                 <Text style={styles.addCartText}>{t("Thêm vào giỏ")}</Text>
               </HoverButton>
@@ -309,6 +318,7 @@ function PhoneLayout() {
           </View>
         </View>
       </ScrollView>
+      {!!notice && <Pressable style={styles.homeNotice} onPress={() => setNotice("")}><Ionicons name="checkmark-circle" size={18} color="#16834a" /><Text style={styles.homeNoticeText}>{notice}</Text></Pressable>}
       <AiConsultationWidget onPress={() => router.push("/chat")} />
     </View>
   );
@@ -323,6 +333,8 @@ function DesktopLayout() {
   const { t, language } = useLanguage();
   const { products, error } = useProducts(true, language);
   const { categories } = useProductCategories(true, language);
+  const { itemCount, addItem } = useCart();
+  const [notice, setNotice] = React.useState("");
   const [selectedCategoryId, setSelectedCategoryId] = React.useState<string | null>(null);
   const pricedProducts = products.filter((product) => product.price > 0);
   const visibleProducts = selectedCategoryId
@@ -383,6 +395,7 @@ function DesktopLayout() {
                     size={25}
                     color={hovered ? "red" : "#ffffff"}
                   />
+                  {itemCount > 0 && <Text style={styles.cartBadge}>{itemCount}</Text>}
                 </View>
 
                 <Text style={styles.iconText}>{t("Giỏ hàng")}</Text>
@@ -455,16 +468,16 @@ function DesktopLayout() {
           {/* bên trái */}
           <View style={styles.bannerLeft}>
             <Text style={styles.bannerSmallTitle}>
-              MUA SẮM DỄ DÀNG - TIỆN LỢI MỖI NGÀY
+              {t("MUA SẮM DỄ DÀNG - TIỆN LỢI MỖI NGÀY")}
             </Text>
 
             <Text style={styles.bannerTitle}>
-              Sản phẩm chất lượng{"\n"}
-              <Text style={styles.bannerTitleHighlight}>Giá tốt mỗi ngày</Text>
+              {t("Sản phẩm chất lượng")}{"\n"}
+              <Text style={styles.bannerTitleHighlight}>{t("Giá tốt mỗi ngày")}</Text>
             </Text>
 
             <Text style={styles.bannerDescription}>
-              Khám phá hàng ngàn sản phẩm chính hãng với nhiều ưu đãi hấp dẫn.
+              {t("Khám phá hàng ngàn sản phẩm chính hãng với nhiều ưu đãi hấp dẫn.")}
             </Text>
 
             {/* Mua ngay */}
@@ -508,6 +521,7 @@ function DesktopLayout() {
             <HoverButton
               style={styles.viewAllButton}
               hoverStyle={styles.viewAllHover}
+              onPress={() => router.push("/products")}
             >
               <Text style={styles.viewAll}>{t("Xem tất cả")}</Text>
             </HoverButton>
@@ -521,13 +535,17 @@ function DesktopLayout() {
               onPress={() => router.push({ pathname: "/product_detail", params: { productId: product.id } })}
             >
               <View style={[styles.productImage, styles.productPlaceholder]}><Ionicons name={categoryIcon(product.categoryId, product.name)} size={72} color="#d9273e" /></View>
-              <Text style={styles.productName} numberOfLines={2}>{product.name}</Text>
+              <Text style={styles.productName} numberOfLines={2}>{t(product.name)}</Text>
               <Text style={styles.price}>{product.price.toLocaleString("vi-VN")} đ</Text>
               <Text style={styles.productStock}>{product.stock > 0 ? `${product.stock} ${t("sản phẩm")}` : t("Hết hàng")}</Text>
 
               <HoverButton
                 style={styles.addCartButton}
                 hoverStyle={styles.buttonHover}
+                onPress={() => {
+                  addItem(product);
+                  setNotice(t("Đã thêm vào giỏ hàng"));
+                }}
               >
                 <Text style={styles.addCartText}>{t("Thêm vào giỏ")}</Text>
               </HoverButton>
@@ -538,6 +556,7 @@ function DesktopLayout() {
           </View>
         </View>
       </ScrollView>
+      {!!notice && <Pressable style={styles.homeNotice} onPress={() => setNotice("")}><Ionicons name="checkmark-circle" size={18} color="#16834a" /><Text style={styles.homeNoticeText}>{notice}</Text></Pressable>}
       <AiConsultationWidget onPress={() => router.push("/chat")} />
     </View>
   );
@@ -548,6 +567,37 @@ function DesktopLayout() {
 /* ================================================= */
 
 const styles = StyleSheet.create({
+  cartBadge: {
+    position: "absolute",
+    right: -8,
+    top: -8,
+    minWidth: 18,
+    height: 18,
+    paddingHorizontal: 4,
+    borderRadius: 9,
+    backgroundColor: "#ffd43b",
+    color: "#8a1c1c",
+    fontSize: 11,
+    fontWeight: "800",
+    textAlign: "center",
+    overflow: "hidden",
+  },
+  homeNotice: {
+    position: "absolute",
+    bottom: 24,
+    left: 20,
+    right: 20,
+    zIndex: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    padding: 13,
+    borderRadius: 12,
+    backgroundColor: "#e9f8ee",
+    borderWidth: 1,
+    borderColor: "#b9e6c7",
+  },
+  homeNoticeText: { color: "#176b35", fontWeight: "700" },
   /* ================================================= */
   /*                DESKTOP CONTAINER                  */
   /* ================================================= */

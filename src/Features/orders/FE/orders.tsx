@@ -136,13 +136,13 @@ export default function OrdersScreen() {
     if (selectedOrder.status !== "Chờ xác nhận") {
       const message =
         selectedOrder.status === "Đã hủy"
-          ? "Đơn hàng này đã được hủy trước đó."
-          : "Không thể hủy đơn hàng này vì trạng thái hiện tại không cho phép hủy.";
+          ? t("Đơn hàng này đã được hủy trước đó.")
+          : t("Không thể hủy đơn hàng này vì trạng thái hiện tại không cho phép hủy.");
 
       if (Platform.OS === "web") {
         window.alert(message);
       } else {
-        Alert.alert("Không thể hủy đơn", message);
+        Alert.alert(t("Không thể hủy đơn"), message);
       }
 
       return;
@@ -158,19 +158,19 @@ export default function OrdersScreen() {
         ),
       );
 
-      const message = `Đơn hàng ${orderId} đã được hủy thành công.`;
+      const message = `${t("Đơn hàng ")}${orderId}${t(" đã được hủy thành công.")}`;
 
       if (Platform.OS === "web") {
         window.alert(message);
       } else {
-        Alert.alert("Hủy đơn thành công", message);
+        Alert.alert(t("Hủy đơn thành công"), message);
       }
     };
 
     // Web sử dụng confirm; Android/iOS sử dụng Alert.
     if (Platform.OS === "web") {
       const confirmed = window.confirm(
-        `Bạn có chắc chắn muốn hủy đơn hàng ${orderId}?`,
+        `${t("Bạn có chắc chắn muốn hủy đơn hàng ")}${orderId}${t("?")}`,
       );
 
       if (confirmed) {
@@ -181,15 +181,15 @@ export default function OrdersScreen() {
     }
 
     Alert.alert(
-      "Xác nhận hủy đơn",
-      `Bạn có chắc chắn muốn hủy đơn hàng ${orderId}?`,
+      t("Xác nhận hủy đơn"),
+      `${t("Bạn có chắc chắn muốn hủy đơn hàng ")}${orderId}${t("?")}`,
       [
         {
-          text: "Không",
+          text: t("Không"),
           style: "cancel",
         },
         {
-          text: "Xác nhận hủy",
+          text: t("Xác nhận hủy"),
           style: "destructive",
           onPress: confirmCancel,
         },
@@ -238,7 +238,7 @@ export default function OrdersScreen() {
             hoverStyle={styles.headerActionHover}
             onPress={() => router.push("/account")}
             accessibilityRole="button"
-            accessibilityLabel="Tài khoản"
+            accessibilityLabel={t("Tài khoản")}
           >
             <Ionicons name="person-outline" size={23} color="#ffffff" />
 
