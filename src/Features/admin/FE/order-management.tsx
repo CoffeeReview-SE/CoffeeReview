@@ -14,78 +14,71 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 
-// ===== KIỂU DỮ LIỆU ĐƠN HÀNG =====
-// Mỗi đơn hàng gồm mã, khách hàng, số điện thoại, tổng tiền,
-// trạng thái, hình thức thanh toán và thời gian đặt.
+// ===== KIỂU DỮ LIỆU ĐƠN HÀNG ĐÃ ĐỒNG BỘ =====
 type Order = {
   id: string;
   customer: string;
   phone: string;
+  items: string;
   total: number;
-  status: string;
+  status: "Chờ xác nhận" | "Đang giao" | "Hoàn thành" | "Đã hủy";
   payment: string;
   date: string;
   image: string;
 };
 
-// ===== DỮ LIỆU MẪU CÁC ĐƠN HÀNG =====
-const orders: Order[] = [
+// ===== DỮ LIỆU ĐỒNG BỘ TỪ TRANG ORDERS =====
+const synchronizedOrders: Order[] = [
   {
-    id: "BVP001258",
+    id: "DH26091001",
     customer: "Nguyễn Văn A",
     phone: "0901234567",
-    total: 1250000,
-    status: "Đang xử lý",
-    payment: "COD",
-    date: "2025-09-28 14:32",
-    image: "https://placehold.co/80x80/f4f4f4/555?text=Phone",
+    items: "iPhone 16e 128GB · 1 sản phẩm",
+    total: 16990000,
+    status: "Chờ xác nhận",
+    payment: "Chuyển khoản",
+    date: "10/10/2026",
+    image: "https://placehold.co/80x80/f4f4f4/555?text=iPhone",
   },
   {
-    id: "BVP001257",
+    id: "DH26090802",
     customer: "Trần Thị B",
     phone: "0987654321",
-    total: 2490000,
+    items: "Tai nghe Bluetooth · 2 sản phẩm",
+    total: 1580000,
     status: "Đang giao",
-    payment: "Chuyển khoản",
-    date: "2025-09-28 11:20",
-    image: "https://placehold.co/80x80/f4f4f4/555?text=Headphone",
+    payment: "COD",
+    date: "08/10/2026",
+    image: "https://placehold.co/80x80/f4f4f4/555?text=Audio",
   },
   {
-    id: "BVP001256",
+    id: "DH26090503",
     customer: "Lê Văn C",
     phone: "0912345678",
-    total: 890000,
+    items: "Laptop ASUS Vivobook · 1 sản phẩm",
+    total: 18490000,
     status: "Hoàn thành",
-    payment: "COD",
-    date: "2025-09-27 16:45",
-    image: "https://placehold.co/80x80/f4f4f4/555?text=Shoes",
+    payment: "Chuyển khoản",
+    date: "05/10/2026",
+    image: "https://placehold.co/80x80/f4f4f4/555?text=Laptop",
   },
   {
-    id: "BVP001255",
+    id: "DH26090104",
     customer: "Phạm Thị D",
     phone: "0934567890",
-    total: 1860000,
-    status: "Đang xử lý",
-    payment: "Chuyển khoản",
-    date: "2025-09-27 13:10",
-    image: "https://placehold.co/80x80/f4f4f4/555?text=Bag",
-  },
-  {
-    id: "BVP001254",
-    customer: "Hoàng Văn E",
-    phone: "0976543210",
-    total: 3200000,
+    items: "Chuột không dây · 1 sản phẩm",
+    total: 390000,
     status: "Đã hủy",
     payment: "COD",
-    date: "2025-09-26 09:22",
-    image: "https://placehold.co/80x80/f4f4f4/555?text=Watch",
+    date: "01/10/2026",
+    image: "https://placehold.co/80x80/f4f4f4/555?text=Mouse",
   },
 ];
 
-// ===== CÁC GIÁ TRỊ CỦA BỘ LỌC =====
+// ===== CÁC GIÁ TRỊ CỦA BỘ LỌC ĐỒNG BỘ =====
 const statusOptions = [
   "Tất cả trạng thái",
-  "Đang xử lý",
+  "Chờ xác nhận",
   "Đang giao",
   "Hoàn thành",
   "Đã hủy",
@@ -100,35 +93,34 @@ const paymentOptions = [
 const dateOptions = ["Mới nhất", "Cũ nhất"];
 
 // ===== HÀM ĐỊNH DẠNG TIỀN TỆ =====
-// Ví dụ: 1250000 -> 1.250.000đ
 const money = (amount: number) =>
   amount.toLocaleString("vi-VN") + "đ";
 
-// ===== HÀM XÁC ĐỊNH MÀU TRẠNG THÁI =====
+// ===== HÀM XÁC ĐỊNH MÀU TRẠNG THÁI (Đồng bộ giao diện) =====
 function getStatusStyle(status: string) {
   switch (status) {
-    case "Đang xử lý":
+    case "Chờ xác nhận":
       return {
-        backgroundColor: "#fff0d5",
-        color: "#d97706",
+        backgroundColor: "#fff5df",
+        color: "#a86a00",
       };
 
     case "Đang giao":
       return {
-        backgroundColor: "#e2efff",
-        color: "#1670df",
+        backgroundColor: "#eaf3ff",
+        color: "#1769aa",
       };
 
     case "Hoàn thành":
       return {
-        backgroundColor: "#dcfce7",
-        color: "#16803d",
+        backgroundColor: "#e9f8ef",
+        color: "#16834a",
       };
 
     case "Đã hủy":
       return {
-        backgroundColor: "#ffe4e8",
-        color: "#dc2638",
+        backgroundColor: "#fff0f0",
+        color: "#c62828",
       };
 
     default:
@@ -140,8 +132,6 @@ function getStatusStyle(status: string) {
 }
 
 // ===== COMPONENT BỘ LỌC DẠNG DANH SÁCH =====
-// React Native không có thẻ <select> như HTML.
-// Vì vậy, sử dụng Modal để người dùng chọn giá trị.
 type FilterSelectProps = {
   label: string;
   value: string;
@@ -159,7 +149,6 @@ function FilterSelect({
 
   return (
     <>
-      {/* Nút mở danh sách lựa chọn */}
       <Pressable
         style={styles.filterSelect}
         onPress={() => setVisible(true)}
@@ -175,7 +164,6 @@ function FilterSelect({
         />
       </Pressable>
 
-      {/* Hộp thoại hiển thị các lựa chọn của bộ lọc */}
       <Modal
         visible={visible}
         transparent
@@ -237,7 +225,6 @@ function FilterSelect({
 }
 
 // ===== COMPONENT SIDEBAR =====
-// Thay thế thẻ <aside> và <nav> trong HTML.
 type SidebarProps = {
   width: number;
   activePage: string;
@@ -245,7 +232,6 @@ type SidebarProps = {
 };
 
 function Sidebar({ width, activePage, onNavigate }: SidebarProps) {
-  // Các mục điều hướng của trang quản trị
   const menuItems = [
     {
       label: "Tổng quan",
@@ -286,7 +272,6 @@ function Sidebar({ width, activePage, onNavigate }: SidebarProps) {
 
   return (
     <View style={[styles.sidebar, { width }]}>
-      {/* Logo cửa hàng */}
       <Pressable
         style={styles.brand}
         onPress={() => onNavigate("main_Admin")}
@@ -302,19 +287,16 @@ function Sidebar({ width, activePage, onNavigate }: SidebarProps) {
         </Text>
       </Pressable>
 
-      {/* Menu điều hướng */}
       <ScrollView
         style={styles.sidebarMenu}
         showsVerticalScrollIndicator={false}
       >
         {menuItems.map((item, index) => (
           <React.Fragment key={item.page}>
-            {/* Tiêu đề nhóm QUẢN LÝ */}
             {index === 1 && (
               <Text style={styles.menuHeading}>QUẢN LÝ</Text>
             )}
 
-            {/* Các trang trong menu */}
             <Pressable
               style={[
                 styles.menuLink,
@@ -344,10 +326,8 @@ function Sidebar({ width, activePage, onNavigate }: SidebarProps) {
           </React.Fragment>
         ))}
 
-        {/* Nhóm hệ thống */}
         <Text style={styles.systemHeading}>HỆ THỐNG</Text>
 
-        {/* Đăng xuất */}
         <Pressable
           style={styles.menuLink}
           onPress={() =>
@@ -360,7 +340,6 @@ function Sidebar({ width, activePage, onNavigate }: SidebarProps) {
                   text: "Đăng xuất",
                   style: "destructive",
                   onPress: () => {
-                    // TODO: Thực hiện logic đăng xuất tại đây.
                     Alert.alert(
                       "Thông báo",
                       "Bạn cần kết nối chức năng đăng xuất.",
@@ -380,7 +359,6 @@ function Sidebar({ width, activePage, onNavigate }: SidebarProps) {
         </Pressable>
       </ScrollView>
 
-      {/* Thẻ giới thiệu phía dưới sidebar */}
       <View style={styles.imageSide}>
         <Image
           source={require("@/assets/image/anh logo.png")}
@@ -396,16 +374,9 @@ function Sidebar({ width, activePage, onNavigate }: SidebarProps) {
 export default function OrderManagement() {
   const { width: screenWidth } = useWindowDimensions();
 
-  // Thu nhỏ sidebar trên màn hình hẹp
   const sidebarWidth = screenWidth <= 768 ? 220 : 255;
+  const tableWidth = 1180;
 
-  // Tổng chiều rộng các cột trong bảng: 42 + 180 + 145 + 115
-  // + 120 + 120 + 135 + 155 + 80 = 1092 px.
-  const tableWidth = 1092;
-
-  // Vùng hiển thị còn lại sau sidebar và lề trái/phải của nội dung.
-  // Màn hình rộng: bảng giữ đúng chiều rộng cột và được căn giữa.
-  // Màn hình hẹp: khung bảng vừa vùng hiển thị, có thể cuộn ngang.
   const availableContentWidth = Math.max(
     0,
     screenWidth - sidebarWidth - 48,
@@ -421,21 +392,19 @@ export default function OrderManagement() {
   // ===== STATE QUẢN LÝ CHECKBOX =====
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
-  // ===== STATE CẬP NHẬT TRẠNG THÁI ĐƠN HÀNG =====
-  const [displayOrders, setDisplayOrders] = useState<Order[]>(orders);
+  // ===== STATE DỮ LIỆU ĐƠN HÀNG ĐÃ ĐỒNG BỘ =====
+  const [displayOrders, setDisplayOrders] = useState<Order[]>(synchronizedOrders);
   const [statusChangeId, setStatusChangeId] = useState<string | null>(null);
-  const [newStatus, setNewStatus] = useState(statusOptions[1]);
+  const [newStatus, setNewStatus] = useState<Order["status"]>("Chờ xác nhận");
   const orderToUpdate = displayOrders.find((item) => item.id === statusChangeId) ?? null;
 
   // ===== LẤY DANH SÁCH ĐƠN HÀNG SAU KHI LỌC =====
-  // Tìm theo mã đơn, tên khách hàng, số điện thoại.
-  // Lọc trạng thái, phương thức thanh toán và sắp xếp ngày đặt.
   const filteredOrders = useMemo(() => {
     const normalizedKeyword = keyword.trim().toLowerCase();
 
     return displayOrders
       .filter((order) =>
-        `${order.id} ${order.customer} ${order.phone}`
+        `${order.id} ${order.customer} ${order.phone} ${order.items}`
           .toLowerCase()
           .includes(normalizedKeyword),
       )
@@ -450,12 +419,11 @@ export default function OrderManagement() {
       )
       .sort((a, b) =>
         dateOrder === "Mới nhất"
-          ? b.date.localeCompare(a.date)
-          : a.date.localeCompare(b.date),
+          ? b.id.localeCompare(a.id)
+          : a.id.localeCompare(b.id),
       );
   }, [keyword, status, payment, dateOrder, displayOrders]);
 
-  // ===== CHỌN HOẶC BỎ CHỌN MỘT ĐƠN HÀNG =====
   function toggleOrder(id: string) {
     setSelectedIds((previous) =>
       previous.includes(id)
@@ -464,21 +432,17 @@ export default function OrderManagement() {
     );
   }
 
-  // ===== CHỌN TẤT CẢ ĐƠN HÀNG ĐANG HIỂN THỊ =====
   const allVisibleSelected =
     filteredOrders.length > 0 &&
     filteredOrders.every((order) => selectedIds.includes(order.id));
 
   function toggleSelectAll() {
     if (allVisibleSelected) {
-      // Bỏ chọn các đơn đang hiển thị, giữ nguyên lựa chọn khác.
       const visibleIds = filteredOrders.map((order) => order.id);
-
       setSelectedIds((previous) =>
         previous.filter((id) => !visibleIds.includes(id)),
       );
     } else {
-      // Chọn tất cả đơn hàng đang hiển thị sau khi lọc.
       setSelectedIds((previous) =>
         Array.from(
           new Set([
@@ -490,13 +454,11 @@ export default function OrderManagement() {
     }
   }
 
-  // ===== XỬ LÝ THAY ĐỔI TRẠNG THÁI ĐƠN HÀNG =====
-  // Theo activity diagram: chọn đơn → cập nhật trạng thái → kiểm tra dữ liệu → lưu → thông báo.
   function openStatusChange(id: string) {
     const order = displayOrders.find((item) => item.id === id);
     if (!order) return;
     setStatusChangeId(id);
-    setNewStatus(order.status === "Đã hủy" ? statusOptions[1] : order.status);
+    setNewStatus(order.status);
   }
 
   function saveStatusChange() {
@@ -513,8 +475,6 @@ export default function OrderManagement() {
     );
   }
 
-  // ===== XỬ LÝ NÚT THAO TÁC ĐƠN HÀNG =====
-  // Hiện tại hiển thị thông tin cơ bản; có thể thay bằng màn hình chi tiết.
   function viewOrder(id: string) {
     const order = displayOrders.find((item) => item.id === id);
 
@@ -524,23 +484,21 @@ export default function OrderManagement() {
       `Đơn hàng #${order.id}`,
       `Khách hàng: ${order.customer}\n` +
         `Số điện thoại: ${order.phone}\n` +
+        `Sản phẩm: ${order.items}\n` +
         `Tổng tiền: ${money(order.total)}\n` +
         `Trạng thái: ${order.status}\n` +
         `Thanh toán: ${order.payment}\n` +
         `Thời gian đặt: ${order.date}`,
       [
         { text: "Đóng", style: "cancel" },
-        order.status !== "Hoàn thành" && order.status !== "Đã hủy"
-          ? {
-              text: "Cập nhật trạng thái",
-              onPress: () => openStatusChange(order.id),
-            }
-          : null,
-      ].filter(Boolean) as { text: string; onPress?: () => void }[],
+        {
+          text: "Cập nhật trạng thái",
+          onPress: () => openStatusChange(order.id),
+        },
+      ],
     );
   }
 
-  // ===== ĐIỀU HƯỚNG SIDEBAR =====
   function navigateTo(page: string) {
     if (page === "order_management") return;
 
@@ -565,20 +523,16 @@ export default function OrderManagement() {
 
   return (
     <View style={styles.screen}>
-      {/* Sidebar: thay thế thẻ <aside> trong HTML */}
       <Sidebar
         width={sidebarWidth}
         activePage="order_management"
         onNavigate={navigateTo}
       />
 
-      {/* Khu vực nội dung bên phải sidebar */}
       <View
         style={[
           styles.page,
           {
-            // Cố định vùng nội dung từ cạnh phải sidebar đến sát mép màn hình.
-            // Không cộng marginLeft vào một width đã tính sẵn, tránh tràn ngang.
             position: "absolute",
             left: sidebarWidth,
             right: 0,
@@ -587,7 +541,6 @@ export default function OrderManagement() {
           },
         ]}
       >
-        {/* Header: tài khoản Admin */}
         <View style={styles.header}>
           <View style={styles.accountAdmin}>
             <View style={styles.accountIcon}>
@@ -602,21 +555,17 @@ export default function OrderManagement() {
           </View>
         </View>
 
-        {/* Nội dung chính của trang quản lý */}
         <ScrollView
           style={styles.mainContent}
           contentContainerStyle={styles.mainContentInner}
           keyboardShouldPersistTaps="handled"
         >
-          {/* Tiêu đề trang */}
           <Text style={styles.pageTitle}>Quản lý đơn hàng</Text>
           <Text style={styles.pageSubtitle}>
-            Theo dõi và quản lý các đơn hàng của cửa hàng.
+            Theo dõi và quản lý các đơn hàng đồng bộ từ cửa hàng.
           </Text>
 
-          {/* Thanh tìm kiếm và bộ lọc */}
           <View style={styles.filters}>
-            {/* Tìm theo mã đơn, tên khách hàng hoặc số điện thoại */}
             <View style={styles.searchBox}>
               <Ionicons
                 name="search-outline"
@@ -627,7 +576,7 @@ export default function OrderManagement() {
               <TextInput
                 value={keyword}
                 onChangeText={setKeyword}
-                placeholder="Tìm mã đơn, tên khách hàng, SDT..."
+                placeholder="Tìm mã đơn, khách hàng, sản phẩm, SDT..."
                 placeholderTextColor="#94a3b8"
                 style={styles.searchInput}
                 autoCapitalize="none"
@@ -635,7 +584,6 @@ export default function OrderManagement() {
               />
             </View>
 
-            {/* Lọc trạng thái đơn hàng */}
             <FilterSelect
               label="Trạng thái đơn hàng"
               value={status}
@@ -643,7 +591,6 @@ export default function OrderManagement() {
               onChange={setStatus}
             />
 
-            {/* Lọc phương thức thanh toán */}
             <FilterSelect
               label="Phương thức thanh toán"
               value={payment}
@@ -651,7 +598,6 @@ export default function OrderManagement() {
               onChange={setPayment}
             />
 
-            {/* Sắp xếp theo thời gian đặt */}
             <FilterSelect
               label="Sắp xếp thời gian"
               value={dateOrder}
@@ -660,7 +606,6 @@ export default function OrderManagement() {
             />
           </View>
 
-          {/* Hiển thị số lượng đơn hàng và số đơn đã chọn */}
           <View style={styles.summaryRow}>
             <Text style={styles.summaryText}>
               Tổng số: {filteredOrders.length} đơn hàng
@@ -671,7 +616,6 @@ export default function OrderManagement() {
             </Text>
           </View>
 
-          {/* Bảng đơn hàng: dùng ScrollView ngang thay cho <table> */}
           <View
             style={[
               styles.orders,
@@ -687,7 +631,6 @@ export default function OrderManagement() {
               contentContainerStyle={{ width: tableWidth }}
             >
               <View style={{ width: tableWidth }}>
-                {/* Tiêu đề bảng */}
                 <View style={[styles.tableRow, styles.tableHeader]}>
                   <View style={[styles.cell, styles.checkboxCell]}>
                     <Pressable
@@ -718,29 +661,35 @@ export default function OrderManagement() {
                   <Text style={[styles.cell, styles.customerColumn]}>
                     Khách hàng
                   </Text>
+                  <Text style={[styles.cell, styles.itemsColumn]}>
+                    Sản phẩm
+                  </Text>
                   <Text style={[styles.cell, styles.phoneColumn]}>
                     SDT
                   </Text>
+
                   <Text style={[styles.cell, styles.totalColumn]}>
                     Tổng tiền
                   </Text>
+
                   <Text style={[styles.cell, styles.statusColumn]}>
                     Trạng thái
                   </Text>
+
                   <Text style={[styles.cell, styles.paymentColumn]}>
                     Thanh toán
                   </Text>
+
                   <Text style={[styles.cell, styles.dateColumn]}>
                     Thời gian đặt
                   </Text>
+
                   <Text style={[styles.cell, styles.actionColumn]}>
                     Thao tác
                   </Text>
                 </View>
 
-                {/* Các hàng dữ liệu đơn hàng */}
                 {filteredOrders.map((order) => {
-                  // Xác định màu hiển thị tương ứng với trạng thái đơn hàng.
                   const statusStyle = getStatusStyle(order.status);
                   const isSelected = selectedIds.includes(order.id);
 
@@ -753,7 +702,6 @@ export default function OrderManagement() {
                         isSelected && styles.selectedRow,
                       ]}
                     >
-                      {/* Checkbox chọn từng đơn hàng */}
                       <View
                         style={[styles.cell, styles.checkboxCell]}
                       >
@@ -778,7 +726,6 @@ export default function OrderManagement() {
                         </Pressable>
                       </View>
 
-                      {/* Hình ảnh minh họa và mã đơn hàng */}
                       <View
                         style={[
                           styles.cell,
@@ -797,19 +744,23 @@ export default function OrderManagement() {
                         </Text>
                       </View>
 
-                      {/* Tên khách hàng */}
                       <Text
                         style={[styles.cell, styles.customerColumn]}
                       >
                         {order.customer}
                       </Text>
 
-                      {/* Số điện thoại khách hàng */}
+                      <Text
+                        style={[styles.cell, styles.itemsColumn]}
+                        numberOfLines={1}
+                      >
+                        {order.items}
+                      </Text>
+
                       <Text style={[styles.cell, styles.phoneColumn]}>
                         {order.phone}
                       </Text>
 
-                      {/* Tổng tiền đơn hàng */}
                       <Text
                         style={[
                           styles.cell,
@@ -820,7 +771,6 @@ export default function OrderManagement() {
                         {money(order.total)}
                       </Text>
 
-                      {/* Trạng thái đơn hàng */}
                       <View
                         style={[
                           styles.cell,
@@ -845,7 +795,6 @@ export default function OrderManagement() {
                         </View>
                       </View>
 
-                      {/* Phương thức thanh toán */}
                       <View
                         style={[
                           styles.cell,
@@ -860,12 +809,10 @@ export default function OrderManagement() {
                         </View>
                       </View>
 
-                      {/* Thời gian đặt đơn hàng */}
                       <Text style={[styles.cell, styles.dateColumn]}>
                         {order.date}
                       </Text>
 
-                      {/* Nút xem thông tin đơn hàng */}
                       <View
                         style={[
                           styles.cell,
@@ -889,7 +836,6 @@ export default function OrderManagement() {
                   );
                 })}
 
-                {/* Thông báo khi không có đơn hàng phù hợp */}
                 {filteredOrders.length === 0 && (
                   <View style={styles.emptyState}>
                     <Ionicons
@@ -908,7 +854,6 @@ export default function OrderManagement() {
         </ScrollView>
       </View>
 
-      {/* Modal cập nhật trạng thái đơn hàng theo activity diagram */}
       <Modal
         visible={statusChangeId !== null}
         transparent
@@ -936,7 +881,7 @@ export default function OrderManagement() {
                     styles.optionItem,
                     newStatus === option && styles.optionSelected,
                   ]}
-                  onPress={() => setNewStatus(option)}
+                  onPress={() => setNewStatus(option as Order["status"])}
                 >
                   <Text
                     style={[
@@ -974,18 +919,12 @@ export default function OrderManagement() {
 }
 
 // ===== STYLE SHEET =====
-// Chuyển đổi CSS sang StyleSheet của React Native.
-// Các thuộc tính như position: fixed, border-radius, flex và màu sắc
-// được thay bằng những thuộc tính tương ứng mà React Native hỗ trợ.
 const styles = StyleSheet.create({
-  // Thiết lập mặc định cho trang
   screen: {
     flex: 1,
     flexDirection: "row",
     backgroundColor: "#f8f9fc",
   },
-
-  // ===== SIDEBAR BVP SHOP =====
   sidebar: {
     position: "absolute",
     left: 0,
@@ -1000,8 +939,6 @@ const styles = StyleSheet.create({
     zIndex: 10,
     elevation: 4,
   },
-
-  // Logo cửa hàng
   brand: {
     flexDirection: "row",
     alignItems: "center",
@@ -1021,8 +958,6 @@ const styles = StyleSheet.create({
   brandStrong: {
     color: "#8f101f",
   },
-
-  // Menu
   sidebarMenu: {
     flex: 1,
   },
@@ -1044,8 +979,6 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     letterSpacing: 0.3,
   },
-
-  // Các trang trong menu
   menuLink: {
     minHeight: 43,
     flexDirection: "row",
@@ -1073,8 +1006,6 @@ const styles = StyleSheet.create({
     color: "#ffffff",
     fontWeight: "600",
   },
-
-  // Thẻ quảng bá phía dưới sidebar
   imageSide: {
     alignItems: "center",
     justifyContent: "center",
@@ -1085,8 +1016,6 @@ const styles = StyleSheet.create({
     width: 170,
     height: 150,
   },
-
-  // ===== HEADER =====
   page: {
     flex: 1,
     height: "100%",
@@ -1103,8 +1032,6 @@ const styles = StyleSheet.create({
     borderBottomColor: "#edf0f5",
     zIndex: 2,
   },
-
-  // Khối tài khoản Admin
   accountAdmin: {
     flexDirection: "row",
     alignItems: "center",
@@ -1123,8 +1050,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "600",
   },
-
-  // ===== VÙNG NỘI DUNG CHÍNH =====
   mainContent: {
     flex: 1,
   },
@@ -1143,8 +1068,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     marginBottom: 20,
   },
-
-  // ===== THANH TÌM KIẾM VÀ BỘ LỌC =====
   filters: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -1194,8 +1117,6 @@ const styles = StyleSheet.create({
     color: "#354157",
     fontSize: 12,
   },
-
-  // ===== MODAL CHỌN BỘ LỌC =====
   modalOverlay: {
     flex: 1,
     justifyContent: "center",
@@ -1248,8 +1169,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "600",
   },
-
-  // ===== THÔNG TIN TỔNG QUAN BẢNG =====
   summaryRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -1266,8 +1185,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "600",
   },
-
-  // ===== BẢNG ĐƠN HÀNG =====
   orders: {
     width: "100%",
     backgroundColor: "#ffffff",
@@ -1302,20 +1219,21 @@ const styles = StyleSheet.create({
     color: "#354157",
     fontSize: 12,
   },
-
-  // Chiều rộng từng cột để bảng có thể cuộn ngang
   checkboxCell: {
     width: 42,
     alignItems: "center",
   },
   idColumn: {
-    width: 180,
+    width: 140,
   },
   customerColumn: {
-    width: 145,
+    width: 130,
+  },
+  itemsColumn: {
+    width: 220,
   },
   phoneColumn: {
-    width: 115,
+    width: 110,
   },
   totalColumn: {
     width: 120,
@@ -1324,16 +1242,14 @@ const styles = StyleSheet.create({
     width: 120,
   },
   paymentColumn: {
-    width: 135,
+    width: 120,
   },
   dateColumn: {
-    width: 155,
+    width: 120,
   },
   actionColumn: {
     width: 80,
   },
-
-  // Checkbox chọn đơn hàng
   checkboxPressable: {
     minWidth: 30,
     minHeight: 30,
@@ -1354,8 +1270,6 @@ const styles = StyleSheet.create({
     borderColor: "#e52332",
     backgroundColor: "#e52332",
   },
-
-  // Ảnh sản phẩm và mã đơn hàng
   productCell: {
     flexDirection: "row",
     alignItems: "center",
@@ -1376,8 +1290,6 @@ const styles = StyleSheet.create({
     color: "#172033",
     fontWeight: "700",
   },
-
-  // Nhãn trạng thái và phương thức thanh toán
   centerCell: {
     alignItems: "flex-start",
   },
@@ -1400,8 +1312,6 @@ const styles = StyleSheet.create({
     color: "#586579",
     fontSize: 11,
   },
-
-  // Nút thao tác đơn hàng
   actionButton: {
     width: 34,
     height: 32,
@@ -1412,8 +1322,6 @@ const styles = StyleSheet.create({
     borderColor: "#ffe0e2",
     borderRadius: 5,
   },
-
-  // Thông báo không có dữ liệu
   emptyState: {
     width: "100%",
     minHeight: 160,
@@ -1425,8 +1333,6 @@ const styles = StyleSheet.create({
     color: "#758198",
     fontSize: 13,
   },
-
-  // Modal cập nhật trạng thái
   modalDescription: {
     marginBottom: 12,
     color: "#758198",
