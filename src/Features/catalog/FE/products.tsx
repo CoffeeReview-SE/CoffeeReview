@@ -70,14 +70,16 @@ export default function ProductsScreen() {
       return matchesCategory && matchesSearch;
     });
 
-  const handleAddToCart = (product: (typeof allFallbackProducts)[number]) => {
+  const handleAddToCart = (
+    product: (typeof allFallbackProducts)[number]
+  ) => {
     addItem(product);
     setNotice(t("Đã thêm vào giỏ hàng"));
   };
 
   return (
     <View style={styles.page}>
-      {/* Header for desktop */}
+      {/* Desktop header - đồng bộ với Home */}
       {!isMobile && (
         <View style={styles.header}>
           <Pressable
@@ -94,19 +96,26 @@ export default function ProductsScreen() {
 
           <View style={styles.searchBar}>
             <TextInput
+              testID="products-search-input"
               value={searchText}
               onChangeText={setSearchText}
               placeholder={t("Tìm kiếm sản phẩm")}
               placeholderTextColor="#888"
+              underlineColorAndroid="transparent"
               style={styles.searchInput}
               returnKeyType="search"
             />
+
             <Pressable
               style={styles.searchButton}
               accessibilityRole="button"
               accessibilityLabel={t("Tìm kiếm sản phẩm")}
             >
-              <Ionicons name="search" size={21} color="#fff" />
+              <Ionicons
+                name="search"
+                size={22}
+                color="#ffffff"
+              />
             </Pressable>
           </View>
 
@@ -118,12 +127,18 @@ export default function ProductsScreen() {
               onPress={() => router.push("/cart")}
             >
               <View style={styles.iconButton}>
-                <Ionicons name="cart-outline" size={24} color="#fff" />
+                <Ionicons
+                  name="cart-outline"
+                  size={25}
+                  color="#ffffff"
+                />
                 {itemCount > 0 && (
                   <Text style={styles.badge}>{itemCount}</Text>
                 )}
               </View>
-              <Text style={styles.actionText}>{t("Giỏ hàng")}</Text>
+              <Text style={styles.actionText}>
+                {t("Giỏ hàng")}
+              </Text>
             </Pressable>
 
             <Pressable
@@ -131,9 +146,15 @@ export default function ProductsScreen() {
               onPress={() => router.push("/orders")}
             >
               <View style={styles.iconButton}>
-                <Ionicons name="receipt-outline" size={24} color="#fff" />
+                <Ionicons
+                  name="cube-outline"
+                  size={25}
+                  color="#ffffff"
+                />
               </View>
-              <Text style={styles.actionText}>{t("Đơn hàng")}</Text>
+              <Text style={styles.actionText}>
+                {t("Đơn hàng")}
+              </Text>
             </Pressable>
 
             <Pressable
@@ -141,15 +162,21 @@ export default function ProductsScreen() {
               onPress={() => router.push("/account")}
             >
               <View style={styles.iconButton}>
-                <Ionicons name="person-outline" size={24} color="#fff" />
+                <Ionicons
+                  name="person-outline"
+                  size={25}
+                  color="#ffffff"
+                />
               </View>
-              <Text style={styles.actionText}>{t("Tài khoản")}</Text>
+              <Text style={styles.actionText}>
+                {t("Tài khoản")}
+              </Text>
             </Pressable>
           </View>
         </View>
       )}
 
-      {/* Compact header for mobile */}
+      {/* Mobile header - giữ nguyên */}
       {isMobile && (
         <View style={styles.mobileHeader}>
           <View style={styles.mobileTopRow}>
@@ -176,7 +203,11 @@ export default function ProductsScreen() {
               onPress={() => router.push("/cart")}
             >
               <View style={styles.mobileIconWrapper}>
-                <Ionicons name="cart-outline" size={23} color="#fff" />
+                <Ionicons
+                  name="cart-outline"
+                  size={23}
+                  color="#fff"
+                />
                 {itemCount > 0 && (
                   <Text style={styles.badge}>{itemCount}</Text>
                 )}
@@ -191,7 +222,11 @@ export default function ProductsScreen() {
               onPress={() => router.push("/orders")}
             >
               <View style={styles.mobileIconWrapper}>
-                <Ionicons name="receipt-outline" size={23} color="#fff" />
+                <Ionicons
+                  name="receipt-outline"
+                  size={23}
+                  color="#fff"
+                />
               </View>
               <Text style={styles.mobileActionText}>
                 {t("Đơn hàng")}
@@ -203,7 +238,11 @@ export default function ProductsScreen() {
               onPress={() => router.push("/account")}
             >
               <View style={styles.mobileIconWrapper}>
-                <Ionicons name="person-outline" size={23} color="#fff" />
+                <Ionicons
+                  name="person-outline"
+                  size={23}
+                  color="#fff"
+                />
               </View>
               <Text style={styles.mobileActionText}>
                 {t("Tài khoản")}
@@ -221,7 +260,11 @@ export default function ProductsScreen() {
               returnKeyType="search"
             />
             <View style={styles.mobileSearchIcon}>
-              <Ionicons name="search" size={20} color="#fff" />
+              <Ionicons
+                name="search"
+                size={20}
+                color="#fff"
+              />
             </View>
           </View>
         </View>
@@ -278,7 +321,6 @@ export default function ProductsScreen() {
         {categories.map((categoryId) => {
           const products = getProducts(categoryId);
 
-          // Hide empty categories when searching
           if (products.length === 0) {
             return null;
           }
@@ -379,9 +421,15 @@ export default function ProductsScreen() {
         })}
 
         {normalizedSearch.length > 0 &&
-          categories.every((categoryId) => getProducts(categoryId).length === 0) && (
+          categories.every(
+            (categoryId) => getProducts(categoryId).length === 0
+          ) && (
             <View style={styles.emptyState}>
-              <Ionicons name="search-outline" size={40} color="#aaa" />
+              <Ionicons
+                name="search-outline"
+                size={40}
+                color="#aaa"
+              />
               <Text style={styles.emptyTitle}>
                 {t("Không tìm thấy sản phẩm")}
               </Text>
@@ -406,11 +454,17 @@ export default function ProductsScreen() {
             color="#16834a"
           />
           <Text style={styles.noticeText}>{notice}</Text>
-          <Ionicons name="close" size={18} color="#176b35" />
+          <Ionicons
+            name="close"
+            size={18}
+            color="#176b35"
+          />
         </Pressable>
       )}
 
-      <AiConsultationWidget onPress={() => router.push("/chat")} />
+      <AiConsultationWidget
+        onPress={() => router.push("/chat")}
+      />
     </View>
   );
 }
@@ -425,55 +479,57 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 
-  /* Desktop header */
+  /* Desktop header - đồng bộ với Home */
   header: {
-    minHeight: 82,
-    paddingHorizontal: 28,
-    paddingVertical: 10,
-    backgroundColor: "#e00000",
+    backgroundColor: "red",
+    paddingHorizontal: 25,
+    paddingTop: 45,
+    paddingBottom: 18,
     flexDirection: "row",
     alignItems: "center",
-    gap: 20,
+    gap: 25,
   },
 
   brand: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 9,
     flexShrink: 0,
   },
 
   logo: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
+    width: 65,
+    height: 65,
+    borderRadius: 8,
   },
 
   brandText: {
-    color: "#fff",
-    fontSize: 20,
-    fontWeight: "800",
+    fontSize: 27,
+    fontWeight: "700",
+    marginLeft: 12,
+    color: "#ffffff",
   },
 
   searchBar: {
     flex: 1,
     minWidth: 100,
-    maxWidth: 650,
-    height: 46,
+    height: 48,
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#fff",
+    backgroundColor: "#ffffff",
     borderRadius: 30,
     overflow: "hidden",
+    paddingLeft: 5,
   },
 
   searchInput: {
     flex: 1,
     minWidth: 0,
     height: "100%",
+    borderWidth: 0,
+    borderColor: "transparent",
     paddingHorizontal: 15,
-    color: "#333",
     fontSize: 14,
+    color: "#333",
     outlineStyle: "none",
   } as any,
 
@@ -482,36 +538,37 @@ const styles = StyleSheet.create({
     height: 42,
     marginRight: 3,
     borderRadius: 21,
-    backgroundColor: "#d9273e",
-    alignItems: "center",
+    backgroundColor: "red",
     justifyContent: "center",
+    alignItems: "center",
   },
 
   actions: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
+    gap: 25,
     flexShrink: 0,
   },
 
   headerAction: {
     alignItems: "center",
-    minWidth: 50,
   },
 
   iconButton: {
-    width: 44,
-    height: 36,
-    borderRadius: 22,
-    alignItems: "center",
+    width: 50,
+    height: 40,
+    borderRadius: 25,
+    backgroundColor: "transparent",
     justifyContent: "center",
+    alignItems: "center",
     position: "relative",
   },
 
   actionText: {
-    color: "#fff",
-    fontWeight: "700",
     fontSize: 12,
+    marginTop: 3,
+    color: "#ffffff",
+    fontWeight: "500",
   },
 
   badge: {
@@ -531,7 +588,7 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
 
-  /* Mobile header */
+  /* Mobile header - giữ nguyên */
   mobileHeader: {
     width: "100%",
     paddingHorizontal: 12,
