@@ -856,7 +856,7 @@ const styles = StyleSheet.create({
   phoneHeader: {
     backgroundColor: "red",
     paddingHorizontal: 12,
-    paddingTop: 28,
+    paddingTop: 50,
     paddingBottom: 16,
     flexDirection: "row",
     alignItems: "center",
