@@ -187,28 +187,6 @@ export default function CartScreen() {
             </HoverButton>
           )}
 
-          <HoverButton
-            style={[
-              styles.headerAction,
-              isMobile && styles.phoneHeaderAction,
-            ]}
-            hoverStyle={styles.headerActionHover}
-            onPress={() => router.push("/account")}
-            accessibilityRole="button"
-            accessibilityLabel={t("Tài khoản")}
-          >
-            <Ionicons
-              name="person-outline"
-              size={23}
-              color="#ffffff"
-            />
-
-            {!isMobile && (
-              <Text style={styles.headerActionText}>
-                {t("Tài khoản")}
-              </Text>
-            )}
-          </HoverButton>
         </View>
       </View>
 

@@ -157,21 +157,6 @@ export default function ProductsScreen() {
               </Text>
             </Pressable>
 
-            <Pressable
-              style={styles.headerAction}
-              onPress={() => router.push("/account")}
-            >
-              <View style={styles.iconButton}>
-                <Ionicons
-                  name="person-outline"
-                  size={25}
-                  color="#ffffff"
-                />
-              </View>
-              <Text style={styles.actionText}>
-                {t("Tài khoản")}
-              </Text>
-            </Pressable>
           </View>
         </View>
       )}
@@ -233,21 +218,6 @@ export default function ProductsScreen() {
               </Text>
             </Pressable>
 
-            <Pressable
-              style={styles.mobileAction}
-              onPress={() => router.push("/account")}
-            >
-              <View style={styles.mobileIconWrapper}>
-                <Ionicons
-                  name="person-outline"
-                  size={23}
-                  color="#fff"
-                />
-              </View>
-              <Text style={styles.mobileActionText}>
-                {t("Tài khoản")}
-              </Text>
-            </Pressable>
           </View>
 
           <View style={styles.mobileSearchBar}>

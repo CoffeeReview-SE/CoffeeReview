@@ -137,20 +137,6 @@ function PhoneLayout() {
             )}
           </HoverButton>
 
-          <HoverButton
-            style={styles.phoneIconItem}
-            hoverStyle={styles.iconItemHover}
-            onPress={() => router.push("/account")}
-          >
-            {(hovered: boolean) => (
-              <>
-                <View style={[styles.phoneIconButton, hovered && styles.iconButtonHover]}>
-                  <Ionicons name="person-outline" size={22} color={hovered ? "red" : "#ffffff"} />
-                </View>
-                <Text style={styles.phoneIconText}>{t("Tài khoản")}</Text>
-              </>
-            )}
-          </HoverButton>
         </View>
 
         {/* Search bar tích hợp xử lý tìm kiếm */}
@@ -375,20 +361,6 @@ function DesktopLayout() {
             )}
           </HoverButton>
 
-          <HoverButton
-            style={styles.iconItem}
-            hoverStyle={styles.iconItemHover}
-            onPress={() => router.push("/account")}
-          >
-            {(hovered: boolean) => (
-              <>
-                <View style={[styles.iconButton, hovered && styles.iconButtonHover]}>
-                  <Ionicons name="person-outline" size={25} color={hovered ? "red" : "#ffffff"} />
-                </View>
-                <Text style={styles.iconText}>{t("Tài khoản")}</Text>
-              </>
-            )}
-          </HoverButton>
         </View>
       </View>
 

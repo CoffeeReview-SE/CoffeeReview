@@ -321,14 +321,6 @@ export default function ProductDetail() {
                         isMobile={isMobile}
                     />
 
-                    {/* Tài khoản */}
-
-                    <HeaderButton
-                        icon="user"
-                        text={t("Tài khoản")}
-                        onPress={() => router.push("/account")}
-                        isMobile={isMobile}
-                    />
                 </View>
 
                 {isMobile && searchBar}
