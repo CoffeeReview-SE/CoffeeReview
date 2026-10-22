@@ -1,16 +1,15 @@
 import { useFonts } from "expo-font";
-import Ionicons from "@expo/vector-icons/Ionicons";
-import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 import { DefaultTheme, Stack, ThemeProvider } from "expo-router";
 import { LanguageProvider } from "@/Core/contexts/language-context";
 import { CartProvider } from "@/Core/contexts/cart-context";
 
 export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({
-    ...Ionicons.font,
-    ...FontAwesome6.font,
+    ionicons: require("../../../assets/fonts/Ionicons.ttf"),
+    FontAwesome6_Solid: require("../../../assets/fonts/FontAwesome6_Solid.ttf"),
   });
 
+  if (fontError) console.error("Font load error:", fontError);
   if (!fontsLoaded && !fontError) return null;
 
   return (
