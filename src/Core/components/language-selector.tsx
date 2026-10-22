@@ -12,6 +12,7 @@ import {
   useLanguage,
   type Language,
 } from "@/Core/contexts/language-context";
+import { speak, welcomeText } from "@/Core/services/speech";
 
 const options: { value: Language; label: string }[] = [
   { value: "vi", label: "Tiếng Việt" },
@@ -28,7 +29,8 @@ export function LanguageSelector() {
         accessibilityLabel={t("Chọn ngôn ngữ")}
         accessibilityRole="button"
         hitSlop={6}
-        onPress={() => setIsOpen(true)}
+        onPress={() =>
+          setIsOpen(true)}
         style={({ pressed }) => [
           styles.trigger,
           pressed && styles.triggerPressed,
@@ -77,6 +79,7 @@ export function LanguageSelector() {
                   accessibilityState={{ checked: selected }}
                   onPress={() => {
                     setLanguage(option.value);
+                    speak(welcomeText[option.value], option.value);
                     setIsOpen(false);
                   }}
                   style={({ pressed }) => [

@@ -17,6 +17,7 @@ import { LanguageSelector } from "@/Core/components/language-selector";
 import { AiConsultationWidget } from "@/Core/components/ai-consultation-widget";
 import { useLanguage } from "@/Core/contexts/language-context";
 import { useProducts } from "@/Core/hooks/use-products";
+import { speak, welcomeText } from "@/Core/services/speech";
 
 /* ================================================= */
 /*                 HOVER BUTTON                      */
@@ -467,7 +468,16 @@ export default function ProductDetail() {
                                 <Ionicons name="chevron-up" size={15} color="#8b8b8b" />
                             </View>
                             <View style={styles.voiceActions}>
-                                <Pressable style={styles.voiceAction}>
+                                <Pressable
+                                    style={styles.voiceAction}
+                                    onPress={() =>
+                                        speak(
+                                            [managedProduct?.name, managedProduct?.description].filter(Boolean).join(". ") ||
+                                                t("The New Standard of Intelligence."),
+                                            language,
+                                        )
+                                    }
+                                >
                                     <Ionicons name="play" size={12} color="#b3242b" />
                                     <Text style={styles.voiceActionText}>{t("Nghe mô tả")}</Text>
                                 </Pressable>

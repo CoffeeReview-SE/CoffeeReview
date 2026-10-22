@@ -8,7 +8,7 @@ import { ThemedText } from '@/Core/components/themed-text';
 import { ThemedView } from '@/Core/components/themed-view';
 import { Collapsible } from '@/Core/components/ui/collapsible';
 import { WebBadge } from '@/Core/components/web-badge';
-import { BottomTabInset, MaxContentWidth, Spacing } from '@/Core/constants/theme';
+import { BottomTabInset, MaxContentWidth, Spacing } from '@/Core/components/constants/theme';
 import { useTheme } from '@/Core/hooks/use-theme';
 
 export default function TabTwoScreen() {

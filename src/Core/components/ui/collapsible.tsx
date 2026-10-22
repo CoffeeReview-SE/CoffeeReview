@@ -5,7 +5,7 @@ import Animated, { FadeIn } from 'react-native-reanimated';
 
 import { ThemedText } from '@/Core/components/themed-text';
 import { ThemedView } from '@/Core/components/themed-view';
-import { Spacing } from '@/Core/constants/theme';
+import { Spacing } from '@/Core/components/constants/theme';
 import { useTheme } from '@/Core/hooks/use-theme';
 
 export function Collapsible({ children, title }: PropsWithChildren & { title: string }) {
