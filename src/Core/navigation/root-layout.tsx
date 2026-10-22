@@ -2,17 +2,19 @@
 import { useFonts } from "expo-font";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { DefaultTheme, Stack, ThemeProvider } from "expo-router";
+import { useFonts } from "expo-font";
+import { Ionicons } from "@expo/vector-icons";
+import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 import { LanguageProvider } from "@/Core/contexts/language-context";
 import { CartProvider } from "@/Core/contexts/cart-context";
 
 export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({
     ...Ionicons.font,
+    ...FontAwesome6.font,
   });
 
-  if (!fontsLoaded && !fontError) {
-    return null;
-  }
+  if (!fontsLoaded && !fontError) return null;
 
   return (
     <LanguageProvider>

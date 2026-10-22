@@ -13,6 +13,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
+import AdminSidebar from "./AdminSidebar";
 
 // ===== KIỂU DỮ LIỆU ĐƠN HÀNG ĐÃ ĐỒNG BỘ =====
 type Order = {
@@ -224,152 +225,6 @@ function FilterSelect({
   );
 }
 
-// ===== COMPONENT SIDEBAR =====
-type SidebarProps = {
-  width: number;
-  activePage: string;
-  onNavigate: (page: string) => void;
-};
-
-function Sidebar({ width, activePage, onNavigate }: SidebarProps) {
-  const menuItems = [
-    {
-      label: "Tổng quan",
-      icon: "home-outline" as const,
-      page: "main_Admin",
-    },
-    {
-      label: "Quản lý đơn hàng",
-      icon: "cart-outline" as const,
-      page: "order_management",
-    },
-    {
-      label: "Quản lý sản phẩm",
-      icon: "cube-outline" as const,
-      page: "product_management",
-    },
-    {
-      label: "Quản lý danh mục",
-      icon: "grid-outline" as const,
-      page: "category_management",
-    },
-    {
-      label: "Tồn kho",
-      icon: "file-tray-stacked-outline" as const,
-      page: "stock_inventory",
-    },
-    {
-      label: "Nhập xuất kho",
-      icon: "swap-vertical-outline" as const,
-      page: "stock_movements",
-    },
-    {
-      label: "Quản lý khách hàng",
-      icon: "person-outline" as const,
-      page: "customer_management",
-    },
-  ];
-
-  return (
-    <View style={[styles.sidebar, { width }]}>
-      <Pressable
-        style={styles.brand}
-        onPress={() => onNavigate("main_Admin")}
-      >
-        <Image
-          source={require("@/assets/image/logo.jpg")}
-          style={styles.brandImage}
-          resizeMode="contain"
-        />
-
-        <Text style={styles.brandText}>
-          BVP <Text style={styles.brandStrong}>Shop</Text>
-        </Text>
-      </Pressable>
-
-      <ScrollView
-        style={styles.sidebarMenu}
-        showsVerticalScrollIndicator={false}
-      >
-        {menuItems.map((item, index) => (
-          <React.Fragment key={item.page}>
-            {index === 1 && (
-              <Text style={styles.menuHeading}>QUẢN LÝ</Text>
-            )}
-
-            <Pressable
-              style={[
-                styles.menuLink,
-                activePage === item.page && styles.menuLinkActive,
-              ]}
-              onPress={() => onNavigate(item.page)}
-            >
-              <Ionicons
-                name={item.icon}
-                size={20}
-                color={
-                  activePage === item.page ? "#ffffff" : "#ed263d"
-                }
-              />
-
-              <Text
-                numberOfLines={1}
-                style={[
-                  styles.menuLinkText,
-                  activePage === item.page &&
-                    styles.menuLinkTextActive,
-                ]}
-              >
-                {item.label}
-              </Text>
-            </Pressable>
-          </React.Fragment>
-        ))}
-
-        <Text style={styles.systemHeading}>HỆ THỐNG</Text>
-
-        <Pressable
-          style={styles.menuLink}
-          onPress={() =>
-            Alert.alert(
-              "Đăng xuất",
-              "Bạn có muốn đăng xuất khỏi hệ thống không?",
-              [
-                { text: "Hủy", style: "cancel" },
-                {
-                  text: "Đăng xuất",
-                  style: "destructive",
-                  onPress: () => {
-                    Alert.alert(
-                      "Thông báo",
-                      "Bạn cần kết nối chức năng đăng xuất.",
-                    );
-                  },
-                },
-              ],
-            )
-          }
-        >
-          <Ionicons
-            name="log-out-outline"
-            size={20}
-            color="#ed263d"
-          />
-          <Text style={styles.menuLinkText}>Đăng xuất</Text>
-        </Pressable>
-      </ScrollView>
-
-      <View style={styles.imageSide}>
-        <Image
-          source={require("@/assets/image/anh logo.png")}
-          style={styles.promoImage}
-          resizeMode="contain"
-        />
-      </View>
-    </View>
-  );
-}
-
 // ===== COMPONENT CHÍNH: QUẢN LÝ ĐƠN HÀNG =====
 export default function OrderManagement() {
   const { width: screenWidth } = useWindowDimensions();
@@ -523,11 +378,7 @@ export default function OrderManagement() {
 
   return (
     <View style={styles.screen}>
-      <Sidebar
-        width={sidebarWidth}
-        activePage="order_management"
-        onNavigate={navigateTo}
-      />
+      <AdminSidebar width={sidebarWidth} activePage="order_management" onNavigate={navigateTo} />
 
       <View
         style={[
@@ -925,101 +776,9 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     backgroundColor: "#f8f9fc",
   },
-  sidebar: {
-    position: "absolute",
-    left: 0,
-    top: 0,
-    bottom: 0,
-    paddingTop: 20,
-    paddingHorizontal: 13,
-    paddingBottom: 12,
-    backgroundColor: "#ffffff",
-    borderRightWidth: 1,
-    borderRightColor: "#f0f1f5",
-    zIndex: 10,
-    elevation: 4,
-  },
-  brand: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    paddingHorizontal: 4,
-    marginBottom: 25,
-  },
-  brandImage: {
-    width: 48,
-    height: 48,
-  },
-  brandText: {
-    color: "#c8102e",
-    fontSize: 21,
-    fontWeight: "800",
-  },
-  brandStrong: {
-    color: "#8f101f",
-  },
-  sidebarMenu: {
-    flex: 1,
-  },
-  menuHeading: {
-    marginTop: 19,
-    marginBottom: 8,
-    marginLeft: 6,
-    color: "#758198",
-    fontSize: 11,
-    fontWeight: "700",
-    letterSpacing: 0.3,
-  },
-  systemHeading: {
-    marginTop: 26,
-    marginBottom: 8,
-    marginLeft: 6,
-    color: "#758198",
-    fontSize: 11,
-    fontWeight: "700",
-    letterSpacing: 0.3,
-  },
-  menuLink: {
-    minHeight: 43,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    paddingHorizontal: 12,
-    marginBottom: 5,
-    borderRadius: 9,
-  },
-  menuLinkActive: {
-    backgroundColor: "#e52332",
-    shadowColor: "#ed263d",
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.16,
-    shadowRadius: 5,
-    elevation: 2,
-  },
-  menuLinkText: {
-    flex: 1,
-    color: "#354157",
-    fontSize: 12,
-    fontWeight: "500",
-  },
-  menuLinkTextActive: {
-    color: "#ffffff",
-    fontWeight: "600",
-  },
-  imageSide: {
-    alignItems: "center",
-    justifyContent: "center",
-    width: "100%",
-    marginTop: 12,
-  },
-  promoImage: {
-    width: 170,
-    height: 150,
-  },
   page: {
     flex: 1,
     height: "100%",
-    minWidth: 0,
   },
   header: {
     height: 70,

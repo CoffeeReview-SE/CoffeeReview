@@ -2,7 +2,6 @@
 import React, { useState } from "react";
 import {
   Alert,
-  Image,
   Modal,
   Pressable,
   ScrollView,
@@ -12,13 +11,14 @@ import {
   useWindowDimensions,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { router } from "expo-router";
 import Svg, {
   Circle,
   Path,
   Polyline,
 } from "react-native-svg";
 import { Text as SvgText } from "react-native-svg";
-import { router } from "expo-router";
+import AdminSidebar from "./AdminSidebar";
 
 // ===== DỮ LIỆU THỐNG KÊ =====
 // Đây là dữ liệu mẫu để hiển thị giao diện dashboard.
@@ -104,173 +104,6 @@ const categoryData = [
   { label: "Đồng hồ", value: 8, color: "#8b5cf6" },
   { label: "Khác", value: 7, color: "#94a3b8" },
 ];
-
-// ===== COMPONENT SIDEBAR =====
-// Thay thế thẻ <aside> và <nav> trong HTML.
-function Sidebar({
-  width,
-  activePage,
-}: {
-  width: number;
-  activePage: string;
-}) {
-  // Các mục điều hướng của trang quản trị
-  const menuItems = [
-    {
-      label: "Tổng quan",
-      icon: "home-outline" as const,
-      route: "/main_Admin",
-      page: "main_Admin",
-    },
-    {
-      label: "Quản lý đơn hàng",
-      icon: "cart-outline" as const,
-      route: "/order_management",
-      page: "order_management",
-    },
-    {
-      label: "Quản lý sản phẩm",
-      icon: "cube-outline" as const,
-      route: "/product_management",
-      page: "product_management",
-    },
-    {
-      label: "Quản lý danh mục",
-      icon: "grid-outline" as const,
-      route: "/category_management",
-      page: "category_management",
-    },
-    {
-      label: "Tồn kho",
-      icon: "file-tray-stacked-outline" as const,
-      route: "/stock_inventory",
-      page: "stock_inventory",
-    },
-    {
-      label: "Nhập xuất kho",
-      icon: "swap-vertical-outline" as const,
-      route: "/stock_movements",
-      page: "stock_movements",
-    },
-    {
-      label: "Quản lý khách hàng",
-      icon: "person-outline" as const,
-      route: "/customer_management",
-      page: "customer_management",
-    },
-  ];
-
-  return (
-    <View style={[styles.sidebar, { width }]}>
-      {/* Logo cửa hàng */}
-      <Pressable
-        style={styles.brand}
-        onPress={() => router.push("/main_Admin")}
-      >
-        <Image
-          source={require("@/assets/image/logo.jpg")}
-          style={styles.brandImage}
-          resizeMode="contain"
-        />
-
-        <Text style={styles.brandText}>
-          BVP <Text style={styles.brandStrong}>Shop</Text>
-        </Text>
-      </Pressable>
-
-      {/* Menu điều hướng */}
-      <ScrollView
-        style={styles.sidebarMenu}
-        showsVerticalScrollIndicator={false}
-      >
-        {menuItems.map((item, index) => (
-          <React.Fragment key={item.page}>
-            {/* Nhóm quản lý */}
-            {index === 1 && (
-              <Text style={styles.menuHeading}>QUẢN LÝ</Text>
-            )}
-
-            {/* Các trang trong menu */}
-            <Pressable
-              style={[
-                styles.menuLink,
-                activePage === item.page && styles.menuLinkActive,
-              ]}
-              onPress={() => {
-                if (item.page !== activePage) {
-                  router.push(item.route as never);
-                }
-              }}
-            >
-              <Ionicons
-                name={item.icon}
-                size={20}
-                color={
-                  activePage === item.page ? "#ffffff" : "#ed263d"
-                }
-              />
-
-              <Text
-                numberOfLines={1}
-                style={[
-                  styles.menuLinkText,
-                  activePage === item.page &&
-                    styles.menuLinkTextActive,
-                ]}
-              >
-                {item.label}
-              </Text>
-            </Pressable>
-          </React.Fragment>
-        ))}
-
-        {/* Nhóm hệ thống */}
-        <Text style={styles.systemHeading}>HỆ THỐNG</Text>
-
-        {/* Đăng xuất */}
-        <Pressable
-          style={styles.menuLink}
-          onPress={() =>
-            Alert.alert(
-              "Đăng xuất",
-              "Bạn có muốn đăng xuất khỏi hệ thống không?",
-              [
-                { text: "Hủy", style: "cancel" },
-                {
-                  text: "Đăng xuất",
-                  style: "destructive",
-                  onPress: () => {
-                    // TODO: Kết nối chức năng đăng xuất tại đây.
-                    Alert.alert(
-                      "Thông báo",
-                      "Hãy kết nối chức năng đăng xuất với hệ thống.",
-                    );
-                  },
-                },
-              ],
-            )
-          }
-        >
-          <Ionicons
-            name="log-out-outline"
-            size={20}
-            color="#ed263d"
-          />
-          <Text style={styles.menuLinkText}>Đăng xuất</Text>
-        </Pressable>
-      </ScrollView>
-
-      {/* Thẻ giới thiệu phía dưới sidebar */}
-      <View style={styles.imageSide}>
-        <Image
-          source={require("@/assets/image/anh logo.png")}
-          style={styles.promoImage}
-          resizeMode="contain"
-        />
-      </View>
-    </View>
-  );
-}
 
 // ===== COMPONENT BIỂU ĐỒ ĐƯỜNG NHỎ =====
 // Thay thế SVG mini-chart trong HTML.
@@ -641,10 +474,7 @@ export default function MainAdmin() {
   return (
     <View style={styles.screen}>
       {/* Sidebar BVP Shop */}
-      <Sidebar
-        width={sidebarWidth}
-        activePage="main_Admin"
-      />
+      <AdminSidebar width={sidebarWidth} activePage="main_Admin" onNavigate={(page) => router.push(`/${page}` as never)} />
 
       {/* Nội dung bên phải sidebar */}
       <View
@@ -960,107 +790,6 @@ const styles = StyleSheet.create({
   },
 
   // ===== SIDEBAR BVP SHOP =====
-  sidebar: {
-    position: "absolute",
-    left: 0,
-    top: 0,
-    bottom: 0,
-    paddingTop: 20,
-    paddingHorizontal: 13,
-    paddingBottom: 12,
-    backgroundColor: "#ffffff",
-    borderRightWidth: 1,
-    borderRightColor: "#f0f1f5",
-    zIndex: 10,
-    elevation: 4,
-  },
-
-  // Logo
-  brand: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    paddingHorizontal: 4,
-    marginBottom: 25,
-  },
-  brandImage: {
-    width: 48,
-    height: 48,
-  },
-  brandText: {
-    fontSize: 21,
-    fontWeight: "800",
-    color: "#c8102e",
-  },
-  brandStrong: {
-    color: "#8f101f",
-  },
-
-  // Menu
-  sidebarMenu: {
-    flex: 1,
-  },
-  menuHeading: {
-    marginTop: 19,
-    marginBottom: 8,
-    marginLeft: 6,
-    color: "#758198",
-    fontSize: 11,
-    fontWeight: "700",
-    letterSpacing: 0.3,
-  },
-  systemHeading: {
-    marginTop: 26,
-    marginBottom: 8,
-    marginLeft: 6,
-    color: "#758198",
-    fontSize: 11,
-    fontWeight: "700",
-    letterSpacing: 0.3,
-  },
-
-  // Các trang trong menu
-  menuLink: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    minHeight: 43,
-    paddingHorizontal: 12,
-    marginBottom: 5,
-    borderRadius: 9,
-  },
-  menuLinkActive: {
-    backgroundColor: "#e52332",
-    shadowColor: "#ed263d",
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.16,
-    shadowRadius: 5,
-    elevation: 2,
-  },
-  menuLinkText: {
-    flex: 1,
-    color: "#354157",
-    fontSize: 12,
-    fontWeight: "500",
-  },
-  menuLinkTextActive: {
-    color: "#ffffff",
-    fontWeight: "600",
-  },
-
-  // Thẻ quảng bá phía dưới
-  imageSide: {
-    alignItems: "center",
-    justifyContent: "center",
-    width: "100%",
-    marginTop: 12,
-  },
-  promoImage: {
-    width: 170,
-    height: 150,
-  },
-
-  // ===== HEADER =====
   header: {
     height: 70,
     paddingHorizontal: 20,
