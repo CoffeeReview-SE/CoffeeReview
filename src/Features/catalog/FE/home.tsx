@@ -19,6 +19,7 @@ import { useLanguage } from "@/Core/contexts/language-context";
 import { useCart } from "@/Core/contexts/cart-context";
 import { useProductCategories } from "@/Core/hooks/use-product-categories";
 import { useProducts } from "@/Core/hooks/use-products";
+import { recordVisit } from "@/Core/services/visit-analytics";
 
 const categoryIcon = (categoryId: string, productName = ""): React.ComponentProps<typeof Ionicons>["name"] => {
   switch (categoryId.toUpperCase()) {
@@ -63,6 +64,10 @@ function HoverButton({ children, style, hoverStyle, ...props }: any) {
 export default function App() {
   const { width } = useWindowDimensions();
   const isMobile = width < 600;
+
+  React.useEffect(() => {
+    void recordVisit();
+  }, []);
 
   return isMobile ? <PhoneLayout /> : <DesktopLayout />;
 }

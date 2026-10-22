@@ -19,6 +19,7 @@ import Svg, {
 } from "react-native-svg";
 import { Text as SvgText } from "react-native-svg";
 import AdminSidebar from "./AdminSidebar";
+import { getVisitStats, type VisitStats } from "@/Core/services/visit-analytics";
 
 // ===== DỮ LIỆU THỐNG KÊ =====
 // Đây là dữ liệu mẫu để hiển thị giao diện dashboard.
@@ -447,6 +448,11 @@ function CategoryLegend() {
 // ===== COMPONENT CHÍNH: TRANG TỔNG QUAN ADMIN =====
 export default function MainAdmin() {
   const { width: screenWidth } = useWindowDimensions();
+  const [visitStats, setVisitStats] = useState<VisitStats>({ total: 0, today: 0 });
+
+  React.useEffect(() => {
+    void getVisitStats().then(setVisitStats);
+  }, []);
 
   // Responsive: thu nhỏ sidebar trên màn hình hẹp.
   const sidebarWidth = screenWidth <= 768 ? 220 : 255;
@@ -605,6 +611,27 @@ export default function MainAdmin() {
                 <StatCard item={item} />
               </View>
             ))}
+            <View
+              style={[
+                styles.statCardWrapper,
+              ]}
+            >
+              <View style={styles.statCard}>
+                <View style={[styles.statIcon, { backgroundColor: "#e7f0ff" }]}>
+                  <Ionicons name="eye-outline" size={19} color="#3985ef" />
+                </View>
+                <View style={styles.statInfo}>
+                  <Text style={styles.statLabel}>Lượt truy cập</Text>
+                  <Text style={styles.statValue}>{visitStats.total}</Text>
+                  <View style={styles.statChange}>
+                    <Text style={[styles.statPercentage, { color: "#3985ef" }]}>
+                      {visitStats.today}
+                    </Text>
+                    <Text style={styles.statDescription}>hôm nay</Text>
+                  </View>
+                </View>
+              </View>
+            </View>
           </View>
 
           {/* Các biểu đồ của dashboard */}
