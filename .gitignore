@@ -1,1 +1,13 @@
-apps/user-web/node_modules
+﻿node_modules/
+dist/
+build/
+.next/
+.expo/
+coverage/
+.turbo/
+.env
+.env.*
+!.env.example
+*.log
+.DS_Store
+Thumbs.db

@@ -1,0 +1,2 @@
+﻿services:
+  # Add local dependencies (database, cache, object storage) as their service choices are finalized.
