@@ -1,38 +1,193 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
+/* Dữ liệu mẫu — thay bằng API/PostgreSQL.
+   cover / audio: URL ảnh và file audio giới thiệu thật của thương hiệu.
+   HERO_IMAGE: ảnh nền khu vực hero (để trống sẽ dùng hình minh họa bằng CSS/SVG). */
+const HERO_IMAGE = "";
 const brands = [
-  { id: 1, name: "Highlands Coffee", category: "Cà phê Việt Nam", description: "Cà phê phin và thức uống hiện đại.", rating: "4.6", mark: "H", color: "#7B3428" },
-  { id: 2, name: "Phúc Long", category: "Trà & cà phê", description: "Trà, trà sữa và cà phê đặc trưng.", rating: "4.5", mark: "PL", color: "#176B45" },
-  { id: 3, name: "The Coffee House", category: "Cà phê & không gian", description: "Không gian gặp gỡ, học tập và làm việc.", rating: "4.4", mark: "TCH", color: "#C66A35" },
-  { id: 4, name: "Katinat", category: "Trà & cà phê", description: "Thực đơn sáng tạo, phong cách hiện đại.", rating: "4.5", mark: "K", color: "#6C4938" },
-  { id: 5, name: "Phê La", category: "Trà đặc sản", description: "Thức uống lấy cảm hứng từ trà đặc sản.", rating: "4.5", mark: "PL", color: "#8C6A42" },
-  { id: 6, name: "Trung Nguyên", category: "Cà phê Việt Nam", description: "Thương hiệu cà phê Việt với hương vị đặc trưng.", rating: "4.3", mark: "TN", color: "#9B6A24" },
+  { id: 3, name: "The Coffee House", type: "Cà phê, trà, bánh", branches: 12, mark: ["THE", "COFFEE", "HOUSE"], cover: "", audio: "" },
+  { id: 2, name: "Phúc Long", type: "Trà, cà phê", branches: 18, mark: ["PHÚC", "LONG"], badge: "#1F6B45", cover: "", audio: "" },
+  { id: 1, name: "Highlands Coffee", type: "Cà phê, trà, bánh", branches: 25, mark: ["HIGHLANDS", "COFFEE"], badge: "#B3282D", cover: "", audio: "" },
+  { id: 7, name: "Cộng Cà Phê", type: "Cà phê, đồ uống", branches: 14, mark: ["CỘNG"], ink: "#E9A24B", cover: "", audio: "" },
 ];
 
-const button = { border: 0, borderRadius: 10, background: "#315C43", color: "#fff", padding: "11px 14px", fontWeight: 700, cursor: "pointer" };
+// Tìm không phân biệt hoa/thường và dấu tiếng Việt ("phuc long" → "Phúc Long")
+const fold = s => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d");
 
-export default function HomePage({ onOpenBrand }) {
+const paths = {
+  search: <><circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" /></>,
+  user: <><circle cx="12" cy="8" r="4" /><path d="M4 21c0-4 4-6 8-6s8 2 8 6" /></>,
+  pin: <><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z" /><circle cx="12" cy="10" r="2.5" /></>,
+  play: <path d="M8 5v14l11-7z" fill="currentColor" stroke="none" />,
+  pause: <path d="M8 5v14M16 5v14" strokeWidth="3.2" />,
+  arrow: <path d="M5 12h14M13 6l6 6-6 6" />,
+  chevron: <path d="m6 9 6 6 6-6" />,
+  globe: <><circle cx="12" cy="12" r="9" /><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18" /></>,
+  cup: <path d="M4 9h13v5a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5zM17 10h2a2 2 0 0 1 0 4h-2M3 21h16M8 3c0 2 2 2 2 4M12 3c0 2 2 2 2 4" />,
+};
+const Icon = ({ n, size = 18 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{paths[n]}</svg>
+);
+
+function Header({ active, go }) {
+  const [lang, setLang] = useState("VI");
+  const items = [["home", "Trang chủ"], ["brands", "Thương hiệu"], ["map", "Bản đồ"], ["suggestions", "Đề xuất"]];
+  return <header className="hp-bar">
+    <button className="hp-logo" onClick={() => go("home")}>
+      <Icon n="cup" size={30} /><span><b>SaigonCoffee</b><small>Khám phá cà phê Sài Gòn</small></span>
+    </button>
+    <nav className="hp-nav" aria-label="Điều hướng chính">
+      {items.map(([k, label]) => <button key={k} aria-current={active === k ? "page" : undefined} onClick={() => go(k)}>{label}</button>)}
+    </nav>
+    <div className="hp-tools">
+      <label className="hp-lang"><Icon n="globe" size={15} />
+        <select value={lang} onChange={e => setLang(e.target.value)} aria-label="Ngôn ngữ"><option>VI</option><option>EN</option><option>KO</option></select>
+      </label>
+      <button aria-label="Tài khoản" onClick={() => go("login")}><Icon n="user" /></button>
+    </div>
+  </header>;
+}
+
+// Hình minh họa tách cà phê (chỉ hiện khi chưa có HERO_IMAGE)
+function Cup() {
+  return <svg className="hp-cup" viewBox="0 0 340 230" aria-hidden="true">
+    <defs><linearGradient id="hp-cupg" x1="0" x2="1"><stop offset="0" stopColor="#9A7C5C" /><stop offset=".55" stopColor="#6A503A" /><stop offset="1" stopColor="#3E2B1D" /></linearGradient></defs>
+    <ellipse cx="170" cy="196" rx="160" ry="22" fill="#1B0E07" opacity=".5" />
+    <ellipse cx="170" cy="184" rx="150" ry="22" fill="#3B2617" />
+    <ellipse cx="170" cy="179" rx="122" ry="14" fill="#54392A" />
+    <path d="M232 70c58-8 66 50 10 72" fill="none" stroke="#6A503A" strokeWidth="13" strokeLinecap="round" />
+    <path d="M92 58c0 78 26 124 78 124s78-46 78-124z" fill="url(#hp-cupg)" />
+    <ellipse cx="170" cy="58" rx="78" ry="15" fill="#B39674" />
+    <ellipse cx="170" cy="60" rx="68" ry="11" fill="#24120A" />
+  </svg>;
+}
+
+// Logo thương hiệu dạng chữ khi chưa có ảnh bìa thật
+function Mark({ b }) {
+  const lines = b.mark.map(l => <span key={l}>{l}</span>);
+  return b.badge
+    ? <span className="hp-badge" style={{ background: b.badge }}>{lines}</span>
+    : <span className={`hp-word${b.mark.length === 1 ? " one" : ""}`} style={{ color: b.ink || "#fff" }}>{lines}</span>;
+}
+
+export default function HomePage({ onOpenBrand, onNavigate }) {
   const [query, setQuery] = useState("");
-  const shown = brands.filter(b => (b.name + b.category).toLowerCase().includes(query.toLowerCase()));
-  return <div style={{ minHeight: "100vh", background: "#F7F5F0", color: "#252820", fontFamily: "Inter, system-ui, sans-serif" }}>
-    <header style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 18, flexWrap: "wrap", padding: "18px 6vw", background: "#fff", borderBottom: "1px solid #e9e5dc" }}>
-      <strong style={{ color: "#315C43", fontSize: 22 }}>☕ SaigonCoffee</strong>
-      <nav style={{ display: "flex", gap: 20, alignItems: "center", color: "#65685f", fontSize: 14 }}><span>Khám phá</span><span>Đánh giá</span><span>Về chúng tôi</span><button style={button}>Đăng nhập</button></nav>
-    </header>
-    <section style={{ margin: "28px 6vw", padding: "clamp(28px, 5vw, 60px)", borderRadius: 26, background: "linear-gradient(120deg,#214A36,#47785A)", color: "#fff", display: "grid", gridTemplateColumns: "minmax(0,1.5fr) minmax(130px,.5fr)", gap: 24, alignItems: "center" }}>
-      <div><div style={{ color: "#D7E6D9", textTransform: "uppercase", letterSpacing: 2, fontSize: 11, fontWeight: 800 }}>Khám phá cà phê Sài Gòn</div><h1 style={{ fontSize: "clamp(36px,5vw,58px)", lineHeight: 1.06, letterSpacing: -2, margin: "14px 0" }}>Tìm góc cà phê<br />hợp gu của bạn.</h1><p style={{ color: "#E1EAE1", lineHeight: 1.7, maxWidth: 560 }}>Khám phá thương hiệu, tìm chi nhánh phù hợp và đọc đánh giá từ cộng đồng yêu đồ uống tại TP. Hồ Chí Minh.</p><input value={query} onChange={e => setQuery(e.target.value)} placeholder="Tìm thương hiệu cà phê, trà..." style={{ width: "100%", maxWidth: 500, boxSizing: "border-box", padding: 15, borderRadius: 12, border: "1px solid #e2dfd5", marginTop: 12 }} /></div>
-      <div style={{ display: "grid", placeItems: "center", fontSize: 100, background: "#F1E8D8", color: "#315C43", borderRadius: "50%", width: 150, height: 150, justifySelf: "center" }}>☕</div>
-    </section>
-    <main style={{ padding: "8px 6vw 60px" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "end", flexWrap: "wrap", gap: 12, marginBottom: 22 }}><div><h2 style={{ margin: "0 0 8px", fontSize: 28 }}>Thương hiệu nổi bật</h2><span style={{ color: "#77796f", fontSize: 14 }}>Chọn thương hiệu để xem chi tiết, chi nhánh và đánh giá.</span></div><span style={{ color: "#77796f", fontSize: 14 }}>{shown.length} thương hiệu</span></div>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(230px,1fr))", gap: 18 }}>
-        {shown.map(b => <article key={b.id} style={{ background: "#fff", border: "1px solid #eae7df", borderRadius: 18, overflow: "hidden" }}>
-          <div style={{ minHeight: 110, display: "grid", placeItems: "center", background: `linear-gradient(135deg,${b.color},${b.color}bb)` }}><div style={{ width: 64, height: 64, display: "grid", placeItems: "center", borderRadius: 20, color: "#fff", fontWeight: 800, fontSize: 23, background: "#ffffff20", border: "1px solid #ffffff55" }}>{b.mark}</div></div>
-          <div style={{ padding: 18 }}><span style={{ background: "#EDF3ED", color: "#315C43", borderRadius: 20, padding: "5px 9px", fontSize: 11 }}>{b.category}</span><h3 style={{ margin: "14px 0 7px" }}>{b.name}</h3><p style={{ color: "#77796f", fontSize: 14, minHeight: 40, lineHeight: 1.5 }}>{b.description}</p><p>★ {b.rating} <span style={{ color: "#888", fontSize: 12 }}>điểm minh họa</span></p><button style={{ ...button, width: "100%" }} onClick={() => onOpenBrand ? onOpenBrand(b.id) : window.alert(`Mở chi tiết thương hiệu ID ${b.id}; cần kết nối router/API.`)}>Xem thương hiệu →</button></div>
-        </article>)}
+  const [playing, setPlaying] = useState(null);
+  const audio = useRef(null);
+  const go = key => onNavigate && onNavigate(key);
+  const shown = brands.filter(b => fold(`${b.name} ${b.type}`).includes(fold(query.trim())));
+  const open = b => onOpenBrand ? onOpenBrand(b.id) : window.alert(`Mở chi tiết thương hiệu ID ${b.id}; cần kết nối router/API.`);
+
+  const stop = () => { audio.current?.pause(); audio.current = null; setPlaying(null); };
+  const toggle = b => {
+    if (playing === b.id) return stop();
+    if (!b.audio) return window.alert(`Chưa có file audio giới thiệu cho ${b.name}.`);
+    stop();
+    const a = new Audio(b.audio);
+    a.onended = () => setPlaying(null);
+    a.play().then(() => setPlaying(b.id)).catch(() => setPlaying(null));
+    audio.current = a;
+  };
+  useEffect(() => () => audio.current?.pause(), []);
+
+  return <div className="hp">
+    <style>{css}</style>
+    <Header active="home" go={go} />
+    <section className="hp-hero" style={HERO_IMAGE ? { backgroundImage: `linear-gradient(90deg,rgba(30,14,6,.88),rgba(30,14,6,.25)),url(${HERO_IMAGE})` } : undefined}>
+      <div className="hp-hero-in">
+        <h1>Khám phá những thương hiệu<br />cà phê đặc sắc tại Sài Gòn</h1>
+        <p>Từ những quán cà phê lâu đời đến những thương hiệu hiện đại, chúng tôi mang đến cho bạn hành trình vị cà phê độc đáo.</p>
+        <form className="hp-search" role="search" onSubmit={e => e.preventDefault()}>
+          <input value={query} onChange={e => setQuery(e.target.value)} placeholder="Tìm kiếm thương hiệu, khu vực, loại hình..." aria-label="Tìm kiếm thương hiệu" />
+          <button aria-label="Tìm kiếm"><Icon n="search" size={18} /></button>
+        </form>
       </div>
-      <p style={{ color: "#77796f", fontSize: 12, marginTop: 18 }}>Dữ liệu hiện tại là dữ liệu minh họa, sẽ thay bằng dữ liệu từ API/PostgreSQL.</p>
+      {!HERO_IMAGE && <Cup />}
+    </section>
+
+    <main className="hp-main">
+      <div className="hp-head">
+        <h2>Thương hiệu nổi bật</h2>
+        <button className="hp-link" onClick={() => go("brands")}>Xem tất cả <Icon n="arrow" size={14} /></button>
+      </div>
+      {shown.length ? <div className="hp-grid">
+        {shown.map(b => <article key={b.id} className="hp-card">
+          <button className="hp-cover" onClick={() => open(b)} aria-label={`Xem thương hiệu ${b.name}`}
+            style={b.cover ? { backgroundImage: `linear-gradient(rgba(0,0,0,.15),rgba(0,0,0,.25)),url(${b.cover})` } : undefined}>
+            {!b.cover && <Mark b={b} />}
+          </button>
+          <button className="hp-play" onClick={() => toggle(b)} aria-pressed={playing === b.id}
+            aria-label={playing === b.id ? `Dừng audio ${b.name}` : `Nghe giới thiệu ${b.name}`}>
+            <Icon n={playing === b.id ? "pause" : "play"} size={13} />
+          </button>
+          <div className="hp-body">
+            <h3><button onClick={() => open(b)}>{b.name}</button></h3>
+            <p>{b.type}</p>
+            <span><Icon n="pin" size={13} /> {b.branches} chi nhánh</span>
+          </div>
+        </article>)}
+      </div> : <p className="hp-empty">Không tìm thấy thương hiệu phù hợp. Hãy thử từ khóa khác.</p>}
     </main>
-    <footer style={{ padding: "24px 6vw", borderTop: "1px solid #e9e5dc", color: "#77796f", fontSize: 13, display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}> <strong>SaigonCoffee</strong><span>Khám phá • Chia sẻ • Đánh giá</span><span>© 2026 SaigonCoffee</span></footer>
   </div>;
 }
+
+const css = `
+.hp{--brown:#4B2817;--brown-3:#6B3A22;--accent:#C8672B;--ink:#2A1810;--muted:#8B7A6C;--line:#EFE5DA;min-height:100vh;background:#fff;color:var(--ink);font-family:Inter,system-ui,"Segoe UI",sans-serif}
+.hp *{box-sizing:border-box}
+.hp :where(button,input,select){font:inherit}
+.hp button:focus-visible,.hp input:focus-visible,.hp select:focus-visible{outline:2px solid #E9A24B;outline-offset:2px}
+
+.hp-bar{display:flex;align-items:center;gap:28px;height:60px;padding:0 6vw;color:#fff;background:linear-gradient(180deg,#5A3220,#442211)}
+.hp-logo{display:flex;align-items:center;gap:10px;padding:0;border:0;background:none;color:#fff;text-align:left;cursor:pointer}
+.hp-logo b{display:block;font-size:15px;line-height:1.15}
+.hp-logo small{display:block;font-size:9px;opacity:.65}
+.hp-nav{display:flex;flex:1;gap:26px}
+.hp-nav button{padding:21px 0 17px;border:0;border-bottom:2px solid transparent;background:none;color:rgba(255,255,255,.82);font-size:13px;cursor:pointer}
+.hp-nav button:hover{color:#fff}
+.hp-nav button[aria-current=page]{color:#fff;font-weight:600;border-color:#E9A24B}
+.hp-tools{display:flex;align-items:center;gap:14px}
+.hp-tools>button{display:grid;place-items:center;padding:4px;border:0;background:none;color:#fff;cursor:pointer}
+.hp-lang{display:flex;align-items:center;gap:6px;font-size:12px}
+.hp-lang select{border:0;background:transparent;color:#fff;font-size:12px;cursor:pointer}
+.hp-lang option{color:var(--ink);background:#fff}
+
+.hp-hero{position:relative;display:flex;align-items:center;min-height:330px;padding:48px 6vw;overflow:hidden;color:#fff;background:radial-gradient(circle at 78% 28%,rgba(233,168,90,.38),transparent 26%),radial-gradient(circle at 94% 62%,rgba(120,150,90,.28),transparent 24%),linear-gradient(100deg,#2B160B 0%,#4A2A18 55%,#3A2415 100%);background-size:cover;background-position:center}
+.hp-hero-in{position:relative;z-index:1;max-width:660px}
+.hp-hero h1{margin:0 0 14px;font-size:clamp(24px,3.2vw,36px);font-weight:700;line-height:1.22}
+.hp-hero p{max-width:520px;margin:0 0 24px;color:rgba(255,255,255,.86);font-size:14.5px;line-height:1.65}
+.hp-search{display:flex;gap:8px;padding:6px;border-radius:10px;background:#fff;box-shadow:0 6px 20px rgba(0,0,0,.28)}
+.hp-search input{flex:1;min-width:0;padding:0 12px;border:0;background:none;color:var(--ink);font-size:13.5px}
+.hp-search input:focus-visible{outline:none}
+.hp-search:focus-within{outline:2px solid #E9A24B}
+.hp-search button{display:grid;place-items:center;width:42px;height:38px;border:0;border-radius:8px;background:var(--brown-3);color:#fff;cursor:pointer}
+.hp-cup{position:absolute;right:4%;bottom:-6px;width:min(38vw,380px);filter:drop-shadow(0 18px 24px rgba(0,0,0,.4))}
+
+.hp-main{max-width:1240px;margin:0 auto;padding:34px 6vw 64px}
+.hp-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.hp-head h2{margin:0;font-size:19px;font-weight:700}
+.hp-link{display:flex;align-items:center;gap:6px;padding:0;border:0;background:none;color:var(--accent);font-size:13px;cursor:pointer}
+.hp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:20px}
+.hp-empty{padding:40px 0;color:var(--muted);text-align:center}
+.hp-card{position:relative;overflow:hidden;border:1px solid var(--line);border-radius:12px;background:#fff;box-shadow:0 4px 14px rgba(75,40,23,.07)}
+.hp-cover{display:grid;place-items:center;width:100%;height:150px;padding:0;border:0;cursor:pointer;background:radial-gradient(circle at 18% 25%,rgba(233,168,90,.45),transparent 38%),radial-gradient(circle at 85% 70%,rgba(110,150,80,.5),transparent 40%),linear-gradient(160deg,#2F3A22,#4A3520);background-size:cover;background-position:center}
+.hp-badge{display:flex;flex-direction:column;align-items:center;justify-content:center;width:84px;height:84px;border-radius:50%;color:#fff;font-size:11px;font-weight:800;line-height:1.15;letter-spacing:.5px;box-shadow:0 0 0 3px rgba(255,255,255,.9),0 6px 16px rgba(0,0,0,.35)}
+.hp-word{display:flex;flex-direction:column;align-items:center;font-size:22px;font-weight:800;line-height:1.05;letter-spacing:1px;text-shadow:0 2px 8px rgba(0,0,0,.5)}
+.hp-word.one{font-size:32px}
+.hp-play{position:absolute;top:132px;right:14px;display:grid;place-items:center;width:36px;height:36px;padding:0 0 0 2px;border:0;border-radius:50%;background:#fff;color:var(--brown-3);box-shadow:0 2px 8px rgba(0,0,0,.25);cursor:pointer}
+.hp-play[aria-pressed=true]{padding:0;background:var(--brown-3);color:#fff}
+.hp-body{padding:14px 16px 16px}
+.hp-body h3{margin:0 0 5px;font-size:14.5px;font-weight:600}
+.hp-body h3 button{padding:0;border:0;background:none;color:inherit;font-weight:inherit;cursor:pointer}
+.hp-body p{margin:0 0 14px;color:var(--muted);font-size:12.5px}
+.hp-body span{display:flex;align-items:center;gap:5px;color:var(--muted);font-size:12px}
+.hp-body span svg{color:var(--accent)}
+
+@media (max-width:760px){
+  .hp-bar{gap:12px;flex-wrap:wrap;height:auto;padding:10px 5vw 0}
+  .hp-nav{order:3;flex-basis:100%;gap:20px;overflow-x:auto}
+  .hp-nav button{padding:10px 0;white-space:nowrap}
+  .hp-logo small{display:none}
+  .hp-tools{margin-left:auto}
+  .hp-cup{display:none}
+  .hp-hero{min-height:0;padding:36px 5vw}
+}`;
