@@ -15,7 +15,6 @@ const demo = {
     { name: "Phúc Long - Bình Thạnh", address: "360 Điện Biên Phủ, Bình Thạnh" },
   ],
 };
-const LANGS = [["vi", "Tiếng Việt"], ["en", "English"], ["ko", "한국어"]];
 const TILE_BG = ["linear-gradient(135deg,#F3E3CC,#E4C7A0)", "linear-gradient(135deg,#FBE7A8,#F0B84F)", "linear-gradient(135deg,#F6E1CB,#C98B5A)"];
 
 const paths = {
@@ -40,7 +39,28 @@ const Icon = ({ n, size = 18 }) => (
 
 function Header({ go, goBrands }) {
   const [lang, setLang] = useState("VI");
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
+  const languages = [
+    { code: "VI", label: "Tiếng Việt" },
+    { code: "EN", label: "English" },
+    { code: "KO", label: "한국어" }
+  ];
+
+  // Đóng dropdown khi click ra bên ngoài
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   const items = [["home", "Trang chủ", true, () => go("home")], ["brands", "Thương hiệu", true, goBrands], ["map", "Bản đồ", false, () => go("map")], ["suggestions", "Đề xuất", false, () => go("suggestions")]];
+  
   return <header className="bd-bar">
     <button className="bd-logo" onClick={() => go("home")}>
       <Icon n="cup" size={30} /><span><b>SaigonCoffee</b><small>Khám phá cà phê Sài Gòn</small></span>
@@ -49,10 +69,38 @@ function Header({ go, goBrands }) {
       {items.map(([k, label, chev, fn]) => <button key={k} aria-current={k === "brands" ? "page" : undefined} onClick={fn}>{label}{chev && <Icon n="chevron" size={13} />}</button>)}
     </nav>
     <div className="bd-tools">
-      <label className="bd-lang">
-        <select value={lang} onChange={e => setLang(e.target.value)} aria-label="Ngôn ngữ"><option>VI</option><option>EN</option><option>KO</option></select>
-        <Icon n="chevron" size={12} />
-      </label>
+      {/* Custom Dropdown Ngôn Ngữ */}
+      <div className="bd-lang-dropdown" ref={dropdownRef}>
+        <button 
+          className="bd-lang-btn" 
+          onClick={() => setIsOpen(!isOpen)} 
+          aria-expanded={isOpen}
+          aria-label="Chọn ngôn ngữ"
+        >
+          <span>{lang}</span>
+          <span className={`bd-chevron-icon ${isOpen ? "open" : ""}`}>
+            <Icon n="chevron" size={12} />
+          </span>
+        </button>
+        
+        {isOpen && (
+          <div className="bd-lang-menu">
+            {languages.map((item) => (
+              <button
+                key={item.code}
+                className={`bd-lang-item ${lang === item.code ? "active" : ""}`}
+                onClick={() => {
+                  setLang(item.code);
+                  setIsOpen(false);
+                }}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
       <button aria-label="Tìm kiếm" onClick={() => go("search")}><Icon n="search" /></button>
     </div>
   </header>;
@@ -69,11 +117,13 @@ function Logo({ item, size }) {
 
 function AudioCard({ audio }) {
   const ref = useRef(null);
-  const [lang, setLang] = useState("vi");
   const [playing, setPlaying] = useState(false);
   const [loop, setLoop] = useState(false);
   const [t, setT] = useState({ cur: 0, dur: 0 });
-  const src = audio && typeof audio === "object" ? audio[lang] : audio;
+  
+  // Nếu audio là object, lấy phần tử đầu tiên hoặc mặc định, nếu không lấy trực tiếp giá trị chuỗi
+  const src = audio && typeof audio === "object" ? Object.values(audio)[0] : audio;
+
   useEffect(() => { setPlaying(false); setT({ cur: 0, dur: 0 }); }, [src]);
   const toggle = () => {
     const a = ref.current;
@@ -87,7 +137,7 @@ function AudioCard({ audio }) {
       onPlay={() => setPlaying(true)} onPause={() => setPlaying(false)} onEnded={() => setPlaying(false)}
       onTimeUpdate={e => setT(x => ({ ...x, cur: e.target.currentTime }))}
       onLoadedMetadata={e => setT({ cur: 0, dur: e.target.duration })} />
-    <button className="bd-play" onClick={toggle} title={src ? undefined : "Chưa có file audio cho ngôn ngữ này"} aria-label={playing ? "Tạm dừng" : "Nghe giới thiệu thương hiệu"}>
+    <button className="bd-play" onClick={toggle} title={src ? undefined : "Chưa có file audio"} aria-label={playing ? "Tạm dừng" : "Nghe giới thiệu thương hiệu"}>
       <Icon n={playing ? "pause" : "play"} size={20} />
     </button>
     <div className="bd-track">
@@ -95,7 +145,6 @@ function AudioCard({ audio }) {
       <input className="bd-range" type="range" min="0" max={t.dur || 1} step="0.1" value={t.cur} disabled={!src} onChange={seek} aria-label="Tua audio" style={{ "--p": `${pct}%` }} />
     </div>
     <div className="bd-audio-r">
-      <select value={lang} onChange={e => setLang(e.target.value)} aria-label="Ngôn ngữ audio">{LANGS.map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select>
       <button onClick={() => setLoop(v => !v)} aria-pressed={loop} aria-label="Lặp lại" className={loop ? "on" : ""}><Icon n="repeat" size={16} /></button>
     </div>
   </div>;
@@ -212,9 +261,22 @@ const css = `
 .bd-nav button[aria-current=page]{color:#fff;font-weight:600}
 .bd-tools{display:flex;align-items:center;gap:14px}
 .bd-tools>button{display:grid;place-items:center;padding:4px;border:0;background:none;color:#fff;cursor:pointer}
-.bd-lang{display:flex;align-items:center;gap:2px;font-size:12px}
-.bd-lang select{appearance:none;border:0;background:transparent;color:#fff;font-size:12px;cursor:pointer}
-.bd-lang option{color:var(--ink);background:#fff}
+
+/* Custom Dropdown Ngôn Ngữ */
+.bd-lang-dropdown{position:relative}
+.bd-lang-btn{display:flex;align-items:center;gap:6px;padding:6px 10px;border:1px solid rgba(255,255,255,0.2);border-radius:8px;background:rgba(255,255,255,0.08);color:#fff;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.2s ease}
+.bd-lang-btn:hover{background:rgba(255,255,255,0.15);border-color:rgba(255,255,255,0.4)}
+.bd-chevron-icon{display:flex;align-items:center;transition:transform 0.25s ease}
+.bd-chevron-icon.open{transform:rotate(180deg)}
+.bd-lang-menu{position:absolute;right:0;top:calc(100% + 6px);min-width:110px;padding:6px;border-radius:8px;background:#fff;box-shadow:0 8px 20px rgba(42,24,16,0.18);border:1px solid var(--line);z-index:100;display:flex;flex-direction:column;gap:2px;animation:fadeInDown 0.2s ease}
+.bd-lang-item{display:block;width:100%;padding:8px 12px;border:0;border-radius:6px;background:transparent;color:var(--ink);font-size:12px;font-weight:500;text-align:left;cursor:pointer;transition:background 0.15s ease, color 0.15s ease}
+.bd-lang-item:hover{background:#F6EFE7;color:var(--brown-3)}
+.bd-lang-item.active{background:var(--brown-3);color:#fff;font-weight:600}
+
+@keyframes fadeInDown {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
 
 .bd-wrap{max-width:1160px;margin:0 auto;padding:22px 5vw 64px}
 .bd-cover{position:relative;height:170px;border-radius:12px;background:radial-gradient(circle at 15% 40%,rgba(233,168,90,.55),transparent 30%),radial-gradient(circle at 60% 30%,rgba(255,220,150,.4),transparent 22%),radial-gradient(circle at 88% 60%,rgba(110,150,80,.6),transparent 34%),linear-gradient(120deg,#3A2A18,#4F4A26 55%,#2F3A22);background-size:cover;background-position:center}
@@ -233,7 +295,6 @@ const css = `
 .bd-range::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;border:0;border-radius:50%;background:var(--brown-3)}
 .bd-range::-moz-range-thumb{width:12px;height:12px;border:0;border-radius:50%;background:var(--brown-3)}
 .bd-audio-r{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:12.5px}
-.bd-audio-r select{border:0;background:transparent;color:var(--ink);cursor:pointer}
 .bd-audio-r button{display:grid;place-items:center;padding:4px;border:0;background:none;color:var(--muted);cursor:pointer}
 .bd-audio-r button.on{color:var(--brown-3)}
 .bd-desc{margin:18px 0 20px;color:#5C4B3F;font-size:13.5px;line-height:1.75}
