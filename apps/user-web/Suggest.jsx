@@ -126,7 +126,6 @@ function BrandBadge({ item }) {
 }
 
 export default function SuggestionsPage({ recentBrands = [], onSelectBrand, onNavigate }) {
-  // Sử dụng danh sách truyền vào hoặc dùng danh sách mặc định
   const displayBrands = recentBrands.length > 0 ? recentBrands : DEFAULT_SELECTED_BRANDS;
 
   const [formData, setFormData] = useState({
@@ -139,7 +138,6 @@ export default function SuggestionsPage({ recentBrands = [], onSelectBrand, onNa
 
   const [submitted, setSubmitted] = useState(false);
 
-  // Nếu người dùng bấm chọn từ danh sách "Thương hiệu đã chọn trước đó"
   const handleSelectPreBrand = (brand) => {
     setFormData(prev => ({
       ...prev,
@@ -175,7 +173,6 @@ export default function SuggestionsPage({ recentBrands = [], onSelectBrand, onNa
 
       <Header currentNav="suggestions" onNavigate={onNavigate} />
 
-      {/* Hero Header Banner */}
       <section className="sg-hero">
         <div className="sg-hero-in">
           <h1>Đề xuất Thương hiệu & Địa điểm</h1>
@@ -187,7 +184,6 @@ export default function SuggestionsPage({ recentBrands = [], onSelectBrand, onNa
       </section>
 
       <main className="sg-main">
-        {/* Danh sách các thương hiệu người dùng đã quan tâm/chọn trước đó */}
         {displayBrands.length > 0 && (
           <section className="sg-selected-section">
             <div className="sg-section-title">
@@ -216,7 +212,6 @@ export default function SuggestionsPage({ recentBrands = [], onSelectBrand, onNa
           </section>
         )}
 
-        {/* Khung Form đề xuất nằm ở giữa */}
         <section className="sg-form-container">
           <div className="sg-form-card">
             {submitted ? (
@@ -340,9 +335,14 @@ const styles = `
 
 .sg-page * { box-sizing: border-box; }
 .sg-page :where(button,input,textarea){font:inherit}
-.sg-page button:focus-visible,.sg-page input:focus-visible,.sg-page textarea:focus-visible{outline:2px solid var(--accent-gold);outline-offset:2px}
 
-/* Header Component */
+.sg-page input:focus-visible,
+.sg-page textarea:focus-visible,
+.sg-page input:focus,
+.sg-page textarea:focus {
+  outline: none !important;
+}
+
 .sg-bar {
   display: flex;
   align-items: center;
@@ -385,7 +385,6 @@ const styles = `
 
 .sg-tools { display: flex; align-items: center; gap: 14px; }
 
-/* Custom Dropdown Ngôn Ngữ */
 .sg-lang-dropdown { position: relative; }
 .sg-lang-btn {
   display: flex;
@@ -457,7 +456,6 @@ const styles = `
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* Hero Section */
 .sg-hero {
   position: relative;
   display: flex;
@@ -473,10 +471,8 @@ const styles = `
 .sg-hero h1 { margin: 0 0 12px; font-size: 28px; font-weight: 700; }
 .sg-hero p { margin: 0; font-size: 14px; opacity: 0.85; line-height: 1.6; }
 
-/* Main Content */
 .sg-main { max-width: 1000px; margin: 0 auto; padding: 36px 5vw 60px; }
 
-/* Selected Brands Section */
 .sg-selected-section { margin-bottom: 36px; }
 .sg-section-title { margin-bottom: 16px; text-align: center; }
 .sg-section-title h2 { margin: 0 0 4px; font-size: 18px; font-weight: 700; color: var(--brown-dark); }
@@ -546,7 +542,6 @@ const styles = `
   color: #fff;
 }
 
-/* Form Container */
 .sg-form-container {
   display: flex;
   justify-content: center;
@@ -587,11 +582,14 @@ const styles = `
   font-size: 13.5px;
   color: var(--text-dark);
   background: #FAF9F7;
+  outline: none !important;
   transition: border-color 0.2s ease, background 0.2s ease;
 }
+
 .sg-field-group input:focus, .sg-field-group textarea:focus {
   background: #fff;
   border-color: var(--brown-mid);
+  outline: none !important;
 }
 
 .sg-btn-submit {
@@ -612,7 +610,6 @@ const styles = `
 }
 .sg-btn-submit:hover { background: var(--brown-dark); }
 
-/* Success State */
 .sg-success-state { text-align: center; padding: 20px 10px; }
 .sg-success-icon {
   display: inline-grid;
