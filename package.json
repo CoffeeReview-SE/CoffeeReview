@@ -24,13 +24,8 @@
     "@vitejs/plugin-react": "^5.0.4",
     "react": "19.1.0",
     "react-dom": "19.1.0",
-<<<<<<< HEAD
-    "react-router-dom": "^7.18.4",
-    "serve": "^14.2.4",
-=======
     "react-router-dom": "^7.9.4",
     "serve": "^14.2.6",
->>>>>>> 72b7355b6f6fcfda8a628b6fa66e77a3bc4209a3
     "vite": "^7.1.12"
   }
 }
