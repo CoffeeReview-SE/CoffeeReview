@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import StoreMap from "./StoreMap.jsx";
 
 const HERO_IMAGE = "";
 const brands = [
@@ -125,6 +126,10 @@ export default function HomePage({ onOpenBrand, onNavigate }) {
   const audio = useRef(null);
   
   const go = key => {
+    if (key === "map") {
+      document.getElementById("store-map")?.scrollIntoView({ behavior: "smooth" });
+      return;
+    }
     if (onNavigate) {
       onNavigate(key);
     }
@@ -147,6 +152,8 @@ export default function HomePage({ onOpenBrand, onNavigate }) {
       </div>
       {!HERO_IMAGE && <Cup />}
     </section>
+
+    <StoreMap />
 
     <main className="hp-main">
       <div className="hp-head">

@@ -51,7 +51,7 @@ export default function StoreMap() {
   };
 
   return (
-    <section className="store-map" aria-labelledby="store-map-title">
+    <section className="store-map" id="store-map" aria-labelledby="store-map-title">
       <div className="store-map__intro">
         <p className="store-map__eyebrow">KHÁM PHÁ SÀI GÒN</p>
         <h1 id="store-map-title">Tìm quán cà phê trên bản đồ</h1>
