@@ -1,26 +1,39 @@
-import React from "react";
-import { Navigate, Route, Routes, useNavigate, useParams } from "react-router-dom";
+import React from 'react';
+import { Navigate, Route, Routes, useNavigate, useParams } from 'react-router-dom';
 
-import HomePage from "./user-web/HomePage.jsx";
-import BrandDetailPage from "./user-web/BrandDetailPage.jsx";
-import AdminDashboard from "./admin/AdminDashboard.jsx";
-import ManagementPage from "./admin/ManagementPage.jsx";
+import HomePage from './user-web/HomePage.jsx';
+import BrandDetailPage from './user-web/BrandDetailPage.jsx';
+import AdminDashboard from './admin/AdminDashboard.jsx';
+import BrandManagement from './admin/Manage_Brand.jsx';
+import BranchManagement from './admin/Branch_manage.jsx';
+import MenuManagement from './admin/Menu_manage.jsx';
+import SuggestionsManagement from './admin/Sugguest_manage.jsx';
+import ApprovalsManagement from './admin/Approve_manage.jsx';
 
-// Sections that ManagementPage already supports
-const ADMIN_SECTIONS = ["brands", "branches", "menu", "languages", "suggestions", "approvals"];
+/* Map: section trên URL -> trang quản trị tương ứng. */
+const ADMIN_PAGES = {
+  brands: BrandManagement,
+  branches: BranchManagement,
+  menu: MenuManagement,
+  suggestions: SuggestionsManagement,
+  approvals: ApprovalsManagement,
+};
+
+/* Định tuyến điều hướng toàn bộ khu admin (dùng chung cho mọi trang). */
+const ADMIN_SECTIONS = Object.keys(ADMIN_PAGES);
 
 function useUserNav() {
   const nav = useNavigate();
-  return key => {
-    if (key === "home" || key === "brands") return nav("/");
+  return (key) => {
+    if (key === 'home' || key === 'brands') return nav('/');
     console.info(`Trang "${key}" chưa có.`); // map, suggestions, login, search...
   };
 }
 
 function useAdminNav() {
   const nav = useNavigate();
-  return key => {
-    if (key === "dashboard") return nav("/admin");
+  return (key) => {
+    if (key === 'dashboard') return nav('/admin');
     if (ADMIN_SECTIONS.includes(key)) return nav(`/admin/${key}`);
     console.info(`Trang quản trị "${key}" chưa có.`); // stats, settings, profile...
   };
@@ -29,14 +42,20 @@ function useAdminNav() {
 function Home() {
   const nav = useNavigate();
   const go = useUserNav();
-  return <HomePage onNavigate={go} onOpenBrand={id => nav(`/brand/${id}`)} />;
+  return <HomePage onNavigate={go} onOpenBrand={(id) => nav(`/brand/${id}`)} />;
 }
 
 function BrandDetail() {
   const { id } = useParams();
   const nav = useNavigate();
   const go = useUserNav();
-  return <BrandDetailPage brandId={id ? Number(id) : undefined} onBack={() => nav("/")} onNavigate={go} />;
+  return (
+    <BrandDetailPage
+      brandId={id ? Number(id) : undefined}
+      onBack={() => nav('/')}
+      onNavigate={go}
+    />
+  );
 }
 
 function Dashboard() {
@@ -45,7 +64,9 @@ function Dashboard() {
 
 function Management() {
   const { section } = useParams();
-  return <ManagementPage section={section} onNavigate={useAdminNav()} />;
+  const Page = ADMIN_PAGES[section];
+  if (!Page) return <Navigate to="/admin" replace />;
+  return <Page onNavigate={useAdminNav()} />;
 }
 
 export default function App() {
