@@ -1,4 +1,5 @@
 import React from 'react';
+import BrandLogo from '../BrandLogo.jsx';
 
 /* Dữ liệu mẫu — thay bằng API/PostgreSQL. */
 const RANGE = '01/04/2025 - 30/04/2025';
@@ -204,7 +205,7 @@ export default function AdminDashboard({ onNavigate }) {
 
       <aside className="ad-side">
         <div className="ad-brand">
-          <Icon n="cup" size={32} />
+          <BrandLogo size={36} tone="light" />
           <span>
             <b>SaigonCoffee</b>
             <small>Quản trị hệ thống</small>

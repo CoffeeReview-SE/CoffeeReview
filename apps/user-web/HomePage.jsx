@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import StoreMap from "./StoreMap.jsx";
+import BrandLogo from "../BrandLogo.jsx";
 
 const HERO_IMAGE = "";
 const brands = [
@@ -51,7 +52,7 @@ function Header({ active, go }) {
   
   return <header className="hp-bar">
     <button className="hp-logo" onClick={() => go("home")}>
-      <Icon n="cup" size={30} /><span><b>SaigonCoffee</b><small>Khám phá cà phê Sài Gòn</small></span>
+      <BrandLogo size={34} tone="light" /><span><b>SaigonCoffee</b><small>Khám phá cà phê Sài Gòn</small></span>
     </button>
     <nav className="hp-nav" aria-label="Điều hướng chính">
       {items.map(([k, label]) => (

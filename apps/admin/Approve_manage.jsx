@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import BrandLogo from '../BrandLogo.jsx';
 
 /* Danh mục điều hướng liên kết đồng bộ với AdminDashboard */
 const NAV = [
@@ -182,7 +183,7 @@ export default function ApprovalsManagement({ onNavigate }) {
       {/* Thanh điều hướng Side Navigation - Kế thừa 100% từ AdminDashboard */}
       <aside className="ad-side">
         <div className="ad-brand">
-          <Icon n="cup" size={32} />
+          <BrandLogo size={36} tone="light" />
           <span>
             <b>SaigonCoffee</b>
             <small>Quản trị hệ thống</small>

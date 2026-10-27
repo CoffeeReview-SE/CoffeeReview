@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import BrandLogo from '../BrandLogo.jsx';
 
 /* Dữ liệu danh sách đề xuất tích hợp từ Dashboard & mở rộng */
 const INITIAL_SUGGESTIONS = [
@@ -187,7 +188,7 @@ export default function SuggestionsManagement({ onNavigate }) {
       {/* Thanh điều hướng dùng chung với Admin Dashboard */}
       <aside className="ad-side">
         <div className="ad-brand">
-          <Icon n="cup" size={32} />
+          <BrandLogo size={36} tone="light" />
           <span>
             <b>SaigonCoffee</b>
             <small>Quản trị hệ thống</small>
