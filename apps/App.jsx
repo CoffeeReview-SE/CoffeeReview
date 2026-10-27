@@ -65,9 +65,6 @@ function Home({ addRecentBrand }) {
 function BrandList({ addRecentBrand }) {
   const nav = useNavigate();
   const go = useUserNav();
-<<<<<<< Updated upstream
-  return <BrandListPage onNavigate={go} onSelectBrand={(brand) => nav(`/brand/${brand.id}`)} />;
-=======
 
   const handleSelectBrand = (brand) => {
     if (addRecentBrand) {
@@ -82,7 +79,6 @@ function BrandList({ addRecentBrand }) {
       onSelectBrand={handleSelectBrand}
     />
   );
->>>>>>> Stashed changes
 }
 
 /* 3. Trang Chi tiết Thương hiệu */
@@ -144,12 +140,7 @@ export default function App() {
       {/* User Routes */}
       <Route path="/" element={<Home addRecentBrand={addRecentBrand} />} />
       <Route path="/home" element={<Navigate to="/" replace />} />
-<<<<<<< Updated upstream
-      <Route path="/brands" element={<BrandList />} />{' '}
-      {/* Thêm route cho trang danh sách thương hiệu */}
-=======
       <Route path="/brands" element={<BrandList addRecentBrand={addRecentBrand} />} />
->>>>>>> Stashed changes
       <Route path="/brand" element={<BrandDetail />} />
       <Route path="/brand/:id" element={<BrandDetail />} />
       <Route path="/suggestions" element={<Suggestions recentBrands={recentBrands} />} />
