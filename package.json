@@ -6,7 +6,7 @@
   "scripts": {
     "build": "vite build",
     "dev": "vite",
-    "start": "vite",
+    "start": "serve -s dist -p $PORT",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit"
   },
@@ -22,6 +22,7 @@
     "@vitejs/plugin-react": "^5.0.4",
     "react": "^19.1.0",
     "react-dom": "19.1.0",
-    "vite": "^7.1.12"
+    "vite": "^7.1.12",
+    "serve": "^14.2.4"
   }
 }
