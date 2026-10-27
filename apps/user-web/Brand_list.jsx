@@ -36,7 +36,6 @@ function Header({ currentNav = "brands", onNavigate }) {
     { code: "KO", label: "한국어" }
   ];
 
-  // Đóng dropdown khi click ra ngoài
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -78,7 +77,7 @@ function Header({ currentNav = "brands", onNavigate }) {
       </nav>
 
       <div className="bl-tools">
-        {/* Custom Language Dropdown (giống BrandDetailPage) */}
+        {/* Custom Language Dropdown */}
         <div className="bl-lang-dropdown" ref={dropdownRef}>
           <button 
             className="bl-lang-btn" 
@@ -111,6 +110,27 @@ function Header({ currentNav = "brands", onNavigate }) {
         </div>
       </div>
     </header>
+  );
+}
+
+function Cup() {
+  return (
+    <svg className="bl-cup" viewBox="0 0 340 230" aria-hidden="true">
+      <defs>
+        <linearGradient id="bl-cupg" x1="0" x2="1">
+          <stop offset="0" stopColor="#9A7C5C" />
+          <stop offset=".55" stopColor="#6A503A" />
+          <stop offset="1" stopColor="#3E2B1D" />
+        </linearGradient>
+      </defs>
+      <ellipse cx="170" cy="196" rx="160" ry="22" fill="#1B0E07" opacity=".5" />
+      <ellipse cx="170" cy="184" rx="150" ry="22" fill="#3B2617" />
+      <ellipse cx="170" cy="179" rx="122" ry="14" fill="#54392A" />
+      <path d="M232 70c58-8 66 50 10 72" fill="none" stroke="#6A503A" strokeWidth="13" strokeLinecap="round" />
+      <path d="M92 58c0 78 26 124 78 124s78-46 78-124z" fill="url(#bl-cupg)" />
+      <ellipse cx="170" cy="58" rx="78" ry="15" fill="#B39674" />
+      <ellipse cx="170" cy="60" rx="68" ry="11" fill="#24120A" />
+    </svg>
   );
 }
 
@@ -166,38 +186,27 @@ export default function BrandListPage({ onSelectBrand, onNavigate }) {
       <Header currentNav="brands" onNavigate={onNavigate} />
 
       <section className="bl-hero">
-        <div className="bl-hero-content">
+        <div className="bl-hero-in">
           <h1>Khám phá những thương hiệu<br />cà phê đặc sắc tại Sài Gòn</h1>
           <p>
             Từ những quán cà phê lâu đời đến những thương hiệu hiện đại, chúng tôi mang
             đến cho bạn hành trình vị cà phê độc đáo.
           </p>
 
-          <div className="bl-search-box">
+          <div className="bl-search" role="search" onSubmit={e => e.preventDefault()}>
             <input
               type="text"
               placeholder="Tìm kiếm thương hiệu, khu vực, loại hình..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
+              aria-label="Tìm kiếm thương hiệu"
             />
-            <button className="bl-search-btn" aria-label="Tìm kiếm">
+            <button aria-label="Tìm kiếm">
               <Icon n="search" size={18} />
             </button>
           </div>
         </div>
-
-        <div className="bl-hero-illustration">
-          <div className="bl-cup-shadow"></div>
-          <div className="bl-cup-graphic">
-            <svg viewBox="0 0 200 160" width="220" height="170" fill="none">
-              <ellipse cx="100" cy="140" rx="90" ry="15" fill="#2E1B11" opacity="0.3" />
-              <path d="M 30 40 L 45 120 Q 100 135 155 120 L 170 40 Z" fill="#6E473B" />
-              <ellipse cx="100" cy="40" rx="70" ry="18" fill="#4B2D24" />
-              <ellipse cx="100" cy="40" rx="60" ry="14" fill="#2E1810" />
-              <path d="M 160 55 C 195 55 195 95 152 105" stroke="#6E473B" strokeWidth="12" strokeLinecap="round" fill="none" />
-            </svg>
-          </div>
-        </div>
+        <Cup />
       </section>
 
       <main className="bl-main">
@@ -262,6 +271,8 @@ const styles = `
 }
 
 .bl-page * { box-sizing: border-box; }
+.bl-page :where(button,input,select){font:inherit}
+.bl-page button:focus-visible,.bl-page input:focus-visible{outline:2px solid #E9A24B;outline-offset:2px}
 
 /* Header Component */
 .bl-bar {
@@ -302,11 +313,12 @@ const styles = `
 }
 
 .bl-nav button:hover { color: #fff; }
+/* Làm nổi bật và gạch chân màu vàng khi đang ở mục Thương hiệu */
 .bl-nav button[aria-current=page] { color: #fff; font-weight: 600; border-color: #E9A24B; }
 
 .bl-tools { display: flex; align-items: center; gap: 14px; }
 
-/* Custom Dropdown Ngôn Ngữ - Giống hệt BrandDetailPage */
+/* Custom Dropdown Ngôn Ngữ */
 .bl-lang-dropdown { position: relative; }
 .bl-lang-btn {
   display: flex;
@@ -378,60 +390,76 @@ const styles = `
   to { opacity: 1; transform: translateY(0); }
 }
 
+/* Đồng bộ Hero Section giống hệt HomePage */
 .bl-hero {
   position: relative;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 40px 5vw 50px;
-  background: linear-gradient(135deg, #3D2214 0%, #593722 50%, #2A160C 100%);
-  color: #fff;
+  min-height: 330px;
+  padding: 48px 6vw;
   overflow: hidden;
+  color: #fff;
+  background: radial-gradient(circle at 78% 28%, rgba(233,168,90,.38), transparent 26%),
+              radial-gradient(circle at 94% 62%, rgba(120,150,90,.28), transparent 24%),
+              linear-gradient(100deg, #2B160B 0%, #4A2A18 55%, #3A2415 100%);
+  background-size: cover;
+  background-position: center;
 }
-
-.bl-hero-content { max-width: 580px; z-index: 2; }
-.bl-hero-content h1 { font-size: 32px; font-weight: 700; line-height: 1.3; margin: 0 0 14px 0; }
-.bl-hero-content p { font-size: 13.5px; line-height: 1.6; opacity: 0.82; margin: 0 0 24px 0; }
-
-.bl-search-box {
+.bl-hero-in {
+  position: relative;
+  z-index: 1;
+  max-width: 660px;
+}
+.bl-hero h1 {
+  margin: 0 0 14px;
+  font-size: clamp(24px, 3.2vw, 36px);
+  font-weight: 700;
+  line-height: 1.22;
+}
+.bl-hero p {
+  max-width: 520px;
+  margin: 0 0 24px;
+  color: rgba(255,255,255,.86);
+  font-size: 14.5px;
+  line-height: 1.65;
+}
+.bl-search {
   display: flex;
-  align-items: center;
+  gap: 8px;
+  padding: 6px;
+  border-radius: 10px;
   background: #fff;
-  border-radius: 30px;
-  padding: 4px 6px 4px 18px;
-  max-width: 440px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+  box-shadow: 0 6px 20px rgba(0,0,0,.28);
+  max-width: 460px;
 }
-
-.bl-search-box input {
+.bl-search input {
   flex: 1;
-  border: none;
-  outline: none;
-  font-size: 13px;
+  min-width: 0;
+  padding: 0 12px;
+  border: 0;
+  background: none;
   color: var(--text-dark);
-  background: transparent;
+  font-size: 13.5px;
 }
-
-.bl-search-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  border: none;
-  background: #6E442B;
+.bl-search input:focus-visible { outline: none; }
+.bl-search:focus-within { outline: 2px solid #E9A24B; }
+.bl-search button {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 38px;
+  border: 0;
+  border-radius: 8px;
+  background: var(--brown-mid);
   color: #fff;
   cursor: pointer;
 }
-
-.bl-hero-illustration {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-right: 40px;
-  z-index: 1;
+.bl-cup {
+  position: absolute;
+  right: 4%;
+  bottom: -6px;
+  width: min(38vw, 380px);
+  filter: drop-shadow(0 18px 24px rgba(0,0,0,.4));
 }
 
 .bl-main { max-width: 1200px; margin: 0 auto; padding: 36px 5vw 60px; }
@@ -526,7 +554,7 @@ const styles = `
 @media (max-width: 1024px) { .bl-grid { grid-template-columns: repeat(3, 1fr); } }
 @media (max-width: 768px) {
   .bl-hero { flex-direction: column; text-align: center; padding: 30px 5vw; }
-  .bl-hero-illustration { margin: 20px 0 0 0; }
+  .bl-cup { display: none; }
   .bl-grid { grid-template-columns: repeat(2, 1fr); }
   .bl-section-header { flex-direction: column; align-items: flex-start; gap: 12px; }
 }
