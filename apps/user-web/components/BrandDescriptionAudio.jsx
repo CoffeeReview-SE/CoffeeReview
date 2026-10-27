@@ -1,41 +1,50 @@
-import React, { useEffect, useRef, useState } from "react";
-import { trackAudio } from "../../analytics/tracking.js";
-import { useLanguage } from "../contexts/LanguageContext.jsx";
-import { brandDescriptionLanguage, getUserApi } from "../../shared/api/userApi.js";
-import { getSpeechVoice, speechLanguageTag } from "../utils/speechVoice.js";
-import { getOfflineBrandTranslation } from "../i18n/offlineBrandTranslations.js";
-import { detailText } from "../i18n/brandDetailTranslations.js";
+import React, { useEffect, useRef, useState } from 'react';
+import { trackAudio } from '../../analytics/tracking.js';
+import { useLanguage } from '../contexts/LanguageProvider.jsx';
+import { brandDescriptionLanguage, getUserApi } from '../../shared/api/userApi.js';
+import { getSpeechVoice, speechLanguageTag } from '../utils/speechVoice.js';
+import { getOfflineBrandTranslation } from '../i18n/brandTranslationsOffline.js';
+import { detailText } from '../i18n/brandDetailsI18n.js';
 
 let latestSpeechRequest = 0;
 
-export default function BrandDescriptionAudio({ brand, className, playLabel, stopLabel, renderIcon }) {
+export default function BrandDescriptionAudio({
+  brand,
+  className,
+  playLabel,
+  stopLabel,
+  renderIcon,
+}) {
   const { languageCode: voiceTargetLanguage } = useLanguage();
   const dt = (key) => detailText(voiceTargetLanguage, key);
   const [speaking, setSpeaking] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState('');
   const utterance = useRef(null);
   const requestId = useRef(0);
-  const supported = typeof window !== "undefined" && "speechSynthesis" in window;
-  const description = brand.description?.trim() || "";
+  const supported = typeof window !== 'undefined' && 'speechSynthesis' in window;
+  const description = brand.description?.trim() || '';
   const sourceLanguage = brandDescriptionLanguage(brand);
 
-  useEffect(() => () => {
-    requestId.current += 1;
-    if (utterance.current) {
-      utterance.current.onstart = null;
-      window.speechSynthesis?.cancel();
-      utterance.current = null;
-    }
-  }, [brand.id, description, voiceTargetLanguage]);
+  useEffect(
+    () => () => {
+      requestId.current += 1;
+      if (utterance.current) {
+        utterance.current.onstart = null;
+        window.speechSynthesis?.cancel();
+        utterance.current = null;
+      }
+    },
+    [brand.id, description, voiceTargetLanguage],
+  );
 
   useEffect(() => {
     setLoading(false);
     setSpeaking(false);
-    setError("");
+    setError('');
   }, [brand.id, description, voiceTargetLanguage]);
 
-  const toggleSpeech = async event => {
+  const toggleSpeech = async (event) => {
     event.stopPropagation();
     if (!description || !supported) return;
 
@@ -53,7 +62,7 @@ export default function BrandDescriptionAudio({ brand, className, playLabel, sto
     const speechRequest = ++latestSpeechRequest;
     let text = description;
     let voiceLanguage = sourceLanguage;
-    setError("");
+    setError('');
     setLoading(true);
 
     if (sourceLanguage !== voiceTargetLanguage) {
@@ -61,17 +70,21 @@ export default function BrandDescriptionAudio({ brand, className, playLabel, sto
       if (offlineTranslation) {
         text = offlineTranslation;
         voiceLanguage = voiceTargetLanguage;
-      } else try {
-        const translated = await getUserApi(`/api/localization/brands/${brand.id}/translations/${voiceTargetLanguage}`, { method: "POST" });
-        if (request !== requestId.current || speechRequest !== latestSpeechRequest) {
-          if (request === requestId.current) setLoading(false);
-          return;
+      } else
+        try {
+          const translated = await getUserApi(
+            `/api/localization/brands/${brand.id}/translations/${voiceTargetLanguage}`,
+            { method: 'POST' },
+          );
+          if (request !== requestId.current || speechRequest !== latestSpeechRequest) {
+            if (request === requestId.current) setLoading(false);
+            return;
+          }
+          text = translated.description || description;
+          if (translated.description) voiceLanguage = voiceTargetLanguage;
+        } catch {
+          // Use the stored description in its original language if translation is unavailable.
         }
-        text = translated.description || description;
-        if (translated.description) voiceLanguage = voiceTargetLanguage;
-      } catch {
-        // Use the stored description in its original language if translation is unavailable.
-      }
     }
 
     if (request !== requestId.current || speechRequest !== latestSpeechRequest) {
@@ -90,7 +103,11 @@ export default function BrandDescriptionAudio({ brand, className, playLabel, sto
       if (request !== requestId.current) return;
       setLoading(false);
       setSpeaking(true);
-      trackAudio({ brandId: Number(brand.id), languageCode: voiceLanguage, eventId: crypto.randomUUID() });
+      trackAudio({
+        brandId: Number(brand.id),
+        languageCode: voiceLanguage,
+        eventId: crypto.randomUUID(),
+      });
     };
     speech.onend = () => {
       if (request !== requestId.current) return;
@@ -98,12 +115,12 @@ export default function BrandDescriptionAudio({ brand, className, playLabel, sto
       setLoading(false);
       setSpeaking(false);
     };
-    speech.onerror = event => {
+    speech.onerror = (event) => {
       if (request !== requestId.current) return;
       utterance.current = null;
       setLoading(false);
       setSpeaking(false);
-      if (!["canceled", "interrupted"].includes(event.error)) setError(dt("speechError"));
+      if (!['canceled', 'interrupted'].includes(event.error)) setError(dt('speechError'));
     };
     window.speechSynthesis.cancel();
     utterance.current = speech;
@@ -113,11 +130,11 @@ export default function BrandDescriptionAudio({ brand, className, playLabel, sto
       utterance.current = null;
       setLoading(false);
       setSpeaking(false);
-      setError(dt("speechError"));
+      setError(dt('speechError'));
     }
   };
 
-  const label = loading ? dt("preparingSpeech") : speaking ? stopLabel : playLabel;
+  const label = loading ? dt('preparingSpeech') : speaking ? stopLabel : playLabel;
   return (
     <button
       className={className}
@@ -126,9 +143,13 @@ export default function BrandDescriptionAudio({ brand, className, playLabel, sto
       disabled={!description || !supported}
       aria-pressed={speaking || loading}
       aria-label={label}
-      title={error || (!description ? dt("noDescription") : undefined)}
+      title={error || (!description ? dt('noDescription') : undefined)}
     >
-      {renderIcon ? renderIcon(speaking || loading) : <span aria-hidden="true">{speaking || loading ? "■" : "▶"}</span>}
+      {renderIcon ? (
+        renderIcon(speaking || loading)
+      ) : (
+        <span aria-hidden="true">{speaking || loading ? '■' : '▶'}</span>
+      )}
     </button>
   );
 }

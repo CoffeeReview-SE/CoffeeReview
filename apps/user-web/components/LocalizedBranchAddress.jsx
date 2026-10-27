@@ -1,7 +1,7 @@
-import { useEffect, useRef, useState } from "react";
-import { useLanguage } from "../contexts/LanguageContext.jsx";
-import { getOfflineAddressTranslation } from "../i18n/offlineAddressTranslations.js";
-import { getUserApi } from "../../shared/api/userApi.js";
+import { useEffect, useRef, useState } from 'react';
+import { useLanguage } from '../contexts/LanguageProvider.jsx';
+import { getOfflineAddressTranslation } from '../i18n/addressTranslationsOffline.js';
+import { getUserApi } from '../../shared/api/userApi.js';
 
 const translations = new Map();
 const pendingTranslations = new Map();
@@ -16,14 +16,16 @@ async function translateBranchAddress(branchId, address, languageCode) {
   if (!request) {
     request = getUserApi(
       `/api/localization/branches/${encodeURIComponent(String(branchId))}/translations/${encodeURIComponent(languageCode)}`,
-      { method: "POST" }
-    ).then(result => {
-      if (typeof result.address !== "string" || !result.address.trim()) {
-        throw new Error("The translation response did not contain an address.");
-      }
-      translations.set(key, result.address);
-      return result.address;
-    }).finally(() => pendingTranslations.delete(key));
+      { method: 'POST' },
+    )
+      .then((result) => {
+        if (typeof result.address !== 'string' || !result.address.trim()) {
+          throw new Error('The translation response did not contain an address.');
+        }
+        translations.set(key, result.address);
+        return result.address;
+      })
+      .finally(() => pendingTranslations.delete(key));
     pendingTranslations.set(key, request);
   }
   return request;
@@ -33,35 +35,43 @@ export default function LocalizedBranchAddress({ branchId, address, languageCode
   const ref = useRef(null);
   const { t } = useLanguage();
   const [result, setResult] = useState(null);
-  const sourceAddress = address || "";
+  const sourceAddress = address || '';
   const key = `${branchId}:${languageCode}:${sourceAddress}`;
 
   useEffect(() => {
     let active = true;
-    setResult({ key, address: sourceAddress, status: "idle" });
-    if (!branchId || !sourceAddress || languageCode === "vi") return () => { active = false; };
+    setResult({ key, address: sourceAddress, status: 'idle' });
+    if (!branchId || !sourceAddress || languageCode === 'vi')
+      return () => {
+        active = false;
+      };
 
     const loadTranslation = () => {
-      if (active) setResult({ key, address: sourceAddress, status: "loading" });
+      if (active) setResult({ key, address: sourceAddress, status: 'loading' });
       translateBranchAddress(branchId, sourceAddress, languageCode)
-        .then(translatedAddress => {
-          if (active) setResult({ key, address: translatedAddress, status: "done" });
+        .then((translatedAddress) => {
+          if (active) setResult({ key, address: translatedAddress, status: 'done' });
         })
         .catch(() => {
-          if (active) setResult({ key, address: sourceAddress, status: "error" });
+          if (active) setResult({ key, address: sourceAddress, status: 'error' });
         });
     };
 
-    if (typeof IntersectionObserver === "undefined") {
+    if (typeof IntersectionObserver === 'undefined') {
       loadTranslation();
-      return () => { active = false; };
+      return () => {
+        active = false;
+      };
     }
 
-    const observer = new IntersectionObserver(entries => {
-      if (!entries.some(entry => entry.isIntersecting)) return;
-      observer.disconnect();
-      loadTranslation();
-    }, { threshold: 0.01 });
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (!entries.some((entry) => entry.isIntersecting)) return;
+        observer.disconnect();
+        loadTranslation();
+      },
+      { threshold: 0.01 },
+    );
     if (ref.current) observer.observe(ref.current);
 
     return () => {
@@ -76,8 +86,12 @@ export default function LocalizedBranchAddress({ branchId, address, languageCode
   return (
     <span ref={ref} className={className}>
       <span>{displayAddress}</span>
-      {currentResult?.status === "loading" && <small role="status">{t("map.translatingAddress")}</small>}
-      {currentResult?.status === "error" && <small role="status">{t("map.addressTranslationUnavailable")}</small>}
+      {currentResult?.status === 'loading' && (
+        <small role="status">{t('map.translatingAddress')}</small>
+      )}
+      {currentResult?.status === 'error' && (
+        <small role="status">{t('map.addressTranslationUnavailable')}</small>
+      )}
     </span>
   );
 }

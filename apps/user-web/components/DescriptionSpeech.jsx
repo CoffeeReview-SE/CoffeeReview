@@ -1,10 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { trackAudio } from '../../analytics/tracking.js';
-import { useLanguage } from '../contexts/LanguageContext.jsx';
-import { detailText } from '../i18n/brandDetailTranslations.js';
+import { useLanguage } from '../contexts/LanguageProvider.jsx';
+import { detailText } from '../i18n/brandDetailsI18n.js';
 import { getUserApi } from '../../shared/api/userApi.js';
 import { getSpeechVoice, speechLanguageTag } from '../utils/speechVoice.js';
-import { getOfflineBrandTranslation } from '../i18n/offlineBrandTranslations.js';
+import { getOfflineBrandTranslation } from '../i18n/brandTranslationsOffline.js';
 
 export default function DescriptionSpeech({ brandId, brandName, description, sourceLanguageCode }) {
   const { languageCode: uiLanguage } = useLanguage();
@@ -17,10 +17,17 @@ export default function DescriptionSpeech({ brandId, brandName, description, sou
   const [error, setError] = useState('');
   const utterance = useRef(null);
   const supported = typeof window !== 'undefined' && 'speechSynthesis' in window;
-  useEffect(() => () => {
-    requestId.current += 1;
-    if (utterance.current) { utterance.current.onstart = null; window.speechSynthesis?.cancel(); utterance.current = null; }
-  }, [description, brandId, sourceDescriptionLanguage, uiLanguage]);
+  useEffect(
+    () => () => {
+      requestId.current += 1;
+      if (utterance.current) {
+        utterance.current.onstart = null;
+        window.speechSynthesis?.cancel();
+        utterance.current = null;
+      }
+    },
+    [description, brandId, sourceDescriptionLanguage, uiLanguage],
+  );
   useEffect(() => {
     setLoading(false);
     setSpeaking(false);
@@ -45,15 +52,19 @@ export default function DescriptionSpeech({ brandId, brandName, description, sou
       if (offlineTranslation) {
         speechText = offlineTranslation;
         voiceLanguage = voiceTargetLanguage;
-      } else try {
-        const translated = await getUserApi(`/api/localization/brands/${brandId}/translations/${voiceTargetLanguage}`, { method: 'POST' });
-        if (translated.description) {
-          speechText = translated.description;
-          voiceLanguage = voiceTargetLanguage;
+      } else
+        try {
+          const translated = await getUserApi(
+            `/api/localization/brands/${brandId}/translations/${voiceTargetLanguage}`,
+            { method: 'POST' },
+          );
+          if (translated.description) {
+            speechText = translated.description;
+            voiceLanguage = voiceTargetLanguage;
+          }
+        } catch {
+          // Speak the currently displayed description if device-language translation is unavailable.
         }
-      } catch {
-        // Speak the currently displayed description if device-language translation is unavailable.
-      }
     }
     if (request !== requestId.current) return;
     let voice;
@@ -74,13 +85,23 @@ export default function DescriptionSpeech({ brandId, brandName, description, sou
     let counted = false;
     speech.onstart = () => {
       if (request !== requestId.current || utterance.current !== speech || counted) return;
-      counted = true; setLoading(false); setSpeaking(true);
+      counted = true;
+      setLoading(false);
+      setSpeaking(true);
       trackAudio({ brandId, languageCode: voiceLanguage, eventId });
     };
-    speech.onend = () => { if (request === requestId.current && utterance.current === speech) { setLoading(false); setSpeaking(false); utterance.current = null; } };
-    speech.onerror = event => {
+    speech.onend = () => {
+      if (request === requestId.current && utterance.current === speech) {
+        setLoading(false);
+        setSpeaking(false);
+        utterance.current = null;
+      }
+    };
+    speech.onerror = (event) => {
       if (request !== requestId.current || utterance.current !== speech) return;
-      setLoading(false); setSpeaking(false); utterance.current = null;
+      setLoading(false);
+      setSpeaking(false);
+      utterance.current = null;
       if (!['canceled', 'interrupted'].includes(event.error)) setError(dt('speechError'));
     };
     window.speechSynthesis.cancel();
@@ -94,9 +115,23 @@ export default function DescriptionSpeech({ brandId, brandName, description, sou
     }
   };
   if (!description) return <p>{dt('noAudio')}</p>;
-  return <div className="bd-audio">
-    <button className="bd-play" onClick={read} disabled={!supported} aria-pressed={speaking || loading} aria-label={speaking || loading ? dt('stopReading') : dt('readDescription')}>{speaking ? '■' : loading ? '…' : '▶'}</button>
-    <span>{supported ? dt('readIn', { language: voiceTargetLanguage.toUpperCase() }) : dt('unsupportedSpeech')}</span>
-    {error && <span role="alert">{error}</span>}
-  </div>;
+  return (
+    <div className="bd-audio">
+      <button
+        className="bd-play"
+        onClick={read}
+        disabled={!supported}
+        aria-pressed={speaking || loading}
+        aria-label={speaking || loading ? dt('stopReading') : dt('readDescription')}
+      >
+        {speaking ? '■' : loading ? '…' : '▶'}
+      </button>
+      <span>
+        {supported
+          ? dt('readIn', { language: voiceTargetLanguage.toUpperCase() })
+          : dt('unsupportedSpeech')}
+      </span>
+      {error && <span role="alert">{error}</span>}
+    </div>
+  );
 }

@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useRef } from "react";
-import { LANGUAGES, useLanguage } from "../contexts/LanguageContext.jsx";
-import { localizedCategory, screenText } from "../i18n/brandDetailTranslations.js";
-import { getUserApi, toBrandCard } from "../../shared/api/userApi.js";
-import BrandDescriptionAudio from "../components/BrandDescriptionAudio.jsx";
+import React, { useState, useEffect, useRef } from 'react';
+import { LANGUAGES, useLanguage } from '../contexts/LanguageProvider.jsx';
+import { localizedCategory, screenText } from '../i18n/brandDetailsI18n.js';
+import { getUserApi, toBrandCard } from '../../shared/api/userApi.js';
+import BrandDescriptionAudio from '../components/BrandDescriptionAudio.jsx';
 
 /* ==========================================================================
    [PHẦN CHÈN THÊM - ĐỂ MÌNH CHÈN]: IMPORT HÌNH ẢNH TỪ 2 THƯ MỤC CỦA BẠN
@@ -10,85 +10,118 @@ import BrandDescriptionAudio from "../components/BrandDescriptionAudio.jsx";
    ========================================================================== */
 
 // 1. Ảnh Không gian (image coffee shop/)
-import coverHighlands from "../../../public/image/highlands-coffee/cover.jpg";
-import coverKatinat from "../../../public/image/katinat/cover.jpg";
-import coverKoi from "../../../public/image/koi-the/cover.jpg";
-import coverMilano from "../../../public/image/milano-coffee/cover.jpg";
-import coverPheLa from "../../../public/image/phe-la/cover.jpg";
-import coverPhucLong from "../../../public/image/phuc-long/cover.jpg";
-import coverStarbucks from "../../../public/image/starbucks/cover.jpg";
-import coverTheCoffeeHouse from "../../../public/image/the-coffee-house/cover.jpg";
-import coverTrungNguyen from "../../../public/image/trung-nguyen/cover.jpg";
-import coverVivaStar from "../../../public/image/viva-star-coffee/cover.jpg";
+import coverHighlands from '../../../public/image/highlands-coffee/cover.jpg';
+import coverKatinat from '../../../public/image/katinat/cover.jpg';
+import coverKoi from '../../../public/image/koi-the/cover.jpg';
+import coverMilano from '../../../public/image/milano-coffee/cover.jpg';
+import coverPheLa from '../../../public/image/phe-la/cover.jpg';
+import coverPhucLong from '../../../public/image/phuc-long/cover.jpg';
+import coverStarbucks from '../../../public/image/starbucks/cover.jpg';
+import coverTheCoffeeHouse from '../../../public/image/the-coffee-house/cover.jpg';
+import coverTrungNguyen from '../../../public/image/trung-nguyen/cover.jpg';
+import coverVivaStar from '../../../public/image/viva-star-coffee/cover.jpg';
 
 // 2. Ảnh Logo (image logo/)
-import logoHighlands from "../../../public/image/highlands-coffee/logo.jpg";
-import logoKatinat from "../../../public/image/katinat/logo.png";
-import logoKoi from "../../../public/image/koi-the/logo.jpg";
-import logoMilano from "../../../public/image/milano-coffee/logo.png";
-import logoPheLa from "../../../public/image/phe-la/logo.jpg";
-import logoPhucLong from "../../../public/image/phuc-long/logo.jpg";
-import logoStarbucks from "../../../public/image/starbucks/logo.png";
-import logoTheCoffeeHouse from "../../../public/image/the-coffee-house/logo.jpg";
-import logoTrungNguyen from "../../../public/image/trung-nguyen/logo.png";
-import logoVivaStar from "../../../public/image/viva-star-coffee/logo.png";
+import logoHighlands from '../../../public/image/highlands-coffee/logo.jpg';
+import logoKatinat from '../../../public/image/katinat/logo.png';
+import logoKoi from '../../../public/image/koi-the/logo.jpg';
+import logoMilano from '../../../public/image/milano-coffee/logo.png';
+import logoPheLa from '../../../public/image/phe-la/logo.jpg';
+import logoPhucLong from '../../../public/image/phuc-long/logo.jpg';
+import logoStarbucks from '../../../public/image/starbucks/logo.png';
+import logoTheCoffeeHouse from '../../../public/image/the-coffee-house/logo.jpg';
+import logoTrungNguyen from '../../../public/image/trung-nguyen/logo.png';
+import logoVivaStar from '../../../public/image/viva-star-coffee/logo.png';
 
 const DATABASE_BRANDS_IMAGES = {
-  "phuc-long": { cover: coverPhucLong, image: logoPhucLong },
-  "highlands-coffee": { cover: coverHighlands, image: logoHighlands },
-  "trung-nguyen": { cover: coverTrungNguyen, image: logoTrungNguyen },
-  "katinat": { cover: coverKatinat, image: logoKatinat },
-  "koi-the": { cover: coverKoi, image: logoKoi },
-  "phe-la": { cover: coverPheLa, image: logoPheLa },
-  "milano-coffee": { cover: coverMilano, image: logoMilano },
-  "viva-star-coffee": { cover: coverVivaStar, image: logoVivaStar },
-  "the-coffee-house": { cover: coverTheCoffeeHouse, image: logoTheCoffeeHouse },
-  "starbucks": { cover: coverStarbucks, image: logoStarbucks }
+  'phuc-long': { cover: coverPhucLong, image: logoPhucLong },
+  'highlands-coffee': { cover: coverHighlands, image: logoHighlands },
+  'trung-nguyen': { cover: coverTrungNguyen, image: logoTrungNguyen },
+  katinat: { cover: coverKatinat, image: logoKatinat },
+  'koi-the': { cover: coverKoi, image: logoKoi },
+  'phe-la': { cover: coverPheLa, image: logoPheLa },
+  'milano-coffee': { cover: coverMilano, image: logoMilano },
+  'viva-star-coffee': { cover: coverVivaStar, image: logoVivaStar },
+  'the-coffee-house': { cover: coverTheCoffeeHouse, image: logoTheCoffeeHouse },
+  starbucks: { cover: coverStarbucks, image: logoStarbucks },
 };
 
 function getDatabaseBrandImages(brandId, brandName) {
-  const idKey = String(brandId || "").toLowerCase().trim();
+  const idKey = String(brandId || '')
+    .toLowerCase()
+    .trim();
   if (DATABASE_BRANDS_IMAGES[idKey]) return DATABASE_BRANDS_IMAGES[idKey];
 
-  const nameKey = String(brandName || "")
+  const nameKey = String(brandName || '')
     .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9]/g, "-")
-    .replace(/-+/g, "-")
-    .replace(/^-|-$/g, "");
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
 
   if (DATABASE_BRANDS_IMAGES[nameKey]) return DATABASE_BRANDS_IMAGES[nameKey];
 
-  if (nameKey.includes("phuc-long") || nameKey.includes("phuclong")) return DATABASE_BRANDS_IMAGES["phuc-long"];
-  if (nameKey.includes("highland")) return DATABASE_BRANDS_IMAGES["highlands-coffee"];
-  if (nameKey.includes("trung-nguyen")) return DATABASE_BRANDS_IMAGES["trung-nguyen"];
-  if (nameKey.includes("katinat")) return DATABASE_BRANDS_IMAGES["katinat"];
-  if (nameKey.includes("koi")) return DATABASE_BRANDS_IMAGES["koi-the"];
-  if (nameKey.includes("phe-la")) return DATABASE_BRANDS_IMAGES["phe-la"];
-  if (nameKey.includes("milano")) return DATABASE_BRANDS_IMAGES["milano-coffee"];
-  if (nameKey.includes("viva")) return DATABASE_BRANDS_IMAGES["viva-star-coffee"];
-  if (nameKey.includes("coffee-house") || nameKey.includes("tch")) return DATABASE_BRANDS_IMAGES["the-coffee-house"];
-  if (nameKey.includes("starbuck")) return DATABASE_BRANDS_IMAGES["starbucks"];
+  if (nameKey.includes('phuc-long') || nameKey.includes('phuclong'))
+    return DATABASE_BRANDS_IMAGES['phuc-long'];
+  if (nameKey.includes('highland')) return DATABASE_BRANDS_IMAGES['highlands-coffee'];
+  if (nameKey.includes('trung-nguyen')) return DATABASE_BRANDS_IMAGES['trung-nguyen'];
+  if (nameKey.includes('katinat')) return DATABASE_BRANDS_IMAGES['katinat'];
+  if (nameKey.includes('koi')) return DATABASE_BRANDS_IMAGES['koi-the'];
+  if (nameKey.includes('phe-la')) return DATABASE_BRANDS_IMAGES['phe-la'];
+  if (nameKey.includes('milano')) return DATABASE_BRANDS_IMAGES['milano-coffee'];
+  if (nameKey.includes('viva')) return DATABASE_BRANDS_IMAGES['viva-star-coffee'];
+  if (nameKey.includes('coffee-house') || nameKey.includes('tch'))
+    return DATABASE_BRANDS_IMAGES['the-coffee-house'];
+  if (nameKey.includes('starbuck')) return DATABASE_BRANDS_IMAGES['starbucks'];
 
   return null;
 }
 
 const paths = {
-  search: <><circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" /></>,
-  pin: <><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z" /><circle cx="12" cy="10" r="2.5" /></>,
+  search: (
+    <>
+      <circle cx="11" cy="11" r="7" />
+      <path d="m21 21-4.3-4.3" />
+    </>
+  ),
+  pin: (
+    <>
+      <path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z" />
+      <circle cx="12" cy="10" r="2.5" />
+    </>
+  ),
   play: <path d="M8 5v14l11-7z" fill="currentColor" stroke="none" />,
   chevron: <path d="m6 9 6 6 6-6" />,
-  globe: <><circle cx="12" cy="12" r="9" /><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18" /></>,
-  cup: <path d="M4 9h13v5a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5zM17 10h2a2 2 0 0 1 0 4h-2M3 21h16M8 3c0 2 2 2 2 4M12 3c0 2 2 2 2 4" />,
-  filter: <path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z" />
+  globe: (
+    <>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18" />
+    </>
+  ),
+  cup: (
+    <path d="M4 9h13v5a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5zM17 10h2a2 2 0 0 1 0 4h-2M3 21h16M8 3c0 2 2 2 2 4M12 3c0 2 2 2 2 4" />
+  ),
+  filter: <path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z" />,
 };
 
 const Icon = ({ n, size = 18 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{paths[n]}</svg>
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="1.8"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
+    {paths[n]}
+  </svg>
 );
 
-function Header({ active = "brands", go }) {
+function Header({ active = 'brands', go }) {
   const { languageCode, setLanguageCode, t } = useLanguage();
   const lang = languageCode.toUpperCase();
   const [isOpen, setIsOpen] = useState(false);
@@ -103,29 +136,30 @@ function Header({ active = "brands", go }) {
         setIsOpen(false);
       }
     };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const items = [["home", t("nav.home")], ["brands", t("nav.brands")], ["map", t("nav.map")], ["suggestions", t("nav.suggestions")]];
-  
+  const items = [
+    ['home', t('nav.home')],
+    ['brands', t('nav.brands')],
+    ['map', t('nav.map')],
+    ['suggestions', t('nav.suggestions')],
+  ];
+
   return (
     <header className="hp-bar">
-      <button className="hp-logo" onClick={() => go("home")}>
+      <button className="hp-logo" onClick={() => go('home')}>
         <Icon n="cup" size={30} />
         <span>
           <b>SaigonCoffee</b>
-          <small>{t("brand.tagline")}</small>
+          <small>{t('brand.tagline')}</small>
         </span>
       </button>
 
-      <nav className="hp-nav" aria-label={t("a11y.mainNavigation")}>
+      <nav className="hp-nav" aria-label={t('a11y.mainNavigation')}>
         {items.map(([k, label]) => (
-          <button 
-            key={k} 
-            aria-current={active === k ? "page" : undefined} 
-            onClick={() => go(k)}
-          >
+          <button key={k} aria-current={active === k ? 'page' : undefined} onClick={() => go(k)}>
             {label}
           </button>
         ))}
@@ -134,24 +168,24 @@ function Header({ active = "brands", go }) {
       <div className="hp-tools">
         {/* Custom Dropdown Ngôn Ngữ */}
         <div className="hp-lang-dropdown" ref={dropdownRef}>
-          <button 
-            className="hp-lang-btn" 
-            onClick={() => setIsOpen(!isOpen)} 
+          <button
+            className="hp-lang-btn"
+            onClick={() => setIsOpen(!isOpen)}
             aria-expanded={isOpen}
-            aria-label={t("a11y.chooseLanguage")}
+            aria-label={t('a11y.chooseLanguage')}
           >
             <span>{lang}</span>
-            <span className={`hp-chevron-icon ${isOpen ? "open" : ""}`}>
+            <span className={`hp-chevron-icon ${isOpen ? 'open' : ''}`}>
               <Icon n="chevron" size={12} />
             </span>
           </button>
-          
+
           {isOpen && (
             <div className="hp-lang-menu">
               {languages.map((item) => (
                 <button
                   key={item.code}
-                  className={`hp-lang-item ${lang === item.code.toUpperCase() ? "active" : ""}`}
+                  className={`hp-lang-item ${lang === item.code.toUpperCase() ? 'active' : ''}`}
                   onClick={() => {
                     setLanguageCode(item.code);
                     setIsOpen(false);
@@ -181,7 +215,13 @@ function Cup() {
       <ellipse cx="170" cy="196" rx="160" ry="22" fill="#1B0E07" opacity=".5" />
       <ellipse cx="170" cy="184" rx="150" ry="22" fill="#3B2617" />
       <ellipse cx="170" cy="179" rx="122" ry="14" fill="#54392A" />
-      <path d="M232 70c58-8 66 50 10 72" fill="none" stroke="#6A503A" strokeWidth="13" strokeLinecap="round" />
+      <path
+        d="M232 70c58-8 66 50 10 72"
+        fill="none"
+        stroke="#6A503A"
+        strokeWidth="13"
+        strokeLinecap="round"
+      />
       <path d="M92 58c0 78 26 124 78 124s78-46 78-124z" fill="url(#hp-cupg)" />
       <ellipse cx="170" cy="58" rx="78" ry="15" fill="#B39674" />
       <ellipse cx="170" cy="60" rx="68" ry="11" fill="#24120A" />
@@ -195,21 +235,50 @@ function BrandBadge({ item }) {
   const resolvedLogo = item.logo || item.image || dbBrandImgs?.image;
 
   if (resolvedLogo) {
-    const isKoiOrTrungNguyen = String(item.id || "").toLowerCase().includes("koi") || 
-                               String(item.name || "").toLowerCase().includes("koi") ||
-                               String(item.id || "").toLowerCase().includes("trung") || 
-                               String(item.name || "").toLowerCase().includes("trung");
+    const isKoiOrTrungNguyen =
+      String(item.id || '')
+        .toLowerCase()
+        .includes('koi') ||
+      String(item.name || '')
+        .toLowerCase()
+        .includes('koi') ||
+      String(item.id || '')
+        .toLowerCase()
+        .includes('trung') ||
+      String(item.name || '')
+        .toLowerCase()
+        .includes('trung');
 
     const logoStyle = isKoiOrTrungNguyen
-      ? { width: "78px", height: "78px", borderRadius: "50%", objectFit: "contain", background: "#fff", padding: "4px", border: "2px solid rgba(255, 255, 255, 0.85)" }
-      : { width: "78px", height: "78px", borderRadius: "50%", objectFit: "cover", border: "2px solid rgba(255, 255, 255, 0.85)" };
+      ? {
+          width: '78px',
+          height: '78px',
+          borderRadius: '50%',
+          objectFit: 'contain',
+          background: '#fff',
+          padding: '4px',
+          border: '2px solid rgba(255, 255, 255, 0.85)',
+        }
+      : {
+          width: '78px',
+          height: '78px',
+          borderRadius: '50%',
+          objectFit: 'cover',
+          border: '2px solid rgba(255, 255, 255, 0.85)',
+        };
 
-    return <img src={resolvedLogo} alt={screenText(languageCode, "brandLogo", { name: item.name })} style={logoStyle} />;
+    return (
+      <img
+        src={resolvedLogo}
+        alt={screenText(languageCode, 'brandLogo', { name: item.name })}
+        style={logoStyle}
+      />
+    );
   }
 
   const lines = item.mark || [item.name];
   return (
-    <div className="bl-badge-circle" style={{ backgroundColor: item.badge || "#2B3A2A" }}>
+    <div className="bl-badge-circle" style={{ backgroundColor: item.badge || '#2B3A2A' }}>
       {lines.map((line, idx) => (
         <span key={idx}>{line}</span>
       ))}
@@ -222,8 +291,12 @@ function BrandCard({ brand, onSelect, languageCode }) {
   const dbImgs = getDatabaseBrandImages(brand.id, brand.name);
   const resolvedCover = brand.cover || dbImgs?.cover;
 
-  const heroStyle = resolvedCover 
-    ? { backgroundImage: `linear-gradient(rgba(0,0,0,.15),rgba(0,0,0,.25)),url(${resolvedCover})`, backgroundSize: "cover", backgroundPosition: "center" }
+  const heroStyle = resolvedCover
+    ? {
+        backgroundImage: `linear-gradient(rgba(0,0,0,.15),rgba(0,0,0,.25)),url(${resolvedCover})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+      }
     : undefined;
 
   return (
@@ -233,16 +306,17 @@ function BrandCard({ brand, onSelect, languageCode }) {
         <BrandDescriptionAudio
           brand={brand}
           className="bl-play-btn"
-          playLabel={screenText(languageCode, "listenDescription", { name: brand.name })}
-          stopLabel={screenText(languageCode, "stopDescription", { name: brand.name })}
-          renderIcon={speaking => <Icon n={speaking ? "pause" : "play"} size={14} />}
+          playLabel={screenText(languageCode, 'listenDescription', { name: brand.name })}
+          stopLabel={screenText(languageCode, 'stopDescription', { name: brand.name })}
+          renderIcon={(speaking) => <Icon n={speaking ? 'pause' : 'play'} size={14} />}
         />
       </div>
       <div className="bl-card-info">
         <h3>{brand.name}</h3>
         <p className="bl-card-type">{localizedCategory(brand.type, languageCode)}</p>
         <p className="bl-card-branch">
-          <Icon n="pin" size={14} /> {screenText(languageCode, "branchCount", { count: brand.branchCount })}
+          <Icon n="pin" size={14} />{' '}
+          {screenText(languageCode, 'branchCount', { count: brand.branchCount })}
         </p>
       </div>
     </div>
@@ -252,29 +326,34 @@ function BrandCard({ brand, onSelect, languageCode }) {
 export default function BrandListPage({ onSelectBrand, onNavigate }) {
   const { languageCode } = useLanguage();
   const st = (key, values) => screenText(languageCode, key, values);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedFilter, setSelectedFilter] = useState("all");
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedFilter, setSelectedFilter] = useState('all');
   const [brands, setBrands] = useState([]);
   const [loadError, setLoadError] = useState(false);
 
   useEffect(() => {
     const controller = new AbortController();
-    getUserApi("/api/catalog/brands", { signal: controller.signal })
-      .then(rows => { if (Array.isArray(rows)) setBrands(rows.map(toBrandCard)); })
-      .catch(() => { if (!controller.signal.aborted) setLoadError(true); });
+    getUserApi('/api/catalog/brands', { signal: controller.signal })
+      .then((rows) => {
+        if (Array.isArray(rows)) setBrands(rows.map(toBrandCard));
+      })
+      .catch(() => {
+        if (!controller.signal.aborted) setLoadError(true);
+      });
     return () => controller.abort();
   }, []);
 
-  const go = key => {
+  const go = (key) => {
     if (onNavigate) {
       onNavigate(key);
     }
   };
 
   const filteredBrands = brands.filter((b) => {
-    const matchesSearch = b.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          b.type.toLowerCase().includes(searchTerm.toLowerCase());
-    if (selectedFilter === "all") return matchesSearch;
+    const matchesSearch =
+      b.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      b.type.toLowerCase().includes(searchTerm.toLowerCase());
+    if (selectedFilter === 'all') return matchesSearch;
     return matchesSearch && b.type.toLowerCase().includes(selectedFilter.toLowerCase());
   });
 
@@ -286,18 +365,18 @@ export default function BrandListPage({ onSelectBrand, onNavigate }) {
 
       <section className="hp-hero">
         <div className="hp-hero-in">
-          <h1>{st("brandTitle")}</h1>
-          <p>{st("brandIntro")}</p>
+          <h1>{st('brandTitle')}</h1>
+          <p>{st('brandIntro')}</p>
 
-          <form className="hp-search" role="search" onSubmit={e => e.preventDefault()}>
+          <form className="hp-search" role="search" onSubmit={(e) => e.preventDefault()}>
             <input
               type="text"
-              placeholder={st("searchPlaceholder")}
+              placeholder={st('searchPlaceholder')}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              aria-label={st("search")}
+              aria-label={st('search')}
             />
-            <button aria-label={st("search")}>
+            <button aria-label={st('search')}>
               <Icon n="search" size={18} />
             </button>
           </form>
@@ -307,26 +386,26 @@ export default function BrandListPage({ onSelectBrand, onNavigate }) {
 
       <main className="bl-main">
         <div className="bl-section-header">
-          <h2>{st("allBrands", { count: filteredBrands.length })}</h2>
+          <h2>{st('allBrands', { count: filteredBrands.length })}</h2>
 
           <div className="bl-filter-tabs">
-            <button 
-              className={selectedFilter === "all" ? "active" : ""} 
-              onClick={() => setSelectedFilter("all")}
+            <button
+              className={selectedFilter === 'all' ? 'active' : ''}
+              onClick={() => setSelectedFilter('all')}
             >
-              {st("all")}
+              {st('all')}
             </button>
-            <button 
-              className={selectedFilter === "trà" ? "active" : ""} 
-              onClick={() => setSelectedFilter("trà")}
+            <button
+              className={selectedFilter === 'trà' ? 'active' : ''}
+              onClick={() => setSelectedFilter('trà')}
             >
-              {st("teaCoffee")}
+              {st('teaCoffee')}
             </button>
-            <button 
-              className={selectedFilter === "bánh" ? "active" : ""} 
-              onClick={() => setSelectedFilter("bánh")}
+            <button
+              className={selectedFilter === 'bánh' ? 'active' : ''}
+              onClick={() => setSelectedFilter('bánh')}
             >
-              {st("coffeeCake")}
+              {st('coffeeCake')}
             </button>
           </div>
         </div>
@@ -334,13 +413,18 @@ export default function BrandListPage({ onSelectBrand, onNavigate }) {
         {filteredBrands.length > 0 ? (
           <div className="bl-grid">
             {filteredBrands.map((brand) => (
-              <BrandCard key={brand.id} brand={brand} onSelect={onSelectBrand} languageCode={languageCode} />
+              <BrandCard
+                key={brand.id}
+                brand={brand}
+                onSelect={onSelectBrand}
+                languageCode={languageCode}
+              />
             ))}
           </div>
         ) : (
           <div className="bl-empty">
             <Icon n="cup" size={48} />
-            <p>{loadError ? st("loadBrandsError") : st("noBrands", { query: searchTerm })}</p>
+            <p>{loadError ? st('loadBrandsError') : st('noBrands', { query: searchTerm })}</p>
           </div>
         )}
       </main>

@@ -1,17 +1,17 @@
-import React from "react";
-import { createRoot } from "react-dom/client";
-import { BrowserRouter } from "react-router-dom";
-import App from "./App.jsx";
-import { LanguageProvider } from "./user-web/contexts/LanguageContext.jsx";
-import "./config/leaflet.js";
-import "./index.css"; // do not import the Vite template's App.css any more
+import React from 'react';
+import { createRoot } from 'react-dom/client';
+import { BrowserRouter } from 'react-router-dom';
+import App from './App.jsx';
+import { LanguageProvider } from './user-web/contexts/LanguageProvider.jsx';
+import './config/leaflet.js';
+import './index.css'; // do not import the Vite template's App.css any more
 import 'leaflet/dist/leaflet.css';
-createRoot(document.getElementById("root")).render(
+createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <BrowserRouter>
       <LanguageProvider>
         <App />
       </LanguageProvider>
     </BrowserRouter>
-  </React.StrictMode>
+  </React.StrictMode>,
 );

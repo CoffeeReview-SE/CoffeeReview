@@ -1,81 +1,124 @@
-import React, { useEffect, useRef, useState } from "react";
-import { LANGUAGES, useLanguage } from "../contexts/LanguageContext.jsx";
-import { localizedCategory, screenText } from "../i18n/brandDetailTranslations.js";
-import { getUserApi, toBrandCard } from "../../shared/api/userApi.js";
-import { emptySuggestion, getBrandSuggestionValues, getSuggestionBrands, isExistingBrandFieldReadOnly, suggestionFields, suggestionText, validateSuggestion } from "../../shared/suggestions/suggestionForm.mjs";
-import SuggestionImageField from "../../shared/suggestions/SuggestionImageField.jsx";
-import { imageFields } from "../../shared/suggestions/suggestionImages.mjs";
+import React, { useEffect, useRef, useState } from 'react';
+import { LANGUAGES, useLanguage } from '../contexts/LanguageProvider.jsx';
+import { localizedCategory, screenText } from '../i18n/brandDetailsI18n.js';
+import { getUserApi, toBrandCard } from '../../shared/api/userApi.js';
+import {
+  emptySuggestion,
+  getBrandSuggestionValues,
+  getSuggestionBrands,
+  isExistingBrandFieldReadOnly,
+  suggestionFields,
+  suggestionText,
+  validateSuggestion,
+} from '../../shared/suggestions/suggestionForm.mjs';
+import SuggestionImageField from '../../shared/suggestions/SuggestionImageField.jsx';
+import { imageFields } from '../../shared/suggestions/suggestionImages.mjs';
 
 // 2. Ảnh Logo (image logo/)
-import logoHighlands from "../../../public/image/highlands-coffee/logo.jpg";
-import logoKatinat from "../../../public/image/katinat/logo.png";
-import logoKoi from "../../../public/image/koi-the/logo.jpg";
-import logoMilano from "../../../public/image/milano-coffee/logo.png";
-import logoPheLa from "../../../public/image/phe-la/logo.jpg";
-import logoPhucLong from "../../../public/image/phuc-long/logo.jpg";
-import logoStarbucks from "../../../public/image/starbucks/logo.png";
-import logoTheCoffeeHouse from "../../../public/image/the-coffee-house/logo.jpg";
-import logoTrungNguyen from "../../../public/image/trung-nguyen/logo.png";
-import logoVivaStar from "../../../public/image/viva-star-coffee/logo.png";
+import logoHighlands from '../../../public/image/highlands-coffee/logo.jpg';
+import logoKatinat from '../../../public/image/katinat/logo.png';
+import logoKoi from '../../../public/image/koi-the/logo.jpg';
+import logoMilano from '../../../public/image/milano-coffee/logo.png';
+import logoPheLa from '../../../public/image/phe-la/logo.jpg';
+import logoPhucLong from '../../../public/image/phuc-long/logo.jpg';
+import logoStarbucks from '../../../public/image/starbucks/logo.png';
+import logoTheCoffeeHouse from '../../../public/image/the-coffee-house/logo.jpg';
+import logoTrungNguyen from '../../../public/image/trung-nguyen/logo.png';
+import logoVivaStar from '../../../public/image/viva-star-coffee/logo.png';
 
 const DATABASE_BRANDS_IMAGES = {
-  "phuc-long": { image: logoPhucLong },
-  "highlands-coffee": { image: logoHighlands },
-  "trung-nguyen": { image: logoTrungNguyen },
-  "katinat": { image: logoKatinat },
-  "koi-the": { image: logoKoi },
-  "phe-la": { image: logoPheLa },
-  "milano-coffee": { image: logoMilano },
-  "viva-star-coffee": { image: logoVivaStar },
-  "the-coffee-house": { image: logoTheCoffeeHouse },
-  "starbucks": { image: logoStarbucks }
+  'phuc-long': { image: logoPhucLong },
+  'highlands-coffee': { image: logoHighlands },
+  'trung-nguyen': { image: logoTrungNguyen },
+  katinat: { image: logoKatinat },
+  'koi-the': { image: logoKoi },
+  'phe-la': { image: logoPheLa },
+  'milano-coffee': { image: logoMilano },
+  'viva-star-coffee': { image: logoVivaStar },
+  'the-coffee-house': { image: logoTheCoffeeHouse },
+  starbucks: { image: logoStarbucks },
 };
 
 function getDatabaseBrandImages(brandId, brandName) {
-  const idKey = String(brandId || "").toLowerCase().trim();
+  const idKey = String(brandId || '')
+    .toLowerCase()
+    .trim();
   if (DATABASE_BRANDS_IMAGES[idKey]) return DATABASE_BRANDS_IMAGES[idKey];
 
-  const nameKey = String(brandName || "")
+  const nameKey = String(brandName || '')
     .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9]/g, "-")
-    .replace(/-+/g, "-")
-    .replace(/^-|-$/g, "");
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
 
   if (DATABASE_BRANDS_IMAGES[nameKey]) return DATABASE_BRANDS_IMAGES[nameKey];
 
-  if (nameKey.includes("phuc-long") || nameKey.includes("phuclong")) return DATABASE_BRANDS_IMAGES["phuc-long"];
-  if (nameKey.includes("highland")) return DATABASE_BRANDS_IMAGES["highlands-coffee"];
-  if (nameKey.includes("trung-nguyen")) return DATABASE_BRANDS_IMAGES["trung-nguyen"];
-  if (nameKey.includes("katinat")) return DATABASE_BRANDS_IMAGES["katinat"];
-  if (nameKey.includes("koi")) return DATABASE_BRANDS_IMAGES["koi-the"];
-  if (nameKey.includes("phe-la")) return DATABASE_BRANDS_IMAGES["phe-la"];
-  if (nameKey.includes("milano")) return DATABASE_BRANDS_IMAGES["milano-coffee"];
-  if (nameKey.includes("viva")) return DATABASE_BRANDS_IMAGES["viva-star-coffee"];
-  if (nameKey.includes("coffee-house") || nameKey.includes("tch")) return DATABASE_BRANDS_IMAGES["the-coffee-house"];
-  if (nameKey.includes("starbuck")) return DATABASE_BRANDS_IMAGES["starbucks"];
+  if (nameKey.includes('phuc-long') || nameKey.includes('phuclong'))
+    return DATABASE_BRANDS_IMAGES['phuc-long'];
+  if (nameKey.includes('highland')) return DATABASE_BRANDS_IMAGES['highlands-coffee'];
+  if (nameKey.includes('trung-nguyen')) return DATABASE_BRANDS_IMAGES['trung-nguyen'];
+  if (nameKey.includes('katinat')) return DATABASE_BRANDS_IMAGES['katinat'];
+  if (nameKey.includes('koi')) return DATABASE_BRANDS_IMAGES['koi-the'];
+  if (nameKey.includes('phe-la')) return DATABASE_BRANDS_IMAGES['phe-la'];
+  if (nameKey.includes('milano')) return DATABASE_BRANDS_IMAGES['milano-coffee'];
+  if (nameKey.includes('viva')) return DATABASE_BRANDS_IMAGES['viva-star-coffee'];
+  if (nameKey.includes('coffee-house') || nameKey.includes('tch'))
+    return DATABASE_BRANDS_IMAGES['the-coffee-house'];
+  if (nameKey.includes('starbuck')) return DATABASE_BRANDS_IMAGES['starbucks'];
 
   return null;
 }
 
 const paths = {
-  search: <><circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" /></>,
-  pin: <><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z" /><circle cx="12" cy="10" r="2.5" /></>,
+  search: (
+    <>
+      <circle cx="11" cy="11" r="7" />
+      <path d="m21 21-4.3-4.3" />
+    </>
+  ),
+  pin: (
+    <>
+      <path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z" />
+      <circle cx="12" cy="10" r="2.5" />
+    </>
+  ),
   chevron: <path d="m6 9 6 6 6-6" />,
-  cup: <path d="M4 9h13v5a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5zM17 10h2a2 2 0 0 1 0 4h-2M3 21h16M8 3c0 2 2 2 2 4M12 3c0 2 2 2 2 4" />,
+  cup: (
+    <path d="M4 9h13v5a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5zM17 10h2a2 2 0 0 1 0 4h-2M3 21h16M8 3c0 2 2 2 2 4M12 3c0 2 2 2 2 4" />
+  ),
   send: <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" />,
   check: <path d="M20 6L9 17l-5-5" />,
-  user: <><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></>,
-  phone: <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />,
-  store: <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+  user: (
+    <>
+      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+      <circle cx="12" cy="7" r="4" />
+    </>
+  ),
+  phone: (
+    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+  ),
+  store: <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />,
 };
 
 const Icon = ({ n, size = 18 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{paths[n]}</svg>
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="1.8"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
+    {paths[n]}
+  </svg>
 );
 
-function Header({ currentNav = "suggestions", onNavigate }) {
+function Header({ currentNav = 'suggestions', onNavigate }) {
   const { languageCode, setLanguageCode, t } = useLanguage();
   const lang = languageCode.toUpperCase();
   const [isOpen, setIsOpen] = useState(false);
@@ -89,11 +132,16 @@ function Header({ currentNav = "suggestions", onNavigate }) {
         setIsOpen(false);
       }
     };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const items = [["home", t("nav.home")], ["brands", t("nav.brands")], ["map", t("nav.map")], ["suggestions", t("nav.suggestions")]];
+  const items = [
+    ['home', t('nav.home')],
+    ['brands', t('nav.brands')],
+    ['map', t('nav.map')],
+    ['suggestions', t('nav.suggestions')],
+  ];
 
   const handleNavClick = (key) => {
     if (onNavigate) {
@@ -103,19 +151,19 @@ function Header({ currentNav = "suggestions", onNavigate }) {
 
   return (
     <header className="sg-bar">
-      <button className="sg-logo" onClick={() => handleNavClick("home")}>
+      <button className="sg-logo" onClick={() => handleNavClick('home')}>
         <Icon n="cup" size={30} />
         <span>
           <b>SaigonCoffee</b>
-          <small>{t("brand.tagline")}</small>
+          <small>{t('brand.tagline')}</small>
         </span>
       </button>
 
-      <nav className="sg-nav" aria-label={t("a11y.mainNavigation")}>
+      <nav className="sg-nav" aria-label={t('a11y.mainNavigation')}>
         {items.map(([k, label]) => (
           <button
             key={k}
-            aria-current={k === currentNav ? "page" : undefined}
+            aria-current={k === currentNav ? 'page' : undefined}
             onClick={() => handleNavClick(k)}
           >
             {label}
@@ -126,24 +174,24 @@ function Header({ currentNav = "suggestions", onNavigate }) {
       <div className="sg-tools">
         {/* Dropdown Ngôn Ngữ */}
         <div className="sg-lang-dropdown" ref={dropdownRef}>
-          <button 
-            className="sg-lang-btn" 
-            onClick={() => setIsOpen(!isOpen)} 
+          <button
+            className="sg-lang-btn"
+            onClick={() => setIsOpen(!isOpen)}
             aria-expanded={isOpen}
-            aria-label={t("a11y.chooseLanguage")}
+            aria-label={t('a11y.chooseLanguage')}
           >
             <span>{lang}</span>
-            <span className={`sg-chevron-icon ${isOpen ? "open" : ""}`}>
+            <span className={`sg-chevron-icon ${isOpen ? 'open' : ''}`}>
               <Icon n="chevron" size={12} />
             </span>
           </button>
-          
+
           {isOpen && (
             <div className="sg-lang-menu">
               {languages.map((item) => (
                 <button
                   key={item.code}
-                  className={`sg-lang-item ${lang === item.code.toUpperCase() ? "active" : ""}`}
+                  className={`sg-lang-item ${lang === item.code.toUpperCase() ? 'active' : ''}`}
                   onClick={() => {
                     setLanguageCode(item.code);
                     setIsOpen(false);
@@ -166,23 +214,67 @@ function Logo({ item, size }) {
   const resolvedLogo = item.logo || item.image || dbBrandImgs?.image;
 
   if (resolvedLogo) {
-    const isKoiOrTrungNguyen = String(item.id || "").toLowerCase().includes("koi") || 
-                               String(item.name || "").toLowerCase().includes("koi") ||
-                               String(item.id || "").toLowerCase().includes("trung") || 
-                               String(item.name || "").toLowerCase().includes("trung");
+    const isKoiOrTrungNguyen =
+      String(item.id || '')
+        .toLowerCase()
+        .includes('koi') ||
+      String(item.name || '')
+        .toLowerCase()
+        .includes('koi') ||
+      String(item.id || '')
+        .toLowerCase()
+        .includes('trung') ||
+      String(item.name || '')
+        .toLowerCase()
+        .includes('trung');
 
     const extraLogoStyle = isKoiOrTrungNguyen
-      ? { width: size, height: size, borderRadius: "50%", objectFit: "contain", background: "#fff", padding: "4px" }
-      : { width: size, height: size, borderRadius: "50%", objectFit: "cover" };
+      ? {
+          width: size,
+          height: size,
+          borderRadius: '50%',
+          objectFit: 'contain',
+          background: '#fff',
+          padding: '4px',
+        }
+      : { width: size, height: size, borderRadius: '50%', objectFit: 'cover' };
 
-    return <img src={resolvedLogo} alt={screenText(languageCode, "brandLogo", { name: item.name })} style={extraLogoStyle} />;
+    return (
+      <img
+        src={resolvedLogo}
+        alt={screenText(languageCode, 'brandLogo', { name: item.name })}
+        style={extraLogoStyle}
+      />
+    );
   }
 
   const big = size > 60;
-  const text = big ? (item.mark || [item.name]) : [item.name?.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase() || ""];
-  return <span className="bd-mark" style={{ width: size, height: size, background: item.badge || "#1F6B45", fontSize: big ? size * 0.13 : size * 0.34, boxShadow: big ? "inset 0 0 0 4px rgba(255,255,255,.85)" : "none" }}>
-    {text.map(l => <span key={l}>{l}</span>)}
-  </span>;
+  const text = big
+    ? item.mark || [item.name]
+    : [
+        item.name
+          ?.split(' ')
+          .map((w) => w[0])
+          .join('')
+          .slice(0, 2)
+          .toUpperCase() || '',
+      ];
+  return (
+    <span
+      className="bd-mark"
+      style={{
+        width: size,
+        height: size,
+        background: item.badge || '#1F6B45',
+        fontSize: big ? size * 0.13 : size * 0.34,
+        boxShadow: big ? 'inset 0 0 0 4px rgba(255,255,255,.85)' : 'none',
+      }}
+    >
+      {text.map((l) => (
+        <span key={l}>{l}</span>
+      ))}
+    </span>
+  );
 }
 
 function BrandBadge({ item }) {
@@ -199,39 +291,43 @@ export default function SuggestionsPage({ recentBrands = [], onNavigate }) {
   const [fieldErrors, setFieldErrors] = useState({});
   const [readingImages, setReadingImages] = useState({});
   const imagesPending = Object.values(readingImages).some(Boolean);
-  const [catalogStatus, setCatalogStatus] = useState("loading");
+  const [catalogStatus, setCatalogStatus] = useState('loading');
   const formRef = useRef(null);
   const normalizedBrandName = formData.brandName.trim().toLocaleLowerCase();
-  const existingBrand = [...catalogBrands, ...recentBrands].find(brand =>
-    brand.name.trim().toLocaleLowerCase() === normalizedBrandName
+  const existingBrand = [...catalogBrands, ...recentBrands].find(
+    (brand) => brand.name.trim().toLocaleLowerCase() === normalizedBrandName,
   );
   const isNewBrand = !existingBrand;
-  const ft = key => suggestionText(languageCode, key);
+  const ft = (key) => suggestionText(languageCode, key);
 
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [submitError, setSubmitError] = useState("");
+  const [submitError, setSubmitError] = useState('');
 
   useEffect(() => {
     const controller = new AbortController();
-    getUserApi("/api/catalog/brands", { signal: controller.signal })
-      .then(rows => {
-        if (!Array.isArray(rows)) throw new Error("Invalid catalog");
+    getUserApi('/api/catalog/brands', { signal: controller.signal })
+      .then((rows) => {
+        if (!Array.isArray(rows)) throw new Error('Invalid catalog');
         setCatalogBrands(rows.map(toBrandCard));
-        setCatalogStatus("ready");
+        setCatalogStatus('ready');
       })
-      .catch(() => { if (!controller.signal.aborted) setCatalogStatus("error"); });
+      .catch(() => {
+        if (!controller.signal.aborted) setCatalogStatus('error');
+      });
     return () => controller.abort();
   }, []);
 
   const handleSelectPreBrand = (brand) => {
     setFieldErrors({});
-    setFormData(prev => {
+    setFormData((prev) => {
       const selectedBrand = prev.brandName === brand.name ? null : brand;
       const clearedBrandFields = Object.fromEntries(
         suggestionFields
-          .filter(field => field.brandOnly || field.name === "brandName" || field.name === "branchName")
-          .map(field => [field.name, ""])
+          .filter(
+            (field) => field.brandOnly || field.name === 'brandName' || field.name === 'branchName',
+          )
+          .map((field) => [field.name, '']),
       );
       return { ...prev, ...clearedBrandFields, ...getBrandSuggestionValues(selectedBrand) };
     });
@@ -239,10 +335,10 @@ export default function SuggestionsPage({ recentBrands = [], onNavigate }) {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    const field = suggestionFields.find(field => field.name === name);
+    const field = suggestionFields.find((field) => field.name === name);
     if (field && isExistingBrandFieldReadOnly(field, existingBrand)) return;
-    setFormData(prev => ({ ...prev, [name]: value }));
-    setFieldErrors(previous => ({ ...previous, [name]: undefined }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    setFieldErrors((previous) => ({ ...previous, [name]: undefined }));
   };
 
   const handleSubmit = async (e) => {
@@ -251,19 +347,20 @@ export default function SuggestionsPage({ recentBrands = [], onNavigate }) {
     const errors = validateSuggestion(formData, isNewBrand);
     setFieldErrors(errors);
     if (Object.keys(errors).length > 0) {
-      setSubmitError("incomplete");
+      setSubmitError('incomplete');
       formRef.current?.elements.namedItem(Object.keys(errors)[0])?.focus();
       return;
     }
     setSubmitting(true);
-    setSubmitError("");
+    setSubmitError('');
     try {
-      await getUserApi("/api/submissions", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      await getUserApi('/api/submissions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          ...Object.fromEntries(Object.entries(formData)
-            .map(([key, value]) => [key, value.trim()])),
+          ...Object.fromEntries(
+            Object.entries(formData).map(([key, value]) => [key, value.trim()]),
+          ),
           latitude: Number(formData.latitude),
           longitude: Number(formData.longitude),
         }),
@@ -271,7 +368,7 @@ export default function SuggestionsPage({ recentBrands = [], onNavigate }) {
       setSubmitted(true);
     } catch (error) {
       setFieldErrors(error.errors || {});
-      setSubmitError(error.errors ? "incomplete" : "error");
+      setSubmitError(error.errors ? 'incomplete' : 'error');
     } finally {
       setSubmitting(false);
     }
@@ -279,7 +376,7 @@ export default function SuggestionsPage({ recentBrands = [], onNavigate }) {
 
   const handleReset = () => {
     setSubmitted(false);
-    setSubmitError("");
+    setSubmitError('');
     setFieldErrors({});
     setFormData({ ...emptySuggestion });
   };
@@ -292,8 +389,8 @@ export default function SuggestionsPage({ recentBrands = [], onNavigate }) {
 
       <section className="sg-hero">
         <div className="sg-hero-in">
-          <h1>{st("suggestTitle")}</h1>
-          <p>{st("suggestIntro")}</p>
+          <h1>{st('suggestTitle')}</h1>
+          <p>{st('suggestIntro')}</p>
         </div>
       </section>
 
@@ -301,15 +398,15 @@ export default function SuggestionsPage({ recentBrands = [], onNavigate }) {
         {displayBrands.length > 0 && (
           <section className="sg-selected-section">
             <div className="sg-section-title">
-              <h2>{st("recentBrands")}</h2>
-              <p>{st("clickBrand")}</p>
+              <h2>{st('recentBrands')}</h2>
+              <p>{st('clickBrand')}</p>
             </div>
             <div className="sg-selected-grid">
               {displayBrands.map((b) => (
                 <button
-                  key={b.id} 
+                  key={b.id}
                   type="button"
-                  className={`sg-selected-card ${formData.brandName === b.name ? "active" : ""}`}
+                  className={`sg-selected-card ${formData.brandName === b.name ? 'active' : ''}`}
                   onClick={() => handleSelectPreBrand(b)}
                   aria-pressed={formData.brandName === b.name}
                 >
@@ -317,10 +414,15 @@ export default function SuggestionsPage({ recentBrands = [], onNavigate }) {
                   <div className="sg-card-info">
                     <h4>{b.name}</h4>
                     <p>{localizedCategory(b.type, languageCode)}</p>
-                    <span><Icon n="pin" size={12} /> {st("branchCount", { count: b.branchCount || b.branches || 0 })}</span>
+                    <span>
+                      <Icon n="pin" size={12} />{' '}
+                      {st('branchCount', { count: b.branchCount || b.branches || 0 })}
+                    </span>
                   </div>
                   {formData.brandName === b.name && (
-                    <span className="sg-card-check"><Icon n="check" size={14} /></span>
+                    <span className="sg-card-check">
+                      <Icon n="check" size={14} />
+                    </span>
                   )}
                 </button>
               ))}
@@ -335,77 +437,117 @@ export default function SuggestionsPage({ recentBrands = [], onNavigate }) {
                 <div className="sg-success-icon">
                   <Icon n="check" size={36} />
                 </div>
-                <h3>{st("success")}</h3>
-                <p>{st("thanks", { name: formData.name, brand: formData.brandName })}</p>
+                <h3>{st('success')}</h3>
+                <p>{st('thanks', { name: formData.name, brand: formData.brandName })}</p>
                 <button className="sg-btn-primary" onClick={handleReset}>
-                  {st("submitAnother")}
+                  {st('submitAnother')}
                 </button>
               </div>
             ) : (
               <form ref={formRef} onSubmit={handleSubmit} className="sg-form" noValidate>
                 <div className="sg-form-header">
-                  <h3>{st("formTitle")}</h3>
-                  <p>{ft(isNewBrand ? "newBrand" : "existingBrand")}</p>
+                  <h3>{st('formTitle')}</h3>
+                  <p>{ft(isNewBrand ? 'newBrand' : 'existingBrand')}</p>
                 </div>
 
-                {suggestionFields.map(field => {
-                  const Field = field.multiline ? "textarea" : "input";
+                {suggestionFields.map((field) => {
+                  const Field = field.multiline ? 'textarea' : 'input';
                   const value = formData[field.name];
                   const readOnly = isExistingBrandFieldReadOnly(field, existingBrand);
                   const required = isNewBrand || !field.brandOnly;
-                  return <div className="sg-field-group" key={field.name}>
-                    <label htmlFor={imageFields.includes(field.name) ? `${field.name}-file` : field.name}>{ft(field.name)} {required && <span className="req">*</span>}</label>
-                    {imageFields.includes(field.name) ? <SuggestionImageField
-                      name={field.name}
-                      value={value}
-                      language={languageCode}
-                      invalid={Boolean(fieldErrors[field.name])}
-                      disabled={readOnly}
-                      onChange={value => handleChange({ target: { name: field.name, value } })}
-                      onError={error => setFieldErrors(previous => ({ ...previous, [field.name]: error }))}
-                      onReadingChange={reading => setReadingImages(previous => ({ ...previous, [field.name]: reading }))}
-                    /> : <Field
-                      id={field.name}
-                      name={field.name}
-                      type={field.multiline ? undefined : field.type || "text"}
-                      rows={field.multiline ? 4 : undefined}
-                      step={field.type === "number" ? "any" : undefined}
-                      min={field.min}
-                      max={field.max}
-                      maxLength={field.maxLength}
-                      placeholder={field.type === "url" ? "https://..." : undefined}
-                      value={value}
-                      onChange={handleChange}
-                      readOnly={readOnly}
-                      required={required}
-                      aria-invalid={Boolean(fieldErrors[field.name])}
-                      aria-readonly={readOnly || undefined}
-                      aria-describedby={fieldErrors[field.name] ? `${field.name}-error` : undefined}
-                    />}
-                    {fieldErrors[field.name] && <small id={`${field.name}-error`} className="sg-field-error">{ft(fieldErrors[field.name])}</small>}
-                  </div>;
+                  return (
+                    <div className="sg-field-group" key={field.name}>
+                      <label
+                        htmlFor={
+                          imageFields.includes(field.name) ? `${field.name}-file` : field.name
+                        }
+                      >
+                        {ft(field.name)} {required && <span className="req">*</span>}
+                      </label>
+                      {imageFields.includes(field.name) ? (
+                        <SuggestionImageField
+                          name={field.name}
+                          value={value}
+                          language={languageCode}
+                          invalid={Boolean(fieldErrors[field.name])}
+                          disabled={readOnly}
+                          onChange={(value) =>
+                            handleChange({ target: { name: field.name, value } })
+                          }
+                          onError={(error) =>
+                            setFieldErrors((previous) => ({ ...previous, [field.name]: error }))
+                          }
+                          onReadingChange={(reading) =>
+                            setReadingImages((previous) => ({ ...previous, [field.name]: reading }))
+                          }
+                        />
+                      ) : (
+                        <Field
+                          id={field.name}
+                          name={field.name}
+                          type={field.multiline ? undefined : field.type || 'text'}
+                          rows={field.multiline ? 4 : undefined}
+                          step={field.type === 'number' ? 'any' : undefined}
+                          min={field.min}
+                          max={field.max}
+                          maxLength={field.maxLength}
+                          placeholder={field.type === 'url' ? 'https://...' : undefined}
+                          value={value}
+                          onChange={handleChange}
+                          readOnly={readOnly}
+                          required={required}
+                          aria-invalid={Boolean(fieldErrors[field.name])}
+                          aria-readonly={readOnly || undefined}
+                          aria-describedby={
+                            fieldErrors[field.name] ? `${field.name}-error` : undefined
+                          }
+                        />
+                      )}
+                      {fieldErrors[field.name] && (
+                        <small id={`${field.name}-error`} className="sg-field-error">
+                          {ft(fieldErrors[field.name])}
+                        </small>
+                      )}
+                    </div>
+                  );
                 })}
 
                 <div className="sg-field-group">
-                  <label htmlFor="note">{st("notes")}</label>
+                  <label htmlFor="note">{st('notes')}</label>
                   <textarea
                     id="note"
                     name="note"
                     rows="3"
                     maxLength={2000}
                     aria-invalid={Boolean(fieldErrors.note)}
-                    aria-describedby={fieldErrors.note ? "note-error" : undefined}
-                    placeholder={st("notesPlaceholder")}
+                    aria-describedby={fieldErrors.note ? 'note-error' : undefined}
+                    placeholder={st('notesPlaceholder')}
                     value={formData.note}
                     onChange={handleChange}
                   ></textarea>
-                  {fieldErrors.note && <small id="note-error" className="sg-field-error">{ft(fieldErrors.note)}</small>}
+                  {fieldErrors.note && (
+                    <small id="note-error" className="sg-field-error">
+                      {ft(fieldErrors.note)}
+                    </small>
+                  )}
                 </div>
 
-                {catalogStatus === "error" && <p role="alert" className="sg-submit-error">{ft("catalogError")}</p>}
-                {submitError && <p role="alert" className="sg-submit-error">{submitError === "incomplete" ? ft("incomplete") : st("submitError")}</p>}
-                <button type="submit" className="sg-btn-submit" disabled={submitting || imagesPending}>
-                  <Icon n="send" size={16} /> {submitting ? st("submitting") : st("submit")}
+                {catalogStatus === 'error' && (
+                  <p role="alert" className="sg-submit-error">
+                    {ft('catalogError')}
+                  </p>
+                )}
+                {submitError && (
+                  <p role="alert" className="sg-submit-error">
+                    {submitError === 'incomplete' ? ft('incomplete') : st('submitError')}
+                  </p>
+                )}
+                <button
+                  type="submit"
+                  className="sg-btn-submit"
+                  disabled={submitting || imagesPending}
+                >
+                  <Icon n="send" size={16} /> {submitting ? st('submitting') : st('submit')}
                 </button>
               </form>
             )}

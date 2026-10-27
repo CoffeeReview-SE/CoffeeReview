@@ -1,120 +1,175 @@
-import React, { useEffect, useRef, useState } from "react";
-import { trackAudio } from "../../analytics/tracking.js";
-import DescriptionSpeech from "../components/DescriptionSpeech.jsx";
-import { LANGUAGES, useLanguage } from "../contexts/LanguageContext.jsx";
-import LocalizedBranchAddress from "../components/LocalizedBranchAddress.jsx";
-import { detailText, localizedCategory } from "../i18n/brandDetailTranslations.js";
-import { brandDescriptionLanguage } from "../../shared/api/userApi.js";
-import { getOfflineBrandTranslation } from "../i18n/offlineBrandTranslations.js";
+import React, { useEffect, useRef, useState } from 'react';
+import { trackAudio } from '../../analytics/tracking.js';
+import DescriptionSpeech from '../components/DescriptionSpeech.jsx';
+import { LANGUAGES, useLanguage } from '../contexts/LanguageProvider.jsx';
+import LocalizedBranchAddress from '../components/LocalizedBranchAddress.jsx';
+import { detailText, localizedCategory } from '../i18n/brandDetailsI18n.js';
+import { brandDescriptionLanguage } from '../../shared/api/userApi.js';
+import { getOfflineBrandTranslation } from '../i18n/brandTranslationsOffline.js';
 
 // 1. Ảnh Không gian (image coffee shop/)
-import coverHighlands from "../../../public/image/highlands-coffee/cover.jpg";
-import coverKatinat from "../../../public/image/katinat/cover.jpg";
-import coverKoi from "../../../public/image/koi-the/cover.jpg";
-import coverMilano from "../../../public/image/milano-coffee/cover.jpg";
-import coverPheLa from "../../../public/image/phe-la/cover.jpg";
-import coverPhucLong from "../../../public/image/phuc-long/cover.jpg";
-import coverStarbucks from "../../../public/image/starbucks/cover.jpg";
-import coverTheCoffeeHouse from "../../../public/image/the-coffee-house/cover.jpg";
-import coverTrungNguyen from "../../../public/image/trung-nguyen/cover.jpg";
-import coverVivaStar from "../../../public/image/viva-star-coffee/cover.jpg";
+import coverHighlands from '../../../public/image/highlands-coffee/cover.jpg';
+import coverKatinat from '../../../public/image/katinat/cover.jpg';
+import coverKoi from '../../../public/image/koi-the/cover.jpg';
+import coverMilano from '../../../public/image/milano-coffee/cover.jpg';
+import coverPheLa from '../../../public/image/phe-la/cover.jpg';
+import coverPhucLong from '../../../public/image/phuc-long/cover.jpg';
+import coverStarbucks from '../../../public/image/starbucks/cover.jpg';
+import coverTheCoffeeHouse from '../../../public/image/the-coffee-house/cover.jpg';
+import coverTrungNguyen from '../../../public/image/trung-nguyen/cover.jpg';
+import coverVivaStar from '../../../public/image/viva-star-coffee/cover.jpg';
 
 // 2. Ảnh Logo (image logo/)
-import logoHighlands from "../../../public/image/highlands-coffee/logo.jpg";
-import logoKatinat from "../../../public/image/katinat/logo.png";
-import logoKoi from "../../../public/image/koi-the/logo.jpg";
-import logoMilano from "../../../public/image/milano-coffee/logo.png";
-import logoPheLa from "../../../public/image/phe-la/logo.jpg";
-import logoPhucLong from "../../../public/image/phuc-long/logo.jpg";
-import logoStarbucks from "../../../public/image/starbucks/logo.png";
-import logoTheCoffeeHouse from "../../../public/image/the-coffee-house/logo.jpg";
-import logoTrungNguyen from "../../../public/image/trung-nguyen/logo.png";
-import logoVivaStar from "../../../public/image/viva-star-coffee/logo.png";
+import logoHighlands from '../../../public/image/highlands-coffee/logo.jpg';
+import logoKatinat from '../../../public/image/katinat/logo.png';
+import logoKoi from '../../../public/image/koi-the/logo.jpg';
+import logoMilano from '../../../public/image/milano-coffee/logo.png';
+import logoPheLa from '../../../public/image/phe-la/logo.jpg';
+import logoPhucLong from '../../../public/image/phuc-long/logo.jpg';
+import logoStarbucks from '../../../public/image/starbucks/logo.png';
+import logoTheCoffeeHouse from '../../../public/image/the-coffee-house/logo.jpg';
+import logoTrungNguyen from '../../../public/image/trung-nguyen/logo.png';
+import logoVivaStar from '../../../public/image/viva-star-coffee/logo.png';
 
 // 3. menu
-import menuHighlands from "../../../public/image/highlands-coffee/menu.jpg";
-import menuKatinat from "../../../public/image/katinat/menu.jpg";
-import menuKoi from "../../../public/image/koi-the/menu.jpg";
-import menuMilano from "../../../public/image/milano-coffee/menu.png";
-import menuPheLa from "../../../public/image/phe-la/menu.jpg";
-import menuPhucLong from "../../../public/image/phuc-long/menu.jpg";
-import menuStarbucks from "../../../public/image/starbucks/menu.jpg";
-import menuTheCoffeeHouse from "../../../public/image/the-coffee-house/menu.jpg";
-import menuTrungNguyen from "../../../public/image/trung-nguyen/menu.jpg";
-import menuViva from "../../../public/image/viva-star-coffee/menu.jpg";
+import menuHighlands from '../../../public/image/highlands-coffee/menu.jpg';
+import menuKatinat from '../../../public/image/katinat/menu.jpg';
+import menuKoi from '../../../public/image/koi-the/menu.jpg';
+import menuMilano from '../../../public/image/milano-coffee/menu.png';
+import menuPheLa from '../../../public/image/phe-la/menu.jpg';
+import menuPhucLong from '../../../public/image/phuc-long/menu.jpg';
+import menuStarbucks from '../../../public/image/starbucks/menu.jpg';
+import menuTheCoffeeHouse from '../../../public/image/the-coffee-house/menu.jpg';
+import menuTrungNguyen from '../../../public/image/trung-nguyen/menu.jpg';
+import menuViva from '../../../public/image/viva-star-coffee/menu.jpg';
 
 const DATABASE_BRANDS_IMAGES = {
-  "phuc-long": { cover: coverPhucLong, image: logoPhucLong, menu: [menuPhucLong] },
-  "highlands-coffee": { cover: coverHighlands, image: logoHighlands, menu: [menuHighlands] },
-  "trung-nguyen": { cover: coverTrungNguyen, image: logoTrungNguyen, menu: [menuTrungNguyen] },
-  "katinat": { cover: coverKatinat, image: logoKatinat, menu: [menuKatinat] },
-  "koi-the": { cover: coverKoi, image: logoKoi, menu: [menuKoi] },
-  "phe-la": { cover: coverPheLa, image: logoPheLa, menu: [menuPheLa] },
-  "milano-coffee": { cover: coverMilano, image: logoMilano, menu: [menuMilano] },
-  "viva-star-coffee": { cover: coverVivaStar, image: logoVivaStar, menu: [menuViva] },
-  "the-coffee-house": { cover: coverTheCoffeeHouse, image: logoTheCoffeeHouse, menu: [menuTheCoffeeHouse] },
-  "starbucks": { cover: coverStarbucks, image: logoStarbucks, menu: [menuStarbucks] }
+  'phuc-long': { cover: coverPhucLong, image: logoPhucLong, menu: [menuPhucLong] },
+  'highlands-coffee': { cover: coverHighlands, image: logoHighlands, menu: [menuHighlands] },
+  'trung-nguyen': { cover: coverTrungNguyen, image: logoTrungNguyen, menu: [menuTrungNguyen] },
+  katinat: { cover: coverKatinat, image: logoKatinat, menu: [menuKatinat] },
+  'koi-the': { cover: coverKoi, image: logoKoi, menu: [menuKoi] },
+  'phe-la': { cover: coverPheLa, image: logoPheLa, menu: [menuPheLa] },
+  'milano-coffee': { cover: coverMilano, image: logoMilano, menu: [menuMilano] },
+  'viva-star-coffee': { cover: coverVivaStar, image: logoVivaStar, menu: [menuViva] },
+  'the-coffee-house': {
+    cover: coverTheCoffeeHouse,
+    image: logoTheCoffeeHouse,
+    menu: [menuTheCoffeeHouse],
+  },
+  starbucks: { cover: coverStarbucks, image: logoStarbucks, menu: [menuStarbucks] },
 };
 
 function getDatabaseBrandImages(brandId, brandName) {
-  const idKey = String(brandId || "").toLowerCase().trim();
+  const idKey = String(brandId || '')
+    .toLowerCase()
+    .trim();
   if (DATABASE_BRANDS_IMAGES[idKey]) return DATABASE_BRANDS_IMAGES[idKey];
 
-  const nameKey = String(brandName || "")
+  const nameKey = String(brandName || '')
     .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9]/g, "-")
-    .replace(/-+/g, "-")
-    .replace(/^-|-$/g, "");
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
 
   if (DATABASE_BRANDS_IMAGES[nameKey]) return DATABASE_BRANDS_IMAGES[nameKey];
 
-  if (nameKey.includes("phuc-long") || nameKey.includes("phuclong")) return DATABASE_BRANDS_IMAGES["phuc-long"];
-  if (nameKey.includes("highland")) return DATABASE_BRANDS_IMAGES["highlands-coffee"];
-  if (nameKey.includes("trung-nguyen")) return DATABASE_BRANDS_IMAGES["trung-nguyen"];
-  if (nameKey.includes("katinat")) return DATABASE_BRANDS_IMAGES["katinat"];
-  if (nameKey.includes("koi")) return DATABASE_BRANDS_IMAGES["koi-the"];
-  if (nameKey.includes("phe-la")) return DATABASE_BRANDS_IMAGES["phe-la"];
-  if (nameKey.includes("milano")) return DATABASE_BRANDS_IMAGES["milano-coffee"];
-  if (nameKey.includes("viva")) return DATABASE_BRANDS_IMAGES["viva-star-coffee"];
-  if (nameKey.includes("coffee-house") || nameKey.includes("tch")) return DATABASE_BRANDS_IMAGES["the-coffee-house"];
-  if (nameKey.includes("starbuck")) return DATABASE_BRANDS_IMAGES["starbucks"];
+  if (nameKey.includes('phuc-long') || nameKey.includes('phuclong'))
+    return DATABASE_BRANDS_IMAGES['phuc-long'];
+  if (nameKey.includes('highland')) return DATABASE_BRANDS_IMAGES['highlands-coffee'];
+  if (nameKey.includes('trung-nguyen')) return DATABASE_BRANDS_IMAGES['trung-nguyen'];
+  if (nameKey.includes('katinat')) return DATABASE_BRANDS_IMAGES['katinat'];
+  if (nameKey.includes('koi')) return DATABASE_BRANDS_IMAGES['koi-the'];
+  if (nameKey.includes('phe-la')) return DATABASE_BRANDS_IMAGES['phe-la'];
+  if (nameKey.includes('milano')) return DATABASE_BRANDS_IMAGES['milano-coffee'];
+  if (nameKey.includes('viva')) return DATABASE_BRANDS_IMAGES['viva-star-coffee'];
+  if (nameKey.includes('coffee-house') || nameKey.includes('tch'))
+    return DATABASE_BRANDS_IMAGES['the-coffee-house'];
+  if (nameKey.includes('starbuck')) return DATABASE_BRANDS_IMAGES['starbucks'];
 
   return null;
 }
 
-const TILE_BG = ["linear-gradient(135deg,#F3E3CC,#E4C7A0)", "linear-gradient(135deg,#FBE7A8,#F0B84F)", "linear-gradient(135deg,#F6E1CB,#C98B5A)"];
+const TILE_BG = [
+  'linear-gradient(135deg,#F3E3CC,#E4C7A0)',
+  'linear-gradient(135deg,#FBE7A8,#F0B84F)',
+  'linear-gradient(135deg,#F6E1CB,#C98B5A)',
+];
 function branchMapsUrl(branch) {
   const hasCoordinates = Number.isFinite(branch.latitude) && Number.isFinite(branch.longitude);
   const params = new URLSearchParams({
-    api: "1",
-    [hasCoordinates ? "destination" : "query"]: hasCoordinates
+    api: '1',
+    [hasCoordinates ? 'destination' : 'query']: hasCoordinates
       ? `${branch.latitude},${branch.longitude}`
-      : `${branch.name || ""} ${branch.address || ""}`.trim(),
+      : `${branch.name || ''} ${branch.address || ''}`.trim(),
   });
-  const action = hasCoordinates ? "dir" : "search";
+  const action = hasCoordinates ? 'dir' : 'search';
   return `https://www.google.com/maps/${action}/?${params.toString()}`;
 }
 
 const paths = {
-  search: <><circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" /></>,
-  pin: <><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z" /><circle cx="12" cy="10" r="2.5" /></>,
+  search: (
+    <>
+      <circle cx="11" cy="11" r="7" />
+      <path d="m21 21-4.3-4.3" />
+    </>
+  ),
+  pin: (
+    <>
+      <path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z" />
+      <circle cx="12" cy="10" r="2.5" />
+    </>
+  ),
   play: <path d="M8 5v14l11-7z" fill="currentColor" stroke="none" />,
   pause: <path d="M8 5v14M16 5v14" strokeWidth="3.2" />,
   arrow: <path d="M5 12h14M13 6l6 6-6 6" />,
   chevron: <path d="m6 9 6 6 6-6" />,
-  globe: <><circle cx="12" cy="12" r="9" /><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18" /></>,
-  phone: <path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z" />,
-  tag: <><path d="M3 12V4h8l10 10-8 8z" /><circle cx="7.5" cy="8.5" r="1.2" /></>,
-  repeat: <><path d="M17 2l4 4-4 4" /><path d="M3 11V9a3 3 0 0 1 3-3h15" /><path d="M7 22l-4-4 4-4" /><path d="M21 13v2a3 3 0 0 1-3 3H3" /></>,
-  cup: <path d="M4 9h13v5a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5zM17 10h2a2 2 0 0 1 0 4h-2M3 21h16M8 3c0 2 2 2 2 4M12 3c0 2 2 2 2 4" />,
+  globe: (
+    <>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18" />
+    </>
+  ),
+  phone: (
+    <path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z" />
+  ),
+  tag: (
+    <>
+      <path d="M3 12V4h8l10 10-8 8z" />
+      <circle cx="7.5" cy="8.5" r="1.2" />
+    </>
+  ),
+  repeat: (
+    <>
+      <path d="M17 2l4 4-4 4" />
+      <path d="M3 11V9a3 3 0 0 1 3-3h15" />
+      <path d="M7 22l-4-4 4-4" />
+      <path d="M21 13v2a3 3 0 0 1-3 3H3" />
+    </>
+  ),
+  cup: (
+    <path d="M4 9h13v5a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5zM17 10h2a2 2 0 0 1 0 4h-2M3 21h16M8 3c0 2 2 2 2 4M12 3c0 2 2 2 2 4" />
+  ),
   left: <path d="m15 6-6 6 6 6" />,
   right: <path d="m9 6 6 6-6 6" />,
   close: <path d="M6 6l12 12M18 6 6 18" />,
 };
 const Icon = ({ n, size = 18 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{paths[n]}</svg>
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="1.8"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
+    {paths[n]}
+  </svg>
 );
 
 function Header({ go, goBrands }) {
@@ -131,65 +186,67 @@ function Header({ go, goBrands }) {
         setIsOpen(false);
       }
     };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   const items = [
-    ["home", t("nav.home"), () => go("home")],
-    ["brands", t("nav.brands"), () => goBrands()],
-    ["map", t("nav.map"), () => go("map")],
-    ["suggestions", t("nav.suggestions"), () => go("suggestions")]
+    ['home', t('nav.home'), () => go('home')],
+    ['brands', t('nav.brands'), () => goBrands()],
+    ['map', t('nav.map'), () => go('map')],
+    ['suggestions', t('nav.suggestions'), () => go('suggestions')],
   ];
-  
-  return <header className="bd-bar">
-    <button className="bd-logo" onClick={() => go("home")}>
-      <Icon n="cup" size={30} /><span><b>SaigonCoffee</b><small>{t("brand.tagline")}</small></span>
-    </button>
-    <nav className="bd-nav" aria-label={t("a11y.mainNavigation")}>
-      {items.map(([k, label, fn]) => (
-        <button 
-          key={k} 
-          aria-current={k === "brands" ? "page" : undefined} 
-          onClick={fn}
-        >
-          {label}
-        </button>
-      ))}
-    </nav>
-    <div className="bd-tools">
-      <div className="bd-lang-dropdown" ref={dropdownRef}>
-        <button 
-          className="bd-lang-btn" 
-          onClick={() => setIsOpen(!isOpen)} 
-          aria-expanded={isOpen}
-          aria-label={t("a11y.chooseLanguage")}
-        >
-          <span>{lang}</span>
-          <span className={`bd-chevron-icon ${isOpen ? "open" : ""}`}>
-            <Icon n="chevron" size={12} />
-          </span>
-        </button>
-        
-        {isOpen && (
-          <div className="bd-lang-menu">
-            {languages.map((item) => (
-              <button
-                key={item.code}
-                className={`bd-lang-item ${lang === item.code.toUpperCase() ? "active" : ""}`}
-                onClick={() => {
-                  setLanguageCode(item.code);
-                  setIsOpen(false);
-                }}
-              >
-                {item.label}
-              </button>
-            ))}
-          </div>
-        )}
+
+  return (
+    <header className="bd-bar">
+      <button className="bd-logo" onClick={() => go('home')}>
+        <Icon n="cup" size={30} />
+        <span>
+          <b>SaigonCoffee</b>
+          <small>{t('brand.tagline')}</small>
+        </span>
+      </button>
+      <nav className="bd-nav" aria-label={t('a11y.mainNavigation')}>
+        {items.map(([k, label, fn]) => (
+          <button key={k} aria-current={k === 'brands' ? 'page' : undefined} onClick={fn}>
+            {label}
+          </button>
+        ))}
+      </nav>
+      <div className="bd-tools">
+        <div className="bd-lang-dropdown" ref={dropdownRef}>
+          <button
+            className="bd-lang-btn"
+            onClick={() => setIsOpen(!isOpen)}
+            aria-expanded={isOpen}
+            aria-label={t('a11y.chooseLanguage')}
+          >
+            <span>{lang}</span>
+            <span className={`bd-chevron-icon ${isOpen ? 'open' : ''}`}>
+              <Icon n="chevron" size={12} />
+            </span>
+          </button>
+
+          {isOpen && (
+            <div className="bd-lang-menu">
+              {languages.map((item) => (
+                <button
+                  key={item.code}
+                  className={`bd-lang-item ${lang === item.code.toUpperCase() ? 'active' : ''}`}
+                  onClick={() => {
+                    setLanguageCode(item.code);
+                    setIsOpen(false);
+                  }}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
-    </div>
-  </header>;
+    </header>
+  );
 }
 
 function Logo({ item, size }) {
@@ -198,35 +255,81 @@ function Logo({ item, size }) {
   const resolvedLogo = item.logo || item.image || dbBrandImgs?.image;
 
   if (resolvedLogo) {
-    const isKoiOrTrungNguyen = String(item.id || "").toLowerCase().includes("koi") || 
-                               String(item.name || "").toLowerCase().includes("koi") ||
-                               String(item.id || "").toLowerCase().includes("trung") || 
-                               String(item.name || "").toLowerCase().includes("trung");
+    const isKoiOrTrungNguyen =
+      String(item.id || '')
+        .toLowerCase()
+        .includes('koi') ||
+      String(item.name || '')
+        .toLowerCase()
+        .includes('koi') ||
+      String(item.id || '')
+        .toLowerCase()
+        .includes('trung') ||
+      String(item.name || '')
+        .toLowerCase()
+        .includes('trung');
 
     const extraLogoStyle = isKoiOrTrungNguyen
-      ? { width: size, height: size, borderRadius: "50%", objectFit: "contain", background: "#fff", padding: "4px" }
-      : { width: size, height: size, borderRadius: "50%", objectFit: "cover" };
+      ? {
+          width: size,
+          height: size,
+          borderRadius: '50%',
+          objectFit: 'contain',
+          background: '#fff',
+          padding: '4px',
+        }
+      : { width: size, height: size, borderRadius: '50%', objectFit: 'cover' };
 
-    return <img src={resolvedLogo} alt={detailText(languageCode, "brandLogo", { name: item.name })} style={extraLogoStyle} />;
+    return (
+      <img
+        src={resolvedLogo}
+        alt={detailText(languageCode, 'brandLogo', { name: item.name })}
+        style={extraLogoStyle}
+      />
+    );
   }
 
   const big = size > 60;
-  const text = big ? (item.mark || [item.name]) : [item.name?.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase() || ""];
-  return <span className="bd-mark" style={{ width: size, height: size, background: item.badge || "#1F6B45", fontSize: big ? size * 0.13 : size * 0.34, boxShadow: big ? "inset 0 0 0 4px rgba(255,255,255,.85)" : "none" }}>
-    {text.map(l => <span key={l}>{l}</span>)}
-  </span>;
+  const text = big
+    ? item.mark || [item.name]
+    : [
+        item.name
+          ?.split(' ')
+          .map((w) => w[0])
+          .join('')
+          .slice(0, 2)
+          .toUpperCase() || '',
+      ];
+  return (
+    <span
+      className="bd-mark"
+      style={{
+        width: size,
+        height: size,
+        background: item.badge || '#1F6B45',
+        fontSize: big ? size * 0.13 : size * 0.34,
+        boxShadow: big ? 'inset 0 0 0 4px rgba(255,255,255,.85)' : 'none',
+      }}
+    >
+      {text.map((l) => (
+        <span key={l}>{l}</span>
+      ))}
+    </span>
+  );
 }
 
 function AudioCard({ audio, brandId, languageCode, preferredLanguage }) {
-  const audioText = key => detailText(languageCode, key);
+  const audioText = (key) => detailText(languageCode, key);
   const ref = useRef(null);
   const [playing, setPlaying] = useState(false);
   const [loop, setLoop] = useState(false);
   const [t, setT] = useState({ cur: 0, dur: 0 });
-  
-  const sources = audio && typeof audio === "object" ? Object.entries(audio) : [];
-  const sourceKey = sources.find(([code]) => code.toLowerCase().split("-")[0] === preferredLanguage)?.[0] || sources[0]?.[0];
-  const src = sources.length ? audio[sourceKey] : typeof audio === "string" ? audio : '';
+
+  const sources = audio && typeof audio === 'object' ? Object.entries(audio) : [];
+  const sourceKey =
+    sources.find(([code]) => code.toLowerCase().split('-')[0] === preferredLanguage)?.[0] ||
+    sources[0]?.[0];
+  const src = sources.length ? audio[sourceKey] : typeof audio === 'string' ? audio : '';
   const code = sourceKey || languageCode;
   const counted = useRef(false);
   const requested = useRef(false);
@@ -234,7 +337,10 @@ function AudioCard({ audio, brandId, languageCode, preferredLanguage }) {
 
   useEffect(() => {
     ref.current?.pause();
-    setPlaying(false); setT({ cur: 0, dur: 0 }); counted.current = false; requested.current = false;
+    setPlaying(false);
+    setT({ cur: 0, dur: 0 });
+    counted.current = false;
+    requested.current = false;
   }, [src, brandId, code, preferredLanguage]);
   const started = () => {
     setPlaying(true);
@@ -248,35 +354,86 @@ function AudioCard({ audio, brandId, languageCode, preferredLanguage }) {
     if (a.paused) {
       requested.current = true;
       if (!counted.current) playEvent.current = crypto.randomUUID();
-      a.play().catch(() => { requested.current = false; setPlaying(false); });
+      a.play().catch(() => {
+        requested.current = false;
+        setPlaying(false);
+      });
     } else a.pause();
   };
-  const seek = e => { const v = +e.target.value; ref.current.currentTime = v; setT(x => ({ ...x, cur: v })); };
+  const seek = (e) => {
+    const v = +e.target.value;
+    ref.current.currentTime = v;
+    setT((x) => ({ ...x, cur: v }));
+  };
   const pct = t.dur ? (t.cur / t.dur) * 100 : 0;
-  return <div className="bd-audio">
-    <audio ref={ref} src={src || undefined} loop={loop} preload="metadata"
-      onPlaying={started} onPause={() => setPlaying(false)}
-      onEnded={() => { setPlaying(false); counted.current = false; requested.current = false; }}
-      onError={() => { setPlaying(false); requested.current = false; }}
-      onTimeUpdate={e => setT(x => ({ ...x, cur: e.target.currentTime }))}
-      onLoadedMetadata={e => setT({ cur: 0, dur: e.target.duration })} />
-    <button className="bd-play" disabled={!src || !code} onClick={toggle} title={src ? undefined : audioText("noAudioFile")} aria-label={playing ? audioText("pauseBrandAudio") : audioText("playBrandAudio")}>
-      <Icon n={playing ? "pause" : "play"} size={20} />
-    </button>
-    <div className="bd-track">
-      <span>{audioText("playBrandAudio")}</span>
-      <input className="bd-range" type="range" min="0" max={t.dur || 1} step="0.1" value={t.cur} disabled={!src} onChange={seek} aria-label={audioText("seekAudio")} style={{ "--p": `${pct}%` }} />
+  return (
+    <div className="bd-audio">
+      <audio
+        ref={ref}
+        src={src || undefined}
+        loop={loop}
+        preload="metadata"
+        onPlaying={started}
+        onPause={() => setPlaying(false)}
+        onEnded={() => {
+          setPlaying(false);
+          counted.current = false;
+          requested.current = false;
+        }}
+        onError={() => {
+          setPlaying(false);
+          requested.current = false;
+        }}
+        onTimeUpdate={(e) => setT((x) => ({ ...x, cur: e.target.currentTime }))}
+        onLoadedMetadata={(e) => setT({ cur: 0, dur: e.target.duration })}
+      />
+      <button
+        className="bd-play"
+        disabled={!src || !code}
+        onClick={toggle}
+        title={src ? undefined : audioText('noAudioFile')}
+        aria-label={playing ? audioText('pauseBrandAudio') : audioText('playBrandAudio')}
+      >
+        <Icon n={playing ? 'pause' : 'play'} size={20} />
+      </button>
+      <div className="bd-track">
+        <span>{audioText('playBrandAudio')}</span>
+        <input
+          className="bd-range"
+          type="range"
+          min="0"
+          max={t.dur || 1}
+          step="0.1"
+          value={t.cur}
+          disabled={!src}
+          onChange={seek}
+          aria-label={audioText('seekAudio')}
+          style={{ '--p': `${pct}%` }}
+        />
+      </div>
+      <div className="bd-audio-r">
+        {!src && <span>{audioText('noAudio')}</span>}
+        <button
+          onClick={() => setLoop((v) => !v)}
+          aria-pressed={loop}
+          aria-label={audioText('repeatAudio')}
+          className={loop ? 'on' : ''}
+        >
+          <Icon n="repeat" size={16} />
+        </button>
+      </div>
     </div>
-    <div className="bd-audio-r">
-      {!src && <span>{audioText("noAudio")}</span>}
-      <button onClick={() => setLoop(v => !v)} aria-pressed={loop} aria-label={audioText("repeatAudio")} className={loop ? "on" : ""}><Icon n="repeat" size={16} /></button>
-    </div>
-  </div>;
+  );
 }
 
-const Tile = ({ src, i, alt }) => src
-  ? <img src={src} alt={alt} loading="lazy" />
-  : <div className="bd-tile" style={{ background: TILE_BG[i % 3] }}><Icon n="cup" size={44} /></div>;
+const Tile = ({ src, i, alt }) =>
+  src ? (
+    <img src={src} alt={alt} loading="lazy" />
+  ) : (
+    <div className="bd-tile" style={{ background: TILE_BG[i % 3] }}>
+      <Icon n="cup" size={44} />
+    </div>
+  );
 
 export default function BrandDetailPage({ brandId, brand, onBack, onNavigate, onOpenBranch }) {
   const [loaded, setLoaded] = useState(null);
@@ -284,23 +441,33 @@ export default function BrandDetailPage({ brandId, brand, onBack, onNavigate, on
   const { languageCode, t } = useLanguage();
   const dt = (key, values) => detailText(languageCode, key, values);
   const [translation, setTranslation] = useState(null);
-  const [translationStatus, setTranslationStatus] = useState({ languageCode: "", status: "idle" });
+  const [translationStatus, setTranslationStatus] = useState({ languageCode: '', status: 'idle' });
   useEffect(() => {
     const controller = new AbortController();
-    setLoaded(null); setLoadError(false);
+    setLoaded(null);
+    setLoadError(false);
     fetch(`/api/catalog/brands/${brandId}`, { signal: controller.signal })
-      .then(response => { if (!response.ok) throw new Error(`API ${response.status}`); return response.json(); })
-      .then(async result => {
+      .then((response) => {
+        if (!response.ok) throw new Error(`API ${response.status}`);
+        return response.json();
+      })
+      .then(async (result) => {
         if (controller.signal.aborted) return;
         setLoaded(result);
-        const branches = await Promise.all((result.branches || []).map(async branch => {
-          try {
-            const response = await fetch(`/api/submission-images/branches/${branch.id}`, { signal: controller.signal });
-            if (!response.ok) return branch;
-            const media = await response.json();
-            return { ...branch, images: media.images };
-          } catch { return branch; }
-        }));
+        const branches = await Promise.all(
+          (result.branches || []).map(async (branch) => {
+            try {
+              const response = await fetch(`/api/submission-images/branches/${branch.id}`, {
+                signal: controller.signal,
+              });
+              if (!response.ok) return branch;
+              const media = await response.json();
+              return { ...branch, images: media.images };
+            } catch {
+              return branch;
+            }
+          }),
+        );
         if (!controller.signal.aborted) setLoaded({ ...result, branches });
       })
       .catch(() => {
@@ -319,159 +486,323 @@ export default function BrandDetailPage({ brandId, brand, onBack, onNavigate, on
     const offlineTranslation = getOfflineBrandTranslation(sourceBrand, languageCode);
     if (offlineTranslation && loadError) {
       setTranslation({ languageCode, description: offlineTranslation, isTranslated: true });
-      setTranslationStatus({ languageCode, status: "idle" });
-      return () => { active = false; };
+      setTranslationStatus({ languageCode, status: 'idle' });
+      return () => {
+        active = false;
+      };
     }
 
     if (sourceLanguage === languageCode) {
       setTranslation({ languageCode, description: sourceBrand.description, isTranslated: false });
-      setTranslationStatus({ languageCode, status: "idle" });
-      return () => { active = false; };
+      setTranslationStatus({ languageCode, status: 'idle' });
+      return () => {
+        active = false;
+      };
     }
 
-
-    setTranslationStatus({ languageCode, status: "loading" });
-    fetch(`/api/localization/brands/${brandId}/translations/${languageCode}`, { method: "POST" })
-      .then(async response => {
+    setTranslationStatus({ languageCode, status: 'loading' });
+    fetch(`/api/localization/brands/${brandId}/translations/${languageCode}`, { method: 'POST' })
+      .then(async (response) => {
         const data = await response.json().catch(() => ({}));
         if (!response.ok) throw new Error(data.detail || data.error || `API ${response.status}`);
         return data;
       })
-      .then(data => {
+      .then((data) => {
         if (!active) return;
-        if (typeof data.description !== "string" || !data.description.trim()) throw new Error("Empty translation");
-        setTranslation({ languageCode, description: data.description, isTranslated: data.isTranslated === true });
-        setTranslationStatus({ languageCode, status: "idle" });
+        if (typeof data.description !== 'string' || !data.description.trim())
+          throw new Error('Empty translation');
+        setTranslation({
+          languageCode,
+          description: data.description,
+          isTranslated: data.isTranslated === true,
+        });
+        setTranslationStatus({ languageCode, status: 'idle' });
       })
       .catch(() => {
         if (!active) return;
         if (offlineTranslation) {
           setTranslation({ languageCode, description: offlineTranslation, isTranslated: true });
-          setTranslationStatus({ languageCode, status: "idle" });
+          setTranslationStatus({ languageCode, status: 'idle' });
           return;
         }
         setTranslation(null);
-        setTranslationStatus({ languageCode, status: "error" });
+        setTranslationStatus({ languageCode, status: 'error' });
       });
-    return () => { active = false; };
-  }, [brandId, languageCode, sourceBrand?.description, sourceBrand?.descriptionLanguageCode, loadError]);
+    return () => {
+      active = false;
+    };
+  }, [
+    brandId,
+    languageCode,
+    sourceBrand?.description,
+    sourceBrand?.descriptionLanguageCode,
+    loadError,
+  ]);
   const item = (loaded?.id === brandId ? loaded : null) || brand || { id: brandId };
 
-  
   const dbBrandImgs = getDatabaseBrandImages(item.id, item.name);
   const branches = Array.isArray(item.branches) ? item.branches : [];
-  const resolvedCover = item.cover || dbBrandImgs?.cover || branches.find(branch => branch.images?.coverUrl)?.images.coverUrl;
-  
-  const resolvedMenuImages = item.menuImages?.length ? [item.menuImages[0]] : (dbBrandImgs?.menu || [branches.find(branch => branch.images?.menuImageUrl)?.images.menuImageUrl || null]);
+  const resolvedCover =
+    item.cover ||
+    dbBrandImgs?.cover ||
+    branches.find((branch) => branch.images?.coverUrl)?.images.coverUrl;
+
+  const resolvedMenuImages = item.menuImages?.length
+    ? [item.menuImages[0]]
+    : dbBrandImgs?.menu || [
+        branches.find((branch) => branch.images?.menuImageUrl)?.images.menuImageUrl || null,
+      ];
 
   const localized = translation?.languageCode === languageCode ? translation : null;
   const currentDescription = localized?.description ?? item.description;
-  const descriptionLanguage = localized?.isTranslated ? languageCode : brandDescriptionLanguage(item);
-  const isTranslating = translationStatus.languageCode === languageCode && translationStatus.status === "loading";
-  const translationFailed = translationStatus.languageCode === languageCode && translationStatus.status === "error";
-  const type = item.type || item.category || "";
+  const descriptionLanguage = localized?.isTranslated
+    ? languageCode
+    : brandDescriptionLanguage(item);
+  const isTranslating =
+    translationStatus.languageCode === languageCode && translationStatus.status === 'loading';
+  const translationFailed =
+    translationStatus.languageCode === languageCode && translationStatus.status === 'error';
+  const type = item.type || item.category || '';
   const displayType = localizedCategory(type, languageCode);
-  const count = item.branchCount ?? (typeof item.branches === 'number' ? item.branches : branches.length);
+  const count =
+    item.branchCount ?? (typeof item.branches === 'number' ? item.branches : branches.length);
   const images = resolvedMenuImages;
   const [view, setView] = useState(null);
-  const go = key => onNavigate && onNavigate(key);
-  const goBrands = () => (onBack ? onBack() : go("brands"));
+  const go = (key) => onNavigate && onNavigate(key);
+  const goBrands = () => (onBack ? onBack() : go('brands'));
 
   useEffect(() => {
     if (view === null) return;
     const n = images.length;
-    const k = e => {
-      if (e.key === "Escape") setView(null);
-      if (e.key === "ArrowRight") setView(v => (v + 1) % n);
-      if (e.key === "ArrowLeft") setView(v => (v - 1 + n) % n);
+    const k = (e) => {
+      if (e.key === 'Escape') setView(null);
+      if (e.key === 'ArrowRight') setView((v) => (v + 1) % n);
+      if (e.key === 'ArrowLeft') setView((v) => (v - 1 + n) % n);
     };
-    window.addEventListener("keydown", k);
-    return () => window.removeEventListener("keydown", k);
+    window.addEventListener('keydown', k);
+    return () => window.removeEventListener('keydown', k);
   }, [view, images.length]);
 
-  if (!brand && (!loaded || loaded.id !== brandId)) return <main className="bd"><style>{css}</style><div className="bd-wrap"><button onClick={goBrands}>{dt("back")}</button><p role={loadError ? 'alert' : 'status'}>{loadError ? dt("backendFallback") : dt("loading")}</p></div></main>;
+  if (!brand && (!loaded || loaded.id !== brandId))
+    return (
+      <main className="bd">
+        <style>{css}</style>
+        <div className="bd-wrap">
+          <button onClick={goBrands}>{dt('back')}</button>
+          <p role={loadError ? 'alert' : 'status'}>
+            {loadError ? dt('backendFallback') : dt('loading')}
+          </p>
+        </div>
+      </main>
+    );
 
   const info = [
-    ["pin", dt("branchesAt", { count })],
-    ["globe", item.website && <>{dt("website")}: <a href={`https://${item.website.replace(/^https?:\/\//, "")}`} target="_blank" rel="noreferrer">{item.website}</a></>],
-    ["phone", item.hotline && `${dt("hotline")}: ${item.hotline}`],
-    ["tag", displayType && dt("category", { type: displayType })],
-  ].filter(r => r[1]);
+    ['pin', dt('branchesAt', { count })],
+    [
+      'globe',
+      item.website && (
+        <>
+          {dt('website')}:{' '}
+          <a
+            href={`https://${item.website.replace(/^https?:\/\//, '')}`}
+            target="_blank"
+            rel="noreferrer"
+          >
+            {item.website}
+          </a>
+        </>
+      ),
+    ],
+    ['phone', item.hotline && `${dt('hotline')}: ${item.hotline}`],
+    ['tag', displayType && dt('category', { type: displayType })],
+  ].filter((r) => r[1]);
 
-  return <div className="bd">
-    <style>{css}</style>
-    <Header go={go} goBrands={goBrands} />
-    {loadError && <div className="bd-data-notice" role="status">{dt("backendFallback")}</div>}
-    <div className="bd-wrap">
-      
-      <div className="bd-cover" style={resolvedCover ? { backgroundImage: `url(${resolvedCover})` } : undefined}>
-        <div className="bd-logo-big"><Logo item={item} size={104} /></div>
-      </div>
-
-      <div className="bd-cols">
-        <div className="bd-left">
-          <h1>{item.name || dt("unnamedBrand", { id: item.id })}</h1>
-          <p className="bd-type">{displayType}</p>
-          <p className="bd-where"><Icon n="pin" size={15} /> {dt("branchesAt", { count })}</p>
-
-          {item.audio && (typeof item.audio === 'string' || Object.values(item.audio).some(Boolean))
-            ? <AudioCard key={item.id} audio={item.audio} brandId={Number(item.id)} languageCode={item.audioLanguageCode || item.descriptionLanguageCode} preferredLanguage={languageCode} />
-            : <DescriptionSpeech key={item.id} brandId={Number(item.id)} brandName={item.name} description={currentDescription} sourceLanguageCode={descriptionLanguage} />}
-
-          {isTranslating && <p className="bd-translation-status" role="status">{dt("translating")}</p>}
-          {translationFailed && <p className="bd-translation-status" role="status">{dt("translationFailed")}</p>}
-          <p className="bd-desc">{currentDescription || (loadError ? dt("noSampleDescription") : dt("loadingBrand"))}</p>
-
-          <section className="bd-card">
-            <div className="bd-card-h"><h2>{dt("menu")}</h2></div>
-            
-            <div className="bd-gal-single">
-              <button className="bd-single-img-btn" onClick={() => setView(0)} aria-label={dt("zoomMenu", { number: 1 })}>
-                <Tile src={images[0]} i={0} alt={dt("menuImage", { number: 1 })} />
-              </button>
-            </div>
-
-          </section>
+  return (
+    <div className="bd">
+      <style>{css}</style>
+      <Header go={go} goBrands={goBrands} />
+      {loadError && (
+        <div className="bd-data-notice" role="status">
+          {dt('backendFallback')}
+        </div>
+      )}
+      <div className="bd-wrap">
+        <div
+          className="bd-cover"
+          style={resolvedCover ? { backgroundImage: `url(${resolvedCover})` } : undefined}
+        >
+          <div className="bd-logo-big">
+            <Logo item={item} size={104} />
+          </div>
         </div>
 
-        <aside className="bd-right">
-          <section className="bd-card">
-            <h2>{dt("quickInfo")}</h2>
-            <ul className="bd-info">{info.map(([ic, text]) => <li key={ic}><span><Icon n={ic} size={15} /></span><div>{text}</div></li>)}</ul>
-          </section>
-          <section className="bd-card">
-            <h2>{dt("featured")}</h2>
-            {branches.length ? <ul className="bd-br">
-              {branches.map((b, i) => <li key={b.id || b.name || i}>
-                <Logo item={b.images?.logoUrl ? { ...item, logo: b.images.logoUrl } : item} size={36} />
-                <div>
-                  <strong>{b.name}</strong>
-                  {b.address
-                    ? <LocalizedBranchAddress branchId={b.id} address={b.address} languageCode={languageCode} />
-                    : <span>{dt("noAddress")}</span>}
-                </div>
-                <div className="bd-branch-actions">
-                  {b.images?.coverUrl && <a href={b.images.coverUrl} target="_blank" rel="noopener noreferrer"><img src={b.images.coverUrl} alt={b.name} loading="lazy" style={{ width: "100%", maxHeight: 140, objectFit: "cover", borderRadius: 8 }} /></a>}
-                  {b.images?.menuImageUrl && <a className="bd-branch-map-link" href={b.images.menuImageUrl} target="_blank" rel="noopener noreferrer">{dt("menu")}</a>}
-                  <a className="bd-branch-map-link" href={branchMapsUrl(b)} target="_blank" rel="noopener noreferrer" aria-label={`${t("map.directionsGoogle")}: ${b.name}`}>
-                    {t("map.directionsGoogle")}
-                  </a>
-                  <button className="bd-branch-map-link bd-branch-app-link" type="button" onClick={() => onOpenBranch?.(b)} aria-label={`${t("map.directionsInApp")}: ${b.name}`}>
-                    {t("map.directionsInApp")}
-                  </button>
-                </div>
-              </li>)}
-            </ul> : <p className="bd-muted">{dt("noFeatured")}</p>}
-          </section>
-        </aside>
-      </div>
-    </div>
+        <div className="bd-cols">
+          <div className="bd-left">
+            <h1>{item.name || dt('unnamedBrand', { id: item.id })}</h1>
+            <p className="bd-type">{displayType}</p>
+            <p className="bd-where">
+              <Icon n="pin" size={15} /> {dt('branchesAt', { count })}
+            </p>
 
-    {view !== null && <div className="bd-lb" role="dialog" aria-modal="true" aria-label={dt("menu")} onClick={() => setView(null)}>
-      <div className="bd-lb-in" onClick={e => e.stopPropagation()}><Tile src={images[view]} i={view} alt={dt("menuImage", { number: view + 1 })} /></div>
-      <button className="bd-lb-x" onClick={() => setView(null)} aria-label={dt("close")}><Icon n="close" /></button>
-    </div>}
-  </div>;
+            {item.audio &&
+            (typeof item.audio === 'string' || Object.values(item.audio).some(Boolean)) ? (
+              <AudioCard
+                key={item.id}
+                audio={item.audio}
+                brandId={Number(item.id)}
+                languageCode={item.audioLanguageCode || item.descriptionLanguageCode}
+                preferredLanguage={languageCode}
+              />
+            ) : (
+              <DescriptionSpeech
+                key={item.id}
+                brandId={Number(item.id)}
+                brandName={item.name}
+                description={currentDescription}
+                sourceLanguageCode={descriptionLanguage}
+              />
+            )}
+
+            {isTranslating && (
+              <p className="bd-translation-status" role="status">
+                {dt('translating')}
+              </p>
+            )}
+            {translationFailed && (
+              <p className="bd-translation-status" role="status">
+                {dt('translationFailed')}
+              </p>
+            )}
+            <p className="bd-desc">
+              {currentDescription || (loadError ? dt('noSampleDescription') : dt('loadingBrand'))}
+            </p>
+
+            <section className="bd-card">
+              <div className="bd-card-h">
+                <h2>{dt('menu')}</h2>
+              </div>
+
+              <div className="bd-gal-single">
+                <button
+                  className="bd-single-img-btn"
+                  onClick={() => setView(0)}
+                  aria-label={dt('zoomMenu', { number: 1 })}
+                >
+                  <Tile src={images[0]} i={0} alt={dt('menuImage', { number: 1 })} />
+                </button>
+              </div>
+            </section>
+          </div>
+
+          <aside className="bd-right">
+            <section className="bd-card">
+              <h2>{dt('quickInfo')}</h2>
+              <ul className="bd-info">
+                {info.map(([ic, text]) => (
+                  <li key={ic}>
+                    <span>
+                      <Icon n={ic} size={15} />
+                    </span>
+                    <div>{text}</div>
+                  </li>
+                ))}
+              </ul>
+            </section>
+            <section className="bd-card">
+              <h2>{dt('featured')}</h2>
+              {branches.length ? (
+                <ul className="bd-br">
+                  {branches.map((b, i) => (
+                    <li key={b.id || b.name || i}>
+                      <Logo
+                        item={b.images?.logoUrl ? { ...item, logo: b.images.logoUrl } : item}
+                        size={36}
+                      />
+                      <div>
+                        <strong>{b.name}</strong>
+                        {b.address ? (
+                          <LocalizedBranchAddress
+                            branchId={b.id}
+                            address={b.address}
+                            languageCode={languageCode}
+                          />
+                        ) : (
+                          <span>{dt('noAddress')}</span>
+                        )}
+                      </div>
+                      <div className="bd-branch-actions">
+                        {b.images?.coverUrl && (
+                          <a href={b.images.coverUrl} target="_blank" rel="noopener noreferrer">
+                            <img
+                              src={b.images.coverUrl}
+                              alt={b.name}
+                              loading="lazy"
+                              style={{
+                                width: '100%',
+                                maxHeight: 140,
+                                objectFit: 'cover',
+                                borderRadius: 8,
+                              }}
+                            />
+                          </a>
+                        )}
+                        {b.images?.menuImageUrl && (
+                          <a
+                            className="bd-branch-map-link"
+                            href={b.images.menuImageUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            {dt('menu')}
+                          </a>
+                        )}
+                        <a
+                          className="bd-branch-map-link"
+                          href={branchMapsUrl(b)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          aria-label={`${t('map.directionsGoogle')}: ${b.name}`}
+                        >
+                          {t('map.directionsGoogle')}
+                        </a>
+                        <button
+                          className="bd-branch-map-link bd-branch-app-link"
+                          type="button"
+                          onClick={() => onOpenBranch?.(b)}
+                          aria-label={`${t('map.directionsInApp')}: ${b.name}`}
+                        >
+                          {t('map.directionsInApp')}
+                        </button>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="bd-muted">{dt('noFeatured')}</p>
+              )}
+            </section>
+          </aside>
+        </div>
+      </div>
+
+      {view !== null && (
+        <div
+          className="bd-lb"
+          role="dialog"
+          aria-modal="true"
+          aria-label={dt('menu')}
+          onClick={() => setView(null)}
+        >
+          <div className="bd-lb-in" onClick={(e) => e.stopPropagation()}>
+            <Tile src={images[view]} i={view} alt={dt('menuImage', { number: view + 1 })} />
+          </div>
+          <button className="bd-lb-x" onClick={() => setView(null)} aria-label={dt('close')}>
+            <Icon n="close" />
+          </button>
+        </div>
+      )}
+    </div>
+  );
 }
 
 const css = `
