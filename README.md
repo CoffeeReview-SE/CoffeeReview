@@ -4,8 +4,8 @@ SaigonCoffee is a workspace for a coffee shop discovery and review product focus
 
 ## Repository structure
 
-- `apps/web` — customer website
-- `apps/mobile` — React Native / Expo app
+- `apps/web` — customer website placeholder
+- `App.jsx` — root React entry point for the four current UI screens
 - `apps/admin` — administration interface
 - `packages/ui` — shared UI components and design system
 - `packages/i18n` — locale resources and text-to-speech integration
@@ -24,26 +24,26 @@ The application and service directories are currently scaffolds. The existing pr
 ## Prerequisites
 
 - Node.js 20 or later
-- pnpm 9
+- npm 10 or later
 - .NET SDK matching the backend project once its project files are added
 
 ## Getting started
 
 ```sh
-pnpm install
-pnpm dev
+npm install
+npm run dev
 ```
 
-Individual app and package scripts become available as their implementations are added. Backend services remain independently buildable and deployable; `backend/` is the current .NET starting point.
+The current UI runs as a Vite React application from the repository root. Backend services remain independently buildable and deployable; `backend/` is the current .NET starting point.
 
 Copy `.env.example` to `.env` and set the values needed for local development. Never commit populated secrets.
 
 ## Workspace commands
 
 ```sh
-pnpm build
-pnpm lint
-pnpm typecheck
+npm run build
+npm run lint
+npm run typecheck
 ```
 
 ## License
