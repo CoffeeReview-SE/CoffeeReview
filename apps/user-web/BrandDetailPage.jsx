@@ -1,5 +1,4 @@
 import React, { useEffect, useRef, useState } from "react";
-import BrandLogo from "../BrandLogo.jsx";
 
 /* Dữ liệu mẫu — thay bằng kết quả API theo brandId khi backend sẵn sàng. */
 const demo = {
@@ -68,7 +67,7 @@ function Header({ go, goBrands }) {
   
   return <header className="bd-bar">
     <button className="bd-logo" onClick={() => go("home")}>
-      <BrandLogo size={34} tone="light" /><span><b>SaigonCoffee</b><small>Khám phá cà phê Sài Gòn</small></span>
+      <Icon n="cup" size={30} /><span><b>SaigonCoffee</b><small>Khám phá cà phê Sài Gòn</small></span>
     </button>
     <nav className="bd-nav" aria-label="Điều hướng chính">
       {items.map(([k, label, fn]) => (

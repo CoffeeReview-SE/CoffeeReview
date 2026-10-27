@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from "react";
-import BrandLogo from "../BrandLogo.jsx";
 
 const INITIAL_BRANDS = [
   { id: 1, name: "The Coffee House", type: "Cà phê, trà, bánh", branchCount: 12, badge: "#1A2518", mark: ["THE", "COFFEE", "HOUSE"], logo: "" },
@@ -58,7 +57,7 @@ function Header({ currentNav = "brands", onNavigate }) {
   return (
     <header className="bl-bar">
       <button className="bl-logo" onClick={() => handleNavClick("home")}>
-        <BrandLogo size={34} tone="light" />
+        <Icon n="cup" size={30} />
         <span>
           <b>SaigonCoffee</b>
           <small>Khám phá cà phê Sài Gòn</small>

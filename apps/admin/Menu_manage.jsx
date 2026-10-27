@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import BrandLogo from '../BrandLogo.jsx';
 
 /* Danh mục điều hướng - Đồng bộ với AdminDashboard & BranchManagement */
 const NAV = [
@@ -201,7 +200,7 @@ export default function MenuManagement({ onNavigate }) {
       {/* Navigation Sidebar */}
       <aside className="ad-side">
         <div className="ad-brand">
-          <BrandLogo size={36} tone="light" />
+          <Icon n="cup" size={32} />
           <span>
             <b>SaigonCoffee</b>
             <small>Quản trị hệ thống</small>

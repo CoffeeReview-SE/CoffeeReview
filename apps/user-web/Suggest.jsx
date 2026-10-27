@@ -1,5 +1,4 @@
 import React, { useEffect, useRef, useState } from "react";
-import BrandLogo from "../BrandLogo.jsx";
 
 // Dữ liệu mẫu thương hiệu đã chọn trước đó (nếu không được truyền qua props)
 const DEFAULT_SELECTED_BRANDS = [
@@ -56,7 +55,7 @@ function Header({ currentNav = "suggestions", onNavigate }) {
   return (
     <header className="sg-bar">
       <button className="sg-logo" onClick={() => handleNavClick("home")}>
-        <BrandLogo size={34} tone="light" />
+        <Icon n="cup" size={30} />
         <span>
           <b>SaigonCoffee</b>
           <small>Khám phá cà phê Sài Gòn</small>

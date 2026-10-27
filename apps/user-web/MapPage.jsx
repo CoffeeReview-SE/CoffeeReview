@@ -1,6 +1,5 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import BrandLogo from "../BrandLogo.jsx";
 import StoreMap from "./StoreMap.jsx";
 
 export default function MapPage() {
@@ -13,7 +12,7 @@ export default function MapPage() {
           event.preventDefault();
           navigate("/");
         }}>
-          <BrandLogo size={32} tone="light" /> SaigonCoffee
+          SaigonCoffee
         </a>
         <button className="store-map-page__home" onClick={() => navigate("/")} type="button">
           Về trang chủ
