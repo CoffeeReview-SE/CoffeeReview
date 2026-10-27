@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview --host 0.0.0.0 --port $PORT",
-    "start": "npm run build && npm run preview"
+    "start": "npm run build && npm run preview",
+    "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
     "turbo": "^2.3.3",
@@ -21,6 +22,7 @@
     "@vitejs/plugin-react": "^5.0.4",
     "react": "^19.1.0",
     "react-dom": "19.1.0",
+    "react-router-dom": "^7.9.4",
     "vite": "^7.1.12",
     "serve": "^14.2.4"
   }

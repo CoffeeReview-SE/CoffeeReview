@@ -5,7 +5,8 @@ SaigonCoffee is a workspace for a coffee shop discovery and review product focus
 ## Repository structure
 
 - `apps/web` — customer website placeholder
-- `App.jsx` — root React entry point for the four current UI screens
+- `apps/main.jsx` — Vite entry point for the four current UI screens
+- `apps/App.jsx` — React Router route definitions
 - `apps/admin` — administration interface
 - `packages/ui` — shared UI components and design system
 - `packages/i18n` — locale resources and text-to-speech integration
@@ -34,7 +35,7 @@ npm install
 npm run dev
 ```
 
-The current UI runs as a Vite React application from the repository root. Backend services remain independently buildable and deployable; `backend/` is the current .NET starting point.
+The current UI runs as a Vite React application from `apps/main.jsx`. Backend services remain independently buildable and deployable; `backend/` is the current .NET starting point.
 
 Copy `.env.example` to `.env` and set the values needed for local development. Never commit populated secrets.
 

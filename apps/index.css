@@ -1,0 +1,21 @@
+/* Full-bleed layout: no browser margin, no centered/padded #root from the Vite template */
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body, #root {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  min-height: 100%;
+}
+
+body {
+  display: block;        /* Vite template sets display:flex; place-items:center */
+  place-items: initial;
+  min-width: 0;
+  background: #fff;
+}
+
+#root {
+  max-width: none;       /* Vite template sets max-width:1280px; padding:2rem */
+  text-align: initial;
+}

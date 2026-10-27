@@ -14,7 +14,8 @@
     "noEmit": true
   },
   "include": [
-    "App.jsx",
+    "apps/main.jsx",
+    "apps/App.jsx",
     "apps/admin/**/*.jsx",
     "apps/admin/**/*.tsx",
     "apps/user-web/**/*.jsx",

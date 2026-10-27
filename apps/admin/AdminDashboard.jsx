@@ -2,7 +2,6 @@ import React from "react";
 
 /* Dữ liệu mẫu — thay bằng API/PostgreSQL. */
 const RANGE = "01/04/2025 - 30/04/2025";
-const ADMIN = { name: "Admin", avatar: "" }; // avatar: URL ảnh đại diện (để trống sẽ hiện chữ cái đầu)
 
 const NAV = [
   ["dashboard", "Dashboard", "home"],
@@ -120,13 +119,6 @@ export default function AdminDashboard({ onNavigate }) {
       </nav>
     </aside>
 
-    <div className="ad-top">
-      <button className="ad-user" onClick={() => go("profile")} aria-label="Tài khoản quản trị">
-        {ADMIN.avatar ? <img src={ADMIN.avatar} alt="" /> : <i>{ADMIN.name[0]}</i>}
-        {ADMIN.name}<Icon n="chevron" size={13} />
-      </button>
-    </div>
-
     <main className="ad-main">
       <header className="ad-head">
         <h1>Dashboard</h1>
@@ -183,7 +175,7 @@ export default function AdminDashboard({ onNavigate }) {
 }
 
 const css = `
-.ad{--brown:#4B2817;--brown-3:#6B3A22;--accent:#C8672B;--ink:#2A1810;--muted:#8B7A6C;--line:#EFE5DA;display:grid;grid-template-columns:240px minmax(0,1fr);grid-template-rows:56px 1fr;grid-template-areas:"side top" "side main";min-height:100vh;background:linear-gradient(180deg,#4B2817,#38190D);color:var(--ink);font-family:Inter,system-ui,"Segoe UI",sans-serif}
+.ad{--brown:#4B2817;--brown-3:#6B3A22;--accent:#C8672B;--ink:#2A1810;--muted:#8B7A6C;--line:#EFE5DA;display:grid;grid-template-columns:240px minmax(0,1fr);grid-template-rows:1fr;grid-template-areas:"side main";min-height:100vh;background:linear-gradient(180deg,#4B2817,#38190D);color:var(--ink);font-family:Inter,system-ui,"Segoe UI",sans-serif}
 .ad *{box-sizing:border-box}
 .ad :where(button){font:inherit}
 .ad button:focus-visible{outline:2px solid #E9A24B;outline-offset:2px}
@@ -195,10 +187,6 @@ const css = `
 .ad-nav button{display:flex;align-items:center;gap:11px;width:100%;margin-bottom:6px;padding:12px;border:0;border-radius:10px;background:transparent;color:rgba(255,255,255,.82);font-size:13px;text-align:left;cursor:pointer}
 .ad-nav button:hover{background:rgba(255,255,255,.07);color:#fff}
 .ad-nav button[aria-current=page]{background:linear-gradient(90deg,#7A4A2E,#6A3C26);color:#fff;font-weight:600;box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)}
-.ad-top{grid-area:top;display:flex;align-items:center;justify-content:flex-end;padding:0 24px}
-.ad-user{display:flex;align-items:center;gap:8px;padding:4px;border:0;background:none;color:#fff;font-size:12.5px;cursor:pointer}
-.ad-user img,.ad-user i{width:28px;height:28px;border-radius:50%;object-fit:cover}
-.ad-user i{display:grid;place-items:center;background:#C98B5A;font-style:normal;font-weight:700}
 
 .ad-main{grid-area:main;min-width:0;padding:24px clamp(16px,2.4vw,32px) 40px;border-top-left-radius:18px;background:#FBF8F4}
 .ad-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin-bottom:20px}
@@ -249,11 +237,10 @@ const css = `
   .ad-row.r1,.ad-row.r2{grid-template-columns:minmax(0,1fr)}
 }
 @media (max-width:900px){
-  .ad{grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto 1fr;grid-template-areas:"side" "top" "main"}
+  .ad{grid-template-columns:minmax(0,1fr);grid-template-rows:auto 1fr;grid-template-areas:"side" "main"}
   .ad-side{padding:12px 12px 4px}
   .ad-brand{padding-bottom:12px}
   .ad-nav{display:flex;gap:6px;overflow-x:auto}
   .ad-nav button{width:auto;margin:0;white-space:nowrap}
-  .ad-top{padding:6px 16px 12px}
   .ad-main{border-radius:18px 18px 0 0}
 }`;
