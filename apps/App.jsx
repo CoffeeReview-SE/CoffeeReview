@@ -2,7 +2,11 @@ import React from 'react';
 import { Navigate, Route, Routes, useNavigate, useParams } from 'react-router-dom';
 
 import HomePage from './user-web/HomePage.jsx';
+<<<<<<< Updated upstream
 import BrandListPage from './user-web/Brand_list.jsx'; // Thêm import trang danh sách thương hiệu
+=======
+import MapPage from './user-web/MapPage.jsx';
+>>>>>>> Stashed changes
 import BrandDetailPage from './user-web/BrandDetailPage.jsx';
 import AdminDashboard from './admin/AdminDashboard.jsx';
 import BrandManagement from './admin/Manage_Brand.jsx';
@@ -26,9 +30,15 @@ const ADMIN_SECTIONS = Object.keys(ADMIN_PAGES);
 function useUserNav() {
   const nav = useNavigate();
   return (key) => {
+<<<<<<< Updated upstream
     if (key === 'home') return nav('/');
     if (key === 'brands') return nav('/brands'); // Chuyển hướng sang trang danh sách thương hiệu
     console.info(`Trang "${key}" chưa có.`); // map, suggestions, login, search...
+=======
+    if (key === 'home' || key === 'brands') return nav('/');
+    if (key === 'map') return nav('/map');
+    console.info(`Trang "${key}" chưa có.`); // suggestions, login, search...
+>>>>>>> Stashed changes
   };
 }
 
@@ -87,7 +97,11 @@ export default function App() {
     <Routes>
       <Route path="/" element={<Home />} />
       <Route path="/home" element={<Navigate to="/" replace />} />
+<<<<<<< Updated upstream
       <Route path="/brands" element={<BrandList />} /> {/* Thêm route cho trang danh sách thương hiệu */}
+=======
+      <Route path="/map" element={<MapPage />} />
+>>>>>>> Stashed changes
       <Route path="/brand" element={<BrandDetail />} />
       <Route path="/brand/:id" element={<BrandDetail />} />
       <Route path="/admin" element={<Dashboard />} />
