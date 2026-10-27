@@ -193,7 +193,8 @@ export default function BrandListPage({ onSelectBrand, onNavigate }) {
             đến cho bạn hành trình vị cà phê độc đáo.
           </p>
 
-          <div className="bl-search" role="search" onSubmit={e => e.preventDefault()}>
+          {/* Đã cập nhật thành thẻ form và đồng bộ style `.bl-search` */}
+          <form className="bl-search" role="search" onSubmit={e => e.preventDefault()}>
             <input
               type="text"
               placeholder="Tìm kiếm thương hiệu, khu vực, loại hình..."
@@ -204,7 +205,7 @@ export default function BrandListPage({ onSelectBrand, onNavigate }) {
             <button aria-label="Tìm kiếm">
               <Icon n="search" size={18} />
             </button>
-          </div>
+          </form>
         </div>
         <Cup />
       </section>
@@ -272,7 +273,8 @@ const styles = `
 
 .bl-page * { box-sizing: border-box; }
 .bl-page :where(button,input,select){font:inherit}
-.bl-page button:focus-visible,.bl-page input:focus-visible{outline:2px solid #E9A24B;outline-offset:2px}
+.bl-page button:focus-visible{outline:2px solid #fff;outline-offset:2px}
+.bl-page input:focus-visible{outline:none}
 
 /* Header Component */
 .bl-bar {
@@ -313,7 +315,6 @@ const styles = `
 }
 
 .bl-nav button:hover { color: #fff; }
-/* Làm nổi bật và gạch chân màu vàng khi đang ở mục Thương hiệu */
 .bl-nav button[aria-current=page] { color: #fff; font-weight: 600; border-color: #E9A24B; }
 
 .bl-tools { display: flex; align-items: center; gap: 14px; }
@@ -390,7 +391,7 @@ const styles = `
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* Đồng bộ Hero Section giống hệt HomePage */
+/* Đồng bộ Hero Section & Search giống hệt HomePage */
 .bl-hero {
   position: relative;
   display: flex;
@@ -430,7 +431,6 @@ const styles = `
   border-radius: 10px;
   background: #fff;
   box-shadow: 0 6px 20px rgba(0,0,0,.28);
-  max-width: 460px;
 }
 .bl-search input {
   flex: 1;
@@ -442,7 +442,7 @@ const styles = `
   font-size: 13.5px;
 }
 .bl-search input:focus-visible { outline: none; }
-.bl-search:focus-within { outline: 2px solid #E9A24B; }
+.bl-search:focus-within { outline: none; }
 .bl-search button {
   display: grid;
   place-items: center;
@@ -450,7 +450,7 @@ const styles = `
   height: 38px;
   border: 0;
   border-radius: 8px;
-  background: var(--brown-mid);
+  background: #6B3A22;
   color: #fff;
   cursor: pointer;
 }
