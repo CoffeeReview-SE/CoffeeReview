@@ -3,11 +3,14 @@
   "private": true,
   "version": "0.1.0",
   "packageManager": "pnpm@9.15.0",
+  "engines": {
+    "node": ">=20.19.0"
+  },
   "scripts": {
-    "start": "serve -s dist -l 8080",
+    "start": "serve -s dist -l tcp://0.0.0.0:${PORT:-8080}",
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview --host 0.0.0.0 --port $PORT"
+    "preview": "vite preview "
   },
   "devDependencies": {
     "turbo": "^2.3.3",
@@ -22,7 +25,7 @@
     "react": "^19.1.0",
     "react-dom": "19.1.0",
     "react-router-dom": "^7.9.4",
-    "vite": "^7.1.12",
-    "serve": "^14.2.4"
+    "serve": "^14.2.6",
+    "vite": "^7.1.12"
   }
 }
