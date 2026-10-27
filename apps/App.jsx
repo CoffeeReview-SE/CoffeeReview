@@ -2,11 +2,7 @@ import React from 'react';
 import { Navigate, Route, Routes, useNavigate, useParams } from 'react-router-dom';
 
 import HomePage from './user-web/HomePage.jsx';
-<<<<<<< Updated upstream
 import BrandListPage from './user-web/Brand_list.jsx'; // Thêm import trang danh sách thương hiệu
-=======
-import MapPage from './user-web/MapPage.jsx';
->>>>>>> Stashed changes
 import BrandDetailPage from './user-web/BrandDetailPage.jsx';
 import AdminDashboard from './admin/AdminDashboard.jsx';
 import BrandManagement from './admin/Manage_Brand.jsx';
