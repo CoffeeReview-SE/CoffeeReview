@@ -1,8 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
 
-/* Dữ liệu mẫu — thay bằng API/PostgreSQL.
-   cover / audio: URL ảnh và file audio giới thiệu thật của thương hiệu.
-   HERO_IMAGE: ảnh nền khu vực hero (để trống sẽ dùng hình minh họa bằng CSS/SVG). */
 const HERO_IMAGE = "";
 const brands = [
   { id: 3, name: "The Coffee House", type: "Cà phê, trà, bánh", branches: 12, mark: ["THE", "COFFEE", "HOUSE"], cover: "", audio: "" },
@@ -11,7 +8,6 @@ const brands = [
   { id: 7, name: "Cộng Cà Phê", type: "Cà phê, đồ uống", branches: 14, mark: ["CỘNG"], ink: "#E9A24B", cover: "", audio: "" },
 ];
 
-// Tìm không phân biệt hoa/thường và dấu tiếng Việt ("phuc long" → "Phúc Long")
 const fold = s => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d");
 
 const paths = {
@@ -30,23 +26,79 @@ const Icon = ({ n, size = 18 }) => (
 
 function Header({ active, go }) {
   const [lang, setLang] = useState("VI");
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
+  const languages = [
+    { code: "VI", label: "Tiếng Việt" },
+    { code: "EN", label: "English" },
+    { code: "KO", label: "한국어" }
+  ];
+
+  // Đóng dropdown khi click ra bên ngoài
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   const items = [["home", "Trang chủ"], ["brands", "Thương hiệu"], ["map", "Bản đồ"], ["suggestions", "Đề xuất"]];
+  
   return <header className="hp-bar">
     <button className="hp-logo" onClick={() => go("home")}>
       <Icon n="cup" size={30} /><span><b>SaigonCoffee</b><small>Khám phá cà phê Sài Gòn</small></span>
     </button>
     <nav className="hp-nav" aria-label="Điều hướng chính">
-      {items.map(([k, label]) => <button key={k} aria-current={active === k ? "page" : undefined} onClick={() => go(k)}>{label}</button>)}
+      {items.map(([k, label]) => (
+        <button 
+          key={k} 
+          aria-current={active === k ? "page" : undefined} 
+          onClick={() => go(k)}
+        >
+          {label}
+        </button>
+      ))}
     </nav>
     <div className="hp-tools">
-      <label className="hp-lang"><Icon n="globe" size={15} />
-        <select value={lang} onChange={e => setLang(e.target.value)} aria-label="Ngôn ngữ"><option>VI</option><option>EN</option><option>KO</option></select>
-      </label>
+      {/* Custom Dropdown Ngôn Ngữ */}
+      <div className="hp-lang-dropdown" ref={dropdownRef}>
+        <button 
+          className="hp-lang-btn" 
+          onClick={() => setIsOpen(!isOpen)} 
+          aria-expanded={isOpen}
+          aria-label="Chọn ngôn ngữ"
+        >
+          <span>{lang}</span>
+          <span className={`hp-chevron-icon ${isOpen ? "open" : ""}`}>
+            <Icon n="chevron" size={12} />
+          </span>
+        </button>
+        
+        {isOpen && (
+          <div className="hp-lang-menu">
+            {languages.map((item) => (
+              <button
+                key={item.code}
+                className={`hp-lang-item ${lang === item.code ? "active" : ""}`}
+                onClick={() => {
+                  setLang(item.code);
+                  setIsOpen(false);
+                }}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   </header>;
 }
 
-// Hình minh họa tách cà phê (chỉ hiện khi chưa có HERO_IMAGE)
 function Cup() {
   return <svg className="hp-cup" viewBox="0 0 340 230" aria-hidden="true">
     <defs><linearGradient id="hp-cupg" x1="0" x2="1"><stop offset="0" stopColor="#9A7C5C" /><stop offset=".55" stopColor="#6A503A" /><stop offset="1" stopColor="#3E2B1D" /></linearGradient></defs>
@@ -60,7 +112,6 @@ function Cup() {
   </svg>;
 }
 
-// Logo thương hiệu dạng chữ khi chưa có ảnh bìa thật
 function Mark({ b }) {
   const lines = b.mark.map(l => <span key={l}>{l}</span>);
   return b.badge
@@ -72,26 +123,20 @@ export default function HomePage({ onOpenBrand, onNavigate }) {
   const [query, setQuery] = useState("");
   const [playing, setPlaying] = useState(null);
   const audio = useRef(null);
-  const go = key => onNavigate && onNavigate(key);
-  const shown = brands.filter(b => fold(`${b.name} ${b.type}`).includes(fold(query.trim())));
+  
+  const go = key => {
+    if (onNavigate) {
+      onNavigate(key);
+    }
+  };
+
+  const shown = brands.filter(b => fold(`${b.name}${b.type}`).includes(fold(query.trim())));
   const open = b => onOpenBrand ? onOpenBrand(b.id) : window.alert(`Mở chi tiết thương hiệu ID ${b.id}; cần kết nối router/API.`);
 
   const stop = () => { audio.current?.pause(); audio.current = null; setPlaying(null); };
   const toggle = b => {
     if (playing === b.id) return stop();
-    if (!b.audio) return window.alert(`Chưa có file audio giới thiệu cho ${b.name}.`);
-    stop();
-    const a = new Audio(b.audio);
-    a.onended = () => setPlaying(null);
-    a.play().then(() => setPlaying(b.id)).catch(() => setPlaying(null));
-    audio.current = a;
-  };
-  useEffect(() => () => audio.current?.pause(), []);
-
-  return <div className="hp">
-    <style>{css}</style>
-    <Header active="home" go={go} />
-    <section className="hp-hero" style={HERO_IMAGE ? { backgroundImage: `linear-gradient(90deg,rgba(30,14,6,.88),rgba(30,14,6,.25)),url(${HERO_IMAGE})` } : undefined}>
+    if (!b.audio) return window.alert(`Chưa có file audio giới thiệu cho ${b.name}.`); stop(); const a = new Audio(b.audio); a.onended = () => setPlaying(null); a.play().then(() => setPlaying(b.id)).catch(() => setPlaying(null)); audio.current = a; }; useEffect(() => () => audio.current?.pause(), []);  return <div className="hp"> <style>{css}</style> <Header active="home" go={go} /> <section className="hp-hero" style={HERO_IMAGE ? { backgroundImage: `linear-gradient(90deg,rgba(30,14,6,.88),rgba(30,14,6,.25)),url(${HERO_IMAGE})` } : undefined}>
       <div className="hp-hero-in">
         <h1>Khám phá những thương hiệu<br />cà phê đặc sắc tại Sài Gòn</h1>
         <p>Từ những quán cà phê lâu đời đến những thương hiệu hiện đại, chúng tôi mang đến cho bạn hành trình vị cà phê độc đáo.</p>
@@ -106,12 +151,13 @@ export default function HomePage({ onOpenBrand, onNavigate }) {
     <main className="hp-main">
       <div className="hp-head">
         <h2>Thương hiệu nổi bật</h2>
-        <button className="hp-link" onClick={() => go("brands")}>Xem tất cả <Icon n="arrow" size={14} /></button>
+        <button className="hp-link" onClick={() => go("brands")}>
+          Xem tất cả <Icon n="arrow" size={14} />
+        </button>
       </div>
       {shown.length ? <div className="hp-grid">
         {shown.map(b => <article key={b.id} className="hp-card">
-          <button className="hp-cover" onClick={() => open(b)} aria-label={`Xem thương hiệu ${b.name}`}
-            style={b.cover ? { backgroundImage: `linear-gradient(rgba(0,0,0,.15),rgba(0,0,0,.25)),url(${b.cover})` } : undefined}>
+          <button className="hp-cover" onClick={() => open(b)} aria-label={`Xem thương hiệu ${b.name}`} style={b.cover ? { backgroundImage: `linear-gradient(rgba(0,0,0,.15),rgba(0,0,0,.25)),url(${b.cover})` } : undefined}>
             {!b.cover && <Mark b={b} />}
           </button>
           <button className="hp-play" onClick={() => toggle(b)} aria-pressed={playing === b.id}
@@ -143,11 +189,25 @@ const css = `
 .hp-nav button{padding:21px 0 17px;border:0;border-bottom:2px solid transparent;background:none;color:rgba(255,255,255,.82);font-size:13px;cursor:pointer}
 .hp-nav button:hover{color:#fff}
 .hp-nav button[aria-current=page]{color:#fff;font-weight:600;border-color:#E9A24B}
+
 .hp-tools{display:flex;align-items:center;gap:14px}
 .hp-tools>button{display:grid;place-items:center;padding:4px;border:0;background:none;color:#fff;cursor:pointer}
-.hp-lang{display:flex;align-items:center;gap:6px;font-size:12px}
-.hp-lang select{border:0;background:transparent;color:#fff;font-size:12px;cursor:pointer}
-.hp-lang option{color:var(--ink);background:#fff}
+
+/* Custom Dropdown Ngôn Ngữ */
+.hp-lang-dropdown{position:relative}
+.hp-lang-btn{display:flex;align-items:center;gap:6px;padding:6px 10px;border:1px solid rgba(255,255,255,0.2);border-radius:8px;background:rgba(255,255,255,0.08);color:#fff;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.2s ease}
+.hp-lang-btn:hover{background:rgba(255,255,255,0.15);border-color:rgba(255,255,255,0.4)}
+.hp-chevron-icon{display:flex;align-items:center;transition:transform 0.25s ease}
+.hp-chevron-icon.open{transform:rotate(180deg)}
+.hp-lang-menu{position:absolute;right:0;top:calc(100% + 6px);min-width:110px;padding:6px;border-radius:8px;background:#fff;box-shadow:0 8px 20px rgba(42,24,16,0.18);border:1px solid var(--line);z-index:100;display:flex;flex-direction:column;gap:2px;animation:fadeInDown 0.2s ease}
+.hp-lang-item{display:block;width:100%;padding:8px 12px;border:0;border-radius:6px;background:transparent;color:var(--ink);font-size:12px;font-weight:500;text-align:left;cursor:pointer;transition:background 0.15s ease, color 0.15s ease}
+.hp-lang-item:hover{background:#F6EFE7;color:var(--brown-3)}
+.hp-lang-item.active{background:var(--brown-3);color:#fff;font-weight:600}
+
+@keyframes fadeInDown {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
 
 .hp-hero{position:relative;display:flex;align-items:center;min-height:330px;padding:48px 6vw;overflow:hidden;color:#fff;background:radial-gradient(circle at 78% 28%,rgba(233,168,90,.38),transparent 26%),radial-gradient(circle at 94% 62%,rgba(120,150,90,.28),transparent 24%),linear-gradient(100deg,#2B160B 0%,#4A2A18 55%,#3A2415 100%);background-size:cover;background-position:center}
 .hp-hero-in{position:relative;z-index:1;max-width:660px}

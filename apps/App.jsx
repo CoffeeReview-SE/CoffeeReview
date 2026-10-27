@@ -2,6 +2,7 @@ import React from 'react';
 import { Navigate, Route, Routes, useNavigate, useParams } from 'react-router-dom';
 
 import HomePage from './user-web/HomePage.jsx';
+import BrandListPage from './user-web/Brand_list.jsx'; // Thêm import trang danh sách thương hiệu
 import BrandDetailPage from './user-web/BrandDetailPage.jsx';
 import AdminDashboard from './admin/AdminDashboard.jsx';
 import BrandManagement from './admin/Manage_Brand.jsx';
@@ -25,7 +26,8 @@ const ADMIN_SECTIONS = Object.keys(ADMIN_PAGES);
 function useUserNav() {
   const nav = useNavigate();
   return (key) => {
-    if (key === 'home' || key === 'brands') return nav('/');
+    if (key === 'home') return nav('/');
+    if (key === 'brands') return nav('/brands'); // Chuyển hướng sang trang danh sách thương hiệu
     console.info(`Trang "${key}" chưa có.`); // map, suggestions, login, search...
   };
 }
@@ -43,6 +45,17 @@ function Home() {
   const nav = useNavigate();
   const go = useUserNav();
   return <HomePage onNavigate={go} onOpenBrand={(id) => nav(`/brand/${id}`)} />;
+}
+
+function BrandList() {
+  const nav = useNavigate();
+  const go = useUserNav();
+  return (
+    <BrandListPage
+      onNavigate={go}
+      onSelectBrand={(brand) => nav(`/brand/${brand.id}`)}
+    />
+  );
 }
 
 function BrandDetail() {
@@ -74,6 +87,7 @@ export default function App() {
     <Routes>
       <Route path="/" element={<Home />} />
       <Route path="/home" element={<Navigate to="/" replace />} />
+      <Route path="/brands" element={<BrandList />} /> {/* Thêm route cho trang danh sách thương hiệu */}
       <Route path="/brand" element={<BrandDetail />} />
       <Route path="/brand/:id" element={<BrandDetail />} />
       <Route path="/admin" element={<Dashboard />} />
