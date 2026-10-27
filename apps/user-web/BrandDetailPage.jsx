@@ -1,8 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 
-/* Dữ liệu mẫu — thay bằng kết quả API theo brandId khi backend sẵn sàng.
-   Tương thích dữ liệu cũ: `category` được hiểu là `type`; số chi nhánh lấy từ `branchCount` hoặc `branches.length`.
-   cover / logo / menuImages: URL ảnh thật. audio: một URL hoặc { vi, en, ko }. */
+/* Dữ liệu mẫu — thay bằng kết quả API theo brandId khi backend sẵn sàng. */
 const demo = {
   id: 2, name: "Phúc Long", type: "Trà, cà phê", branchCount: 18,
   description: "Phúc Long là thương hiệu trà và cà phê nổi tiếng tại Việt Nam, với hơn 50 năm phát triển. Từ những năm 1968, Phúc Long đã mang đến những sản phẩm chất lượng cao, kết hợp giữa hương vị truyền thống và hiện đại.",
@@ -59,14 +57,28 @@ function Header({ go, goBrands }) {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const items = [["home", "Trang chủ", true, () => go("home")], ["brands", "Thương hiệu", true, goBrands], ["map", "Bản đồ", false, () => go("map")], ["suggestions", "Đề xuất", false, () => go("suggestions")]];
+  // Cấu hình menu: "brands" được đánh dấu active để hiển thị nổi bật và gạch chân giống trang chủ
+  const items = [
+    ["home", "Trang chủ", () => go("home")], 
+    ["brands", "Thương hiệu", () => goBrands()], 
+    ["map", "Bản đồ", () => go("map")], 
+    ["suggestions", "Đề xuất", () => go("suggestions")]
+  ];
   
   return <header className="bd-bar">
     <button className="bd-logo" onClick={() => go("home")}>
       <Icon n="cup" size={30} /><span><b>SaigonCoffee</b><small>Khám phá cà phê Sài Gòn</small></span>
     </button>
     <nav className="bd-nav" aria-label="Điều hướng chính">
-      {items.map(([k, label, chev, fn]) => <button key={k} aria-current={k === "brands" ? "page" : undefined} onClick={fn}>{label}{chev && <Icon n="chevron" size={13} />}</button>)}
+      {items.map(([k, label, fn]) => (
+        <button 
+          key={k} 
+          aria-current={k === "brands" ? "page" : undefined} 
+          onClick={fn}
+        >
+          {label}
+        </button>
+      ))}
     </nav>
     <div className="bd-tools">
       {/* Custom Dropdown Ngôn Ngữ */}
@@ -100,8 +112,6 @@ function Header({ go, goBrands }) {
           </div>
         )}
       </div>
-
-      <button aria-label="Tìm kiếm" onClick={() => go("search")}><Icon n="search" /></button>
     </div>
   </header>;
 }
@@ -121,7 +131,6 @@ function AudioCard({ audio }) {
   const [loop, setLoop] = useState(false);
   const [t, setT] = useState({ cur: 0, dur: 0 });
   
-  // Nếu audio là object, lấy phần tử đầu tiên hoặc mặc định, nếu không lấy trực tiếp giá trị chuỗi
   const src = audio && typeof audio === "object" ? Object.values(audio)[0] : audio;
 
   useEffect(() => { setPlaying(false); setT({ cur: 0, dur: 0 }); }, [src]);
@@ -162,7 +171,7 @@ export default function BrandDetailPage({ brandId, brand, onBack, onNavigate, on
   const images = item.menuImages?.length ? item.menuImages : [null, null, null];
   const [view, setView] = useState(null);
   const go = key => onNavigate && onNavigate(key);
-  const goBrands = () => (onBack ? onBack() : go("brands")); // quay về danh sách thương hiệu
+  const goBrands = () => (onBack ? onBack() : go("brands"));
 
   useEffect(() => {
     if (view === null) return;
@@ -239,7 +248,7 @@ export default function BrandDetailPage({ brandId, brand, onBack, onNavigate, on
       <button className="bd-lb-x" onClick={() => setView(null)} aria-label="Đóng"><Icon n="close" /></button>
       {images.length > 1 && <>
         <button className="bd-lb-n l" onClick={e => { e.stopPropagation(); setView((view - 1 + images.length) % images.length); }} aria-label="Ảnh trước"><Icon n="left" /></button>
-        <button className="bd-lb-n r" onClick={e => { e.stopPropagation(); setView((view + 1) % images.length); }} aria-label="Ảnh sau"><Icon n="right" /></button>
+        <button className="bd-lb-n r" onClick={e => { e.stopPropagation(); setView((view + 1 + images.length) % images.length); }} aria-label="Ảnh sau"><Icon n="right" /></button>
       </>}
     </div>}
   </div>;
@@ -255,12 +264,14 @@ const css = `
 .bd-logo{display:flex;align-items:center;gap:10px;padding:0;border:0;background:none;color:#fff;text-align:left;cursor:pointer}
 .bd-logo b{display:block;font-size:15px;line-height:1.15}
 .bd-logo small{display:block;font-size:9px;opacity:.65}
+
 .bd-nav{display:flex;flex:1;gap:26px}
-.bd-nav button{display:flex;align-items:center;gap:4px;padding:21px 0 17px;border:0;border-bottom:2px solid transparent;background:none;color:rgba(255,255,255,.82);font-size:13px;cursor:pointer}
+.bd-nav button{padding:21px 0 17px;border:0;border-bottom:2px solid transparent;background:none;color:rgba(255,255,255,.82);font-size:13px;cursor:pointer}
 .bd-nav button:hover{color:#fff}
-.bd-nav button[aria-current=page]{color:#fff;font-weight:600}
+/* Đồng bộ kiểu gạch chân và làm nổi bật chữ khi đang ở trang đó (giống trang chủ) */
+.bd-nav button[aria-current=page]{color:#fff;font-weight:600;border-color:#E9A24B}
+
 .bd-tools{display:flex;align-items:center;gap:14px}
-.bd-tools>button{display:grid;place-items:center;padding:4px;border:0;background:none;color:#fff;cursor:pointer}
 
 /* Custom Dropdown Ngôn Ngữ */
 .bd-lang-dropdown{position:relative}
