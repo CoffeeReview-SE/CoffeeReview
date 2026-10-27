@@ -9,15 +9,13 @@ import SuggestionsPage from './user-web/Suggest.jsx';
 import AdminDashboard from './admin/AdminDashboard.jsx';
 import BrandManagement from './admin/Manage_Brand.jsx';
 import BranchManagement from './admin/Branch_manage.jsx';
-import MenuManagement from './admin/Menu_manage.jsx';
 import SuggestionsManagement from './admin/Sugguest_manage.jsx';
 import ApprovalsManagement from './admin/Approve_manage.jsx';
 
-/* Map: section trên URL -> trang quản trị tương ứng */
+/* Map: section trên URL -> trang quản trị tương ứng (đã bỏ menu) */
 const ADMIN_PAGES = {
   brands: BrandManagement,
   branches: BranchManagement,
-  menu: MenuManagement,
   suggestions: SuggestionsManagement,
   approvals: ApprovalsManagement,
 };
