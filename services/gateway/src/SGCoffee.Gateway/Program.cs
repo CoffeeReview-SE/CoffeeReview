@@ -75,11 +75,20 @@ app.Use(async (ctx, next) =>
 // Admin switch: no login, so admin routes only exist while Admin:Enabled=true
 app.Use(async (ctx, next) =>
 {
-    if (!adminEnabled && ctx.Request.Path.StartsWithSegments("/api/admin"))
+    var isSummaryEndpoint =
+        HttpMethods.IsGet(ctx.Request.Method) &&
+        ctx.Request.Path.Equals(
+            "/api/admin/analytics/summary",
+            StringComparison.OrdinalIgnoreCase);
+
+    if (!isSummaryEndpoint &&
+        !adminEnabled &&
+        ctx.Request.Path.StartsWithSegments("/api/admin"))
     {
         ctx.Response.StatusCode = StatusCodes.Status404NotFound;
         return;
     }
+
     await next();
 });
 

@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 
-/* Dữ liệu mẫu — thay bằng API/PostgreSQL. */
+/* Các biểu đồ và bảng bên dưới vẫn dùng dữ liệu mẫu; KPI truy cập lấy từ API. */
 const RANGE = '01/04/2025 - 30/04/2025';
 
 const NAV = [
@@ -9,13 +9,6 @@ const NAV = [
   ['branches', 'Quản lý chi nhánh', 'pin'],
   ['suggestions', 'Quản lý đề xuất', 'bulb'],
   ['approvals', 'Duyệt đề xuất', 'check'],
-];
-const stats = [
-  { icon: 'eye', label: 'Tổng lượt truy cập', value: '125,430', delta: 12 },
-  { icon: 'audio', label: 'Lượt nghe audio', value: '8,732', delta: 18 },
-  { icon: 'store', label: 'Tổng thương hiệu', value: '28', delta: 3 },
-  { icon: 'pin', label: 'Tổng chi nhánh', value: '156', delta: 5 },
-  { icon: 'bulb', label: 'Đề xuất chờ duyệt', value: '12', delta: -2 },
 ];
 const visits = [
   290, 330, 520, 610, 680, 620, 830, 920, 1000, 840, 910, 1010, 1090, 1160, 1060, 970, 880, 800,
@@ -42,7 +35,7 @@ const latest = [
   ['Phúc Long - Quận 3', '12/04/2025', 'Từ chối'],
 ];
 const badge = { 'Chờ duyệt': 'wait', 'Đã duyệt': 'ok', 'Từ chối': 'no' };
-const fmt = (n) => n.toLocaleString('en-US');
+const fmt = (n) => Number(n ?? 0).toLocaleString('vi-VN');
 
 const paths = {
   cup: (
@@ -192,6 +185,68 @@ function Donut({ data, total }) {
 }
 
 export default function AdminDashboard({ onNavigate }) {
+  const [analytics, setAnalytics] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    async function loadAnalytics() {
+      try {
+        const response = await fetch('/api/admin/analytics/summary', {
+          signal: controller.signal,
+        });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+        const data = await response.json();
+        setAnalytics(data);
+        setError('');
+      } catch (err) {
+        if (err.name !== 'AbortError') {
+          setError(`Không thể tải thống kê: ${err.message}`);
+        }
+      } finally {
+        if (!controller.signal.aborted) setLoading(false);
+      }
+    }
+
+    loadAnalytics();
+    return () => controller.abort();
+  }, []);
+
+  const stats = [
+    {
+      icon: 'eye',
+      label: 'Người truy cập',
+      value: analytics ? fmt(analytics.visitors) : '—',
+      delta: null,
+    },
+    {
+      icon: 'eye',
+      label: 'Số phiên',
+      value: analytics ? fmt(analytics.sessions) : '—',
+      delta: null,
+    },
+    {
+      icon: 'eye',
+      label: 'Lượt xem trang',
+      value: analytics ? fmt(analytics.pageViews) : '—',
+      delta: null,
+    },
+    {
+      icon: 'audio',
+      label: 'Lượt nghe audio (mẫu)',
+      value: '8.732',
+      delta: null,
+    },
+    {
+      icon: 'store',
+      label: 'Tổng thương hiệu (mẫu)',
+      value: '28',
+      delta: null,
+    },
+  ];
   const go = (key) =>
     onNavigate ? onNavigate(key) : window.alert(`Cần cấu hình điều hướng đến mục ${key}.`);
   return (
@@ -229,7 +284,7 @@ export default function AdminDashboard({ onNavigate }) {
               onClick={() => window.alert('Chọn khoảng thời gian sẽ kết nối API sau.')}
             >
               <Icon n="calendar" size={15} />
-              {RANGE}
+              {RANGE} (mẫu)
               <Icon n="chevron" size={14} />
             </button>
             <button
@@ -241,7 +296,8 @@ export default function AdminDashboard({ onNavigate }) {
             </button>
           </div>
         </header>
-
+        {loading && <p>Đang tải thống kê...</p>}
+        {error && <p role="alert">{error}</p>}
         <section className="ad-kpis" aria-label="Chỉ số tổng quan">
           {stats.map((s) => (
             <article key={s.label} className="ad-kpi">
@@ -251,9 +307,12 @@ export default function AdminDashboard({ onNavigate }) {
               <div>
                 <p>{s.label}</p>
                 <strong>{s.value}</strong>
-                <small className={s.delta >= 0 ? 'up' : 'down'}>
-                  {s.delta >= 0 ? '↑' : '↓'} {Math.abs(s.delta)}% <em>so với tháng trước</em>
-                </small>
+                {s.delta !== null && (
+                  <small className={s.delta >= 0 ? 'up' : 'down'}>
+                    {s.delta >= 0 ? '↑' : '↓'} {Math.abs(s.delta)}%
+                    <em> so với tháng trước</em>
+                  </small>
+                )}
               </div>
             </article>
           ))}
@@ -261,11 +320,11 @@ export default function AdminDashboard({ onNavigate }) {
 
         <div className="ad-row r1">
           <section className="ad-panel">
-            <h2>Lượt truy cập theo thời gian</h2>
+            <h2>Lượt truy cập theo thời gian (dữ liệu mẫu)</h2>
             <AreaChart values={visits} />
           </section>
           <section className="ad-panel">
-            <h2>Lượt nghe theo ngôn ngữ</h2>
+            <h2>Lượt nghe theo ngôn ngữ (dữ liệu mẫu)</h2>
             <div className="ad-lang">
               <Donut data={langs} total={8732} />
               <ul>
@@ -283,7 +342,7 @@ export default function AdminDashboard({ onNavigate }) {
 
         <div className="ad-row r2">
           <section className="ad-panel">
-            <h2>Thương hiệu có lượt xem cao nhất</h2>
+            <h2>Thương hiệu có lượt xem cao nhất (dữ liệu mẫu)</h2>
             <div className="ad-scroll">
               <table>
                 <thead>
@@ -316,7 +375,7 @@ export default function AdminDashboard({ onNavigate }) {
           </section>
           <section className="ad-panel">
             <div className="ad-ph">
-              <h2>Đề xuất mới nhất</h2>
+              <h2>Đề xuất mới nhất (dữ liệu mẫu)</h2>
               <button onClick={() => go('approvals')}>
                 Xem tất cả <Icon n="arrow" size={12} />
               </button>

@@ -11,7 +11,7 @@ import BrandManagement from './admin/Manage_Brand.jsx';
 import BranchManagement from './admin/Branch_manage.jsx';
 import SuggestionsManagement from './admin/Sugguest_manage.jsx';
 import ApprovalsManagement from './admin/Approve_manage.jsx';
-
+import PageTracker from './analytics/PageTracker.jsx';
 /* Map: section trên URL -> trang quản trị tương ứng (đã bỏ menu) */
 const ADMIN_PAGES = {
   brands: BrandManagement,
@@ -129,21 +129,25 @@ export default function App() {
   };
 
   return (
-    <Routes>
-      {/* User Routes */}
-      <Route path="/" element={<Home addRecentBrand={addRecentBrand} />} />
-      <Route path="/home" element={<Navigate to="/" replace />} />
-      <Route path="/brands" element={<BrandList addRecentBrand={addRecentBrand} />} />
-      <Route path="/brand" element={<BrandDetail />} />
-      <Route path="/brand/:id" element={<BrandDetail />} />
-      <Route path="/suggestions" element={<Suggestions recentBrands={recentBrands} />} />
+    <>
+      <PageTracker />
 
-      {/* Admin Routes */}
-      <Route path="/admin" element={<Dashboard />} />
-      <Route path="/admin/:section" element={<Management />} />
+      <Routes>
+        {/* User Routes */}
+        <Route path="/" element={<Home addRecentBrand={addRecentBrand} />} />
+        <Route path="/home" element={<Navigate to="/" replace />} />
+        <Route path="/brands" element={<BrandList addRecentBrand={addRecentBrand} />} />
+        <Route path="/brand" element={<BrandDetail />} />
+        <Route path="/brand/:id" element={<BrandDetail />} />
+        <Route path="/suggestions" element={<Suggestions recentBrands={recentBrands} />} />
 
-      {/* Wildcard Route */}
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+        {/* Admin Routes */}
+        <Route path="/admin" element={<Dashboard />} />
+        <Route path="/admin/:section" element={<Management />} />
+
+        {/* Wildcard Route */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </>
   );
 }
