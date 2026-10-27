@@ -25,7 +25,7 @@ const Icon = ({ n, size = 18 }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{paths[n]}</svg>
 );
 
-function Header({ currentNav = "brands", onNavigate }) {
+function Header({ active = "brands", go }) {
   const [lang, setLang] = useState("VI");
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
@@ -36,6 +36,7 @@ function Header({ currentNav = "brands", onNavigate }) {
     { code: "KO", label: "한국어" }
   ];
 
+  // Đóng dropdown khi click ra bên ngoài
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -47,16 +48,10 @@ function Header({ currentNav = "brands", onNavigate }) {
   }, []);
 
   const items = [["home", "Trang chủ"], ["brands", "Thương hiệu"], ["map", "Bản đồ"], ["suggestions", "Đề xuất"]];
-
-  const handleNavClick = (key) => {
-    if (onNavigate) {
-      onNavigate(key);
-    }
-  };
-
+  
   return (
-    <header className="bl-bar">
-      <button className="bl-logo" onClick={() => handleNavClick("home")}>
+    <header className="hp-bar">
+      <button className="hp-logo" onClick={() => go("home")}>
         <Icon n="cup" size={30} />
         <span>
           <b>SaigonCoffee</b>
@@ -64,39 +59,39 @@ function Header({ currentNav = "brands", onNavigate }) {
         </span>
       </button>
 
-      <nav className="bl-nav" aria-label="Điều hướng chính">
+      <nav className="hp-nav" aria-label="Điều hướng chính">
         {items.map(([k, label]) => (
-          <button
-            key={k}
-            aria-current={k === currentNav ? "page" : undefined}
-            onClick={() => handleNavClick(k)}
+          <button 
+            key={k} 
+            aria-current={active === k ? "page" : undefined} 
+            onClick={() => go(k)}
           >
             {label}
           </button>
         ))}
       </nav>
 
-      <div className="bl-tools">
-        {/* Custom Language Dropdown */}
-        <div className="bl-lang-dropdown" ref={dropdownRef}>
+      <div className="hp-tools">
+        {/* Custom Dropdown Ngôn Ngữ */}
+        <div className="hp-lang-dropdown" ref={dropdownRef}>
           <button 
-            className="bl-lang-btn" 
+            className="hp-lang-btn" 
             onClick={() => setIsOpen(!isOpen)} 
             aria-expanded={isOpen}
             aria-label="Chọn ngôn ngữ"
           >
             <span>{lang}</span>
-            <span className={`bl-chevron-icon ${isOpen ? "open" : ""}`}>
+            <span className={`hp-chevron-icon ${isOpen ? "open" : ""}`}>
               <Icon n="chevron" size={12} />
             </span>
           </button>
           
           {isOpen && (
-            <div className="bl-lang-menu">
+            <div className="hp-lang-menu">
               {languages.map((item) => (
                 <button
                   key={item.code}
-                  className={`bl-lang-item ${lang === item.code ? "active" : ""}`}
+                  className={`hp-lang-item ${lang === item.code ? "active" : ""}`}
                   onClick={() => {
                     setLang(item.code);
                     setIsOpen(false);
@@ -115,9 +110,9 @@ function Header({ currentNav = "brands", onNavigate }) {
 
 function Cup() {
   return (
-    <svg className="bl-cup" viewBox="0 0 340 230" aria-hidden="true">
+    <svg className="hp-cup" viewBox="0 0 340 230" aria-hidden="true">
       <defs>
-        <linearGradient id="bl-cupg" x1="0" x2="1">
+        <linearGradient id="hp-cupg" x1="0" x2="1">
           <stop offset="0" stopColor="#9A7C5C" />
           <stop offset=".55" stopColor="#6A503A" />
           <stop offset="1" stopColor="#3E2B1D" />
@@ -127,7 +122,7 @@ function Cup() {
       <ellipse cx="170" cy="184" rx="150" ry="22" fill="#3B2617" />
       <ellipse cx="170" cy="179" rx="122" ry="14" fill="#54392A" />
       <path d="M232 70c58-8 66 50 10 72" fill="none" stroke="#6A503A" strokeWidth="13" strokeLinecap="round" />
-      <path d="M92 58c0 78 26 124 78 124s78-46 78-124z" fill="url(#bl-cupg)" />
+      <path d="M92 58c0 78 26 124 78 124s78-46 78-124z" fill="url(#hp-cupg)" />
       <ellipse cx="170" cy="58" rx="78" ry="15" fill="#B39674" />
       <ellipse cx="170" cy="60" rx="68" ry="11" fill="#24120A" />
     </svg>
@@ -172,6 +167,12 @@ export default function BrandListPage({ onSelectBrand, onNavigate }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedFilter, setSelectedFilter] = useState("all");
 
+  const go = key => {
+    if (onNavigate) {
+      onNavigate(key);
+    }
+  };
+
   const filteredBrands = INITIAL_BRANDS.filter((b) => {
     const matchesSearch = b.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                           b.type.toLowerCase().includes(searchTerm.toLowerCase());
@@ -183,18 +184,17 @@ export default function BrandListPage({ onSelectBrand, onNavigate }) {
     <div className="bl-page">
       <style>{styles}</style>
 
-      <Header currentNav="brands" onNavigate={onNavigate} />
+      <Header active="brands" go={go} />
 
-      <section className="bl-hero">
-        <div className="bl-hero-in">
+      <section className="hp-hero">
+        <div className="hp-hero-in">
           <h1>Khám phá những thương hiệu<br />cà phê đặc sắc tại Sài Gòn</h1>
           <p>
             Từ những quán cà phê lâu đời đến những thương hiệu hiện đại, chúng tôi mang
             đến cho bạn hành trình vị cà phê độc đáo.
           </p>
 
-          {/* Đã cập nhật thành thẻ form và đồng bộ style `.bl-search` */}
-          <form className="bl-search" role="search" onSubmit={e => e.preventDefault()}>
+          <form className="hp-search" role="search" onSubmit={e => e.preventDefault()}>
             <input
               type="text"
               placeholder="Tìm kiếm thương hiệu, khu vực, loại hình..."
@@ -255,15 +255,14 @@ export default function BrandListPage({ onSelectBrand, onNavigate }) {
 
 const styles = `
 .bl-page {
-  --brown-dark: #3A2012;
-  --brown-mid: #52311E;
-  --brown-light: #704732;
-  --accent-gold: #D4A359;
+  --brown: #4B2817;
+  --brown-3: #6B3A22;
+  --accent: #C8672B;
   --bg-color: #FAF7F3;
   --text-dark: #2A1810;
-  --text-muted: #7E6E65;
+  --text-muted: #8B7A6C;
   --card-bg: #FFFFFF;
-  --border-color: #EFE6DD;
+  --border-color: #EFE5DA;
 
   min-height: 100vh;
   background-color: var(--bg-color);
@@ -274,10 +273,10 @@ const styles = `
 .bl-page * { box-sizing: border-box; }
 .bl-page :where(button,input,select){font:inherit}
 .bl-page button:focus-visible{outline:2px solid #fff;outline-offset:2px}
-.bl-page input:focus-visible{outline:none}
+.bl-page input:focus-visible,.bl-page select:focus-visible{outline:none}
 
-/* Header Component */
-.bl-bar {
+/* Header Component (Đồng bộ hoàn toàn class .hp- của HomePage) */
+.hp-bar {
   display: flex;
   align-items: center;
   gap: 28px;
@@ -287,7 +286,7 @@ const styles = `
   background: linear-gradient(180deg,#5A3220,#442211);
 }
 
-.bl-logo {
+.hp-logo {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -299,12 +298,12 @@ const styles = `
   cursor: pointer;
 }
 
-.bl-logo b { display: block; font-size: 15px; line-height: 1.15; }
-.bl-logo small { display: block; font-size: 9px; opacity: .65; }
+.hp-logo b { display: block; font-size: 15px; line-height: 1.15; }
+.hp-logo small { display: block; font-size: 9px; opacity: .65; }
 
-.bl-nav { display: flex; flex: 1; gap: 26px; }
+.hp-nav { display: flex; flex: 1; gap: 26px; }
 
-.bl-nav button {
+.hp-nav button {
   padding: 21px 0 17px;
   border: 0;
   border-bottom: 2px solid transparent;
@@ -314,14 +313,15 @@ const styles = `
   cursor: pointer;
 }
 
-.bl-nav button:hover { color: #fff; }
-.bl-nav button[aria-current=page] { color: #fff; font-weight: 600; border-color: #E9A24B; }
+.hp-nav button:hover { color: #fff; }
+.hp-nav button[aria-current=page] { color: #fff; font-weight: 600; border-color: #E9A24B; }
 
-.bl-tools { display: flex; align-items: center; gap: 14px; }
+.hp-tools { display: flex; align-items: center; gap: 14px; }
+.hp-tools>button { display: grid; place-items: center; padding: 4px; border: 0; background: none; color: #fff; cursor: pointer; }
 
 /* Custom Dropdown Ngôn Ngữ */
-.bl-lang-dropdown { position: relative; }
-.bl-lang-btn {
+.hp-lang-dropdown { position: relative; }
+.hp-lang-btn {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -335,18 +335,18 @@ const styles = `
   cursor: pointer;
   transition: all 0.2s ease;
 }
-.bl-lang-btn:hover {
+.hp-lang-btn:hover {
   background: rgba(255,255,255,0.15);
   border-color: rgba(255,255,255,0.4);
 }
-.bl-chevron-icon {
+.hp-chevron-icon {
   display: flex;
   align-items: center;
   transition: transform 0.25s ease;
 }
-.bl-chevron-icon.open { transform: rotate(180deg); }
+.hp-chevron-icon.open { transform: rotate(180deg); }
 
-.bl-lang-menu {
+.hp-lang-menu {
   position: absolute;
   right: 0;
   top: calc(100% + 6px);
@@ -362,7 +362,7 @@ const styles = `
   gap: 2px;
   animation: fadeInDown 0.2s ease;
 }
-.bl-lang-item {
+.hp-lang-item {
   display: block;
   width: 100%;
   padding: 8px 12px;
@@ -376,12 +376,12 @@ const styles = `
   cursor: pointer;
   transition: background 0.15s ease, color 0.15s ease;
 }
-.bl-lang-item:hover {
+.hp-lang-item:hover {
   background: #F6EFE7;
-  color: #6B3A22;
+  color: var(--brown-3);
 }
-.bl-lang-item.active {
-  background: #6B3A22;
+.hp-lang-item.active {
+  background: var(--brown-3);
   color: #fff;
   font-weight: 600;
 }
@@ -391,8 +391,8 @@ const styles = `
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* Đồng bộ Hero Section & Search giống hệt HomePage */
-.bl-hero {
+/* Hero Section & Search đồng bộ chuẩn HomePage */
+.hp-hero {
   position: relative;
   display: flex;
   align-items: center;
@@ -406,25 +406,25 @@ const styles = `
   background-size: cover;
   background-position: center;
 }
-.bl-hero-in {
+.hp-hero-in {
   position: relative;
   z-index: 1;
   max-width: 660px;
 }
-.bl-hero h1 {
+.hp-hero h1 {
   margin: 0 0 14px;
   font-size: clamp(24px, 3.2vw, 36px);
   font-weight: 700;
   line-height: 1.22;
 }
-.bl-hero p {
+.hp-hero p {
   max-width: 520px;
   margin: 0 0 24px;
   color: rgba(255,255,255,.86);
   font-size: 14.5px;
   line-height: 1.65;
 }
-.bl-search {
+.hp-search {
   display: flex;
   gap: 8px;
   padding: 6px;
@@ -432,7 +432,7 @@ const styles = `
   background: #fff;
   box-shadow: 0 6px 20px rgba(0,0,0,.28);
 }
-.bl-search input {
+.hp-search input {
   flex: 1;
   min-width: 0;
   padding: 0 12px;
@@ -441,20 +441,20 @@ const styles = `
   color: var(--text-dark);
   font-size: 13.5px;
 }
-.bl-search input:focus-visible { outline: none; }
-.bl-search:focus-within { outline: none; }
-.bl-search button {
+.hp-search input:focus-visible { outline: none; }
+.hp-search:focus-within { outline: none; }
+.hp-search button {
   display: grid;
   place-items: center;
   width: 42px;
   height: 38px;
   border: 0;
   border-radius: 8px;
-  background: #6B3A22;
+  background: var(--brown-3);
   color: #fff;
   cursor: pointer;
 }
-.bl-cup {
+.hp-cup {
   position: absolute;
   right: 4%;
   bottom: -6px;
@@ -478,9 +478,9 @@ const styles = `
 }
 
 .bl-filter-tabs button.active {
-  background: var(--brown-dark);
+  background: var(--brown);
   color: #fff;
-  border-color: var(--brown-dark);
+  border-color: var(--brown);
 }
 
 .bl-grid {
@@ -553,8 +553,13 @@ const styles = `
 
 @media (max-width: 1024px) { .bl-grid { grid-template-columns: repeat(3, 1fr); } }
 @media (max-width: 768px) {
-  .bl-hero { flex-direction: column; text-align: center; padding: 30px 5vw; }
-  .bl-cup { display: none; }
+  .hp-bar { gap: 12px; flex-wrap: wrap; height: auto; padding: 10px 5vw 0; }
+  .hp-nav { order: 3; flex-basis: 100%; gap: 20px; overflow-x: auto; }
+  .hp-nav button { padding: 10px 0; white-space: nowrap; }
+  .hp-logo small { display: none; }
+  .hp-tools { margin-left: auto; }
+  .hp-cup { display: none; }
+  .hp-hero { flex-direction: column; text-align: center; padding: 30px 5vw; min-height: 0; }
   .bl-grid { grid-template-columns: repeat(2, 1fr); }
   .bl-section-header { flex-direction: column; align-items: flex-start; gap: 12px; }
 }
