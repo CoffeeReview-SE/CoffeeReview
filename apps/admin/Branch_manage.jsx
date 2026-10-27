@@ -5,7 +5,6 @@ const NAV = [
   ['dashboard', 'Dashboard', 'home'],
   ['brands', 'Quản lý thương hiệu', 'store'],
   ['branches', 'Quản lý chi nhánh', 'pin'],
-  ['menu', 'Quản lý thực đơn', 'menu'],
   ['suggestions', 'Quản lý đề xuất', 'bulb'],
   ['approvals', 'Duyệt đề xuất', 'check'],
 ];
@@ -105,7 +104,6 @@ const paths = {
       <circle cx="12" cy="10" r="2.5" />
     </>
   ),
-  menu: <path d="M5 3v8a2 2 0 0 0 2 2v8M9 3v8a2 2 0 0 1-2 2M17 21V3c-2 1-3 4-3 8h3" />,
   audio: (
     <>
       <path d="M4 9v6h4l5 4V5L8 9z" />
@@ -216,7 +214,6 @@ export default function BranchManagement({ onNavigate }) {
     <div className="ad">
       <style>{css}</style>
 
-      {/* Sidebar - Same structure as AdminDashboard */}
       <aside className="ad-side">
         <div className="ad-brand">
           <Icon n="cup" size={32} />
@@ -239,7 +236,6 @@ export default function BranchManagement({ onNavigate }) {
         </nav>
       </aside>
 
-      {/* Main Content Area */}
       <main className="ad-main">
         <header className="ad-head">
           <div>
@@ -253,7 +249,6 @@ export default function BranchManagement({ onNavigate }) {
           </div>
         </header>
 
-        {/* Branch KPI cards */}
         <section className="ad-kpis" aria-label="Chỉ số chi nhánh">
           {branchStats.map((s) => (
             <article key={s.label} className="ad-kpi">
@@ -271,7 +266,6 @@ export default function BranchManagement({ onNavigate }) {
           ))}
         </section>
 
-        {/* Search & Filter Bar */}
         <section className="ad-panel ad-filter-bar" style={{ marginTop: '14px' }}>
           <div className="ad-search-box">
             <Icon n="search" size={16} />
@@ -300,7 +294,6 @@ export default function BranchManagement({ onNavigate }) {
           </div>
         </section>
 
-        {/* Branch Table */}
         <section className="ad-panel" style={{ marginTop: '14px' }}>
           <div className="ad-scroll">
             <table>
@@ -388,7 +381,6 @@ export default function BranchManagement({ onNavigate }) {
   );
 }
 
-/* CSS Styles - Matching AdminDashboard design system */
 const css = `
 .ad{--brown:#4B2817;--brown-3:#6B3A22;--accent:#C8672B;--ink:#2A1810;--muted:#8B7A6C;--line:#EFE5DA;display:grid;grid-template-columns:240px minmax(0,1fr);grid-template-rows:1fr;grid-template-areas:"side main";min-height:100vh;background:linear-gradient(180deg,#4B2817,#38190D);color:var(--ink);font-family:Inter,system-ui,"Segoe UI",sans-serif}
 .ad *{box-sizing:border-box}

@@ -7,7 +7,6 @@ const NAV = [
   ['dashboard', 'Dashboard', 'home'],
   ['brands', 'Quản lý thương hiệu', 'store'],
   ['branches', 'Quản lý chi nhánh', 'pin'],
-  ['menu', 'Quản lý thực đơn', 'menu'],
   ['suggestions', 'Quản lý đề xuất', 'bulb'],
   ['approvals', 'Duyệt đề xuất', 'check'],
 ];
@@ -59,7 +58,6 @@ const paths = {
       <circle cx="12" cy="10" r="2.5" />
     </>
   ),
-  menu: <path d="M5 3v8a2 2 0 0 0 2 2v8M9 3v8a2 2 0 0 1-2 2M17 21V3c-2 1-3 4-3 8h3" />,
   audio: (
     <>
       <path d="M4 9v6h4l5 4V5L8 9z" />
@@ -107,7 +105,6 @@ const Icon = ({ n, size = 18 }) => (
   </svg>
 );
 
-// Biểu đồ vùng: lượt truy cập theo ngày (trục Y 0–2.000)
 function AreaChart({ values }) {
   const W = 640,
     H = 260,
@@ -160,7 +157,6 @@ function AreaChart({ values }) {
   );
 }
 
-// Biểu đồ vòng: lượt nghe theo ngôn ngữ
 function Donut({ data, total }) {
   const r = 58,
     c = 2 * Math.PI * r;

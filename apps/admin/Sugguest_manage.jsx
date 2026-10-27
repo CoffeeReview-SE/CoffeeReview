@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 
-/* Dữ liệu danh sách đề xuất tích hợp từ Dashboard & mở rộng */
 const INITIAL_SUGGESTIONS = [
   {
     id: 1,
@@ -78,7 +77,6 @@ const NAV = [
   ['dashboard', 'Dashboard', 'home'],
   ['brands', 'Quản lý thương hiệu', 'store'],
   ['branches', 'Quản lý chi nhánh', 'pin'],
-  ['menu', 'Quản lý thực đơn', 'menu'],
   ['suggestions', 'Quản lý đề xuất', 'bulb'],
   ['approvals', 'Duyệt đề xuất', 'check'],
 ];
@@ -99,7 +97,6 @@ const paths = {
       <circle cx="12" cy="10" r="2.5" />
     </>
   ),
-  menu: <path d="M5 3v8a2 2 0 0 0 2 2v8M9 3v8a2 2 0 0 1-2 2M17 21V3c-2 1-3 4-3 8h3" />,
   audio: (
     <>
       <path d="M4 9v6h4l5 4V5L8 9z" />
@@ -184,7 +181,6 @@ export default function SuggestionsManagement({ onNavigate }) {
     <div className="ad">
       <style>{css}</style>
 
-      {/* Thanh điều hướng dùng chung với Admin Dashboard */}
       <aside className="ad-side">
         <div className="ad-brand">
           <Icon n="cup" size={32} />
@@ -207,7 +203,6 @@ export default function SuggestionsManagement({ onNavigate }) {
         </nav>
       </aside>
 
-      {/* Nội dung chính trang Quản lý đề xuất */}
       <main className="ad-main">
         <header className="ad-head">
           <div>
@@ -226,7 +221,6 @@ export default function SuggestionsManagement({ onNavigate }) {
           </div>
         </header>
 
-        {/* Các thẻ tổng quan chỉ số đề xuất */}
         <section className="ad-kpis" aria-label="Chỉ số đề xuất">
           <article className="ad-kpi">
             <span className="ad-ico">
@@ -266,7 +260,6 @@ export default function SuggestionsManagement({ onNavigate }) {
           </article>
         </section>
 
-        {/* Bảng danh sách đề xuất */}
         <section className="ad-panel margin-top">
           <div className="ad-filter-bar">
             <div className="ad-search-box">
