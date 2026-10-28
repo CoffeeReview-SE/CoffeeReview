@@ -5,6 +5,18 @@ import { LANGUAGES, useLanguage } from "./LanguageContext.jsx";
 import { detailText, localizedCategory } from "./brandDetailTranslations.js";
 
 const TILE_BG = ["linear-gradient(135deg,#F3E3CC,#E4C7A0)", "linear-gradient(135deg,#FBE7A8,#F0B84F)", "linear-gradient(135deg,#F6E1CB,#C98B5A)"];
+function branchMapsUrl(branch) {
+  const hasCoordinates = Number.isFinite(branch.latitude) && Number.isFinite(branch.longitude);
+  const params = new URLSearchParams({
+    api: "1",
+    [hasCoordinates ? "destination" : "query"]: hasCoordinates
+      ? `${branch.latitude},${branch.longitude}`
+      : `${branch.name || ""} ${branch.address || ""}`.trim(),
+  });
+  const action = hasCoordinates ? "dir" : "search";
+  return `https://www.google.com/maps/${action}/?${params.toString()}`;
+}
+
 const paths = {
   search: <><circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" /></>,
   pin: <><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z" /><circle cx="12" cy="10" r="2.5" /></>,
@@ -318,7 +330,9 @@ export default function BrandDetailPage({ brandId, brand, onBack, onNavigate, on
               {branches.map((b, i) => <li key={b.id || b.name || i}>
                 <Logo item={item} size={36} />
                 <div><strong>{b.name}</strong><span>{b.address || dt("noAddress")}</span></div>
-                <button onClick={() => onOpenBranch ? onOpenBranch(b) : window.alert(`${dt("branchDetails")}: ${b.name}`)}>{dt("branchDetails")}</button>
+                <a className="bd-branch-map-link" href={branchMapsUrl(b)} target="_blank" rel="noopener noreferrer" aria-label={`Google Maps: ${b.name}`}>
+                  Google Maps
+                </a>
               </li>)}
             </ul> : <p className="bd-muted">{dt("noFeatured")}</p>}
           </section>
@@ -423,8 +437,8 @@ const css = `
 .bd-br div{flex:1;min-width:0}
 .bd-br strong{display:block;font-size:13px;font-weight:600}
 .bd-br div span{display:block;margin-top:2px;color:var(--muted);font-size:12px}
-.bd-br button{flex:none;padding:7px 12px;border:0;border-radius:8px;background:var(--brown-3);color:#fff;font-size:11.5px;cursor:pointer}
-.bd-br button:hover{background:var(--brown)}
+.bd-branch-map-link{flex:none;padding:7px 12px;border:0;border-radius:8px;background:var(--brown-3);color:#fff;font-size:11.5px;text-decoration:none;white-space:nowrap}
+.bd-branch-map-link:hover{background:var(--brown)}
 .bd-muted{margin:0;color:var(--muted);font-size:13px}
 
 .bd-lb{position:fixed;inset:0;z-index:50;display:grid;place-items:center;padding:24px;background:rgba(30,14,6,.82)}
