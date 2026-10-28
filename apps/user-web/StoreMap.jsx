@@ -89,6 +89,7 @@ export default function StoreMap() {
   const [nearbyAudioStatus, setNearbyAudioStatus] = useState("");
   const [tileStatus, setTileStatus] = useState("loading");
   const [tileRetry, setTileRetry] = useState(0);
+  const tileHadError = useRef(false);
   const requestedLocation = useRef(false);
   const playedNearbyBrands = useRef(new Set());
   const nearbyAudioQueue = useRef([]);
@@ -98,8 +99,11 @@ export default function StoreMap() {
   const proximityAudioActive = useRef(nearbyAudioEnabled);
   const proximityAudioGeneration = useRef(0);
   const tileEventHandlers = useMemo(() => ({
-    load: () => setTileStatus("ready"),
-    tileerror: () => setTileStatus("error"),
+    load: () => setTileStatus(tileHadError.current ? "error" : "ready"),
+    tileerror: () => {
+      tileHadError.current = true;
+      setTileStatus("error");
+    },
   }), []);
   proximityAudioActive.current = nearbyAudioEnabled;
   useEffect(() => {
@@ -251,8 +255,11 @@ export default function StoreMap() {
   });
 
   const selectLocation = (item) => {
-    if (item.lat == null || item.lng == null) return;
-    setMapCenter([item.lat, item.lng]);
+    if (item.lat == null || item.lat === "" || item.lng == null || item.lng === "") return;
+    const lat = Number(item.lat);
+    const lng = Number(item.lng);
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+    setMapCenter([lat, lng]);
     setMapZoom(16);
   };
 
@@ -347,7 +354,7 @@ export default function StoreMap() {
                   {item.lat == null || item.lng == null ? <small>{t("map.unverified")}</small> : null}
                 </span>
                 </button>
-                {Number.isFinite(item.lat) && Number.isFinite(item.lng) && (
+                {item.lat != null && item.lat !== "" && item.lng != null && item.lng !== "" && Number.isFinite(Number(item.lat)) && Number.isFinite(Number(item.lng)) && (
                   <a className="store-map__directions" href={googleDirectionsUrl(item, userPosition)} target="_blank" rel="noopener noreferrer">
                     {t("map.directions")}
                   </a>
@@ -360,57 +367,61 @@ export default function StoreMap() {
         </aside>
 
         <div className="store-map__canvas-wrap">
-        <MapContainer
-          className="store-map__canvas"
-          center={mapCenter}
-          zoom={mapZoom}
-          scrollWheelZoom
-        >
-          <KeepMapSized />
-          <ChangeView center={mapCenter} zoom={mapZoom} />
-          <TileLayer
-            key={tileRetry}
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
-            maxZoom={19}
-            eventHandlers={tileEventHandlers}
-          />
-          {mappedLocations.map((item) => (
-            <Marker key={item.id} position={[item.lat, item.lng]} icon={coffeeMarkerIcon(item.brandId)} riseOnHover>
-              <Tooltip direction="top" sticky className="coffee-map-tooltip">
-                {item.brand || item.name}
-              </Tooltip>
-              <Popup>
-                <strong>{item.brand || item.name}</strong>
-                <br />
-                {item.address}
-                {item.phone && <><br />{item.phone}</>}
-                <br />
-                <a className="store-map__directions" href={googleDirectionsUrl(item, userPosition)} target="_blank" rel="noopener noreferrer">
-                  {t("map.directionsGoogle")}
-                </a>
-              </Popup>
-            </Marker>
-          ))}
-          {userPosition && (
-            <Marker position={userPosition.position} icon={currentLocationIcon} zIndexOffset={1000}>
-              <Tooltip permanent direction="top" offset={[0, -12]}>
-                {t("map.current")}
-              </Tooltip>
-              <Popup>
-                <strong>{t("map.userCurrent")}</strong>
-                <br />
-                {userPosition.position[0].toFixed(6)}, {userPosition.position[1].toFixed(6)}
-              </Popup>
-            </Marker>
+          <MapContainer
+            className="store-map__canvas"
+            center={mapCenter}
+            zoom={mapZoom}
+            scrollWheelZoom
+          >
+            <KeepMapSized />
+            <ChangeView center={mapCenter} zoom={mapZoom} />
+            <TileLayer
+              key={tileRetry}
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+              url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+              maxZoom={19}
+              eventHandlers={tileEventHandlers}
+            />
+            {mappedLocations.map((item) => (
+              <Marker key={item.id} position={[item.lat, item.lng]} icon={coffeeMarkerIcon(item.brandId)} riseOnHover>
+                <Tooltip direction="top" sticky className="coffee-map-tooltip">
+                  {item.brand || item.name}
+                </Tooltip>
+                <Popup>
+                  <strong>{item.brand || item.name}</strong>
+                  <br />
+                  {item.address}
+                  {item.phone && <><br />{item.phone}</>}
+                  <br />
+                  <a className="store-map__directions" href={googleDirectionsUrl(item, userPosition)} target="_blank" rel="noopener noreferrer">
+                    {t("map.directionsGoogle")}
+                  </a>
+                </Popup>
+              </Marker>
+            ))}
+            {userPosition && (
+              <Marker position={userPosition.position} icon={currentLocationIcon} zIndexOffset={1000}>
+                <Tooltip permanent direction="top" offset={[0, -12]}>
+                  {t("map.current")}
+                </Tooltip>
+                <Popup>
+                  <strong>{t("map.userCurrent")}</strong>
+                  <br />
+                  {userPosition.position[0].toFixed(6)}, {userPosition.position[1].toFixed(6)}
+                </Popup>
+              </Marker>
+            )}
+          </MapContainer>
+          {tileStatus !== "ready" && (
+            <div className={`store-map__tile-status${tileStatus === "error" ? " is-error" : ""}`} role="status" aria-live="polite">
+              <span>{tileStatus === "error" ? t("map.tilesError") : t("map.tilesLoading")}</span>
+              {tileStatus === "error" && <button type="button" onClick={() => {
+                tileHadError.current = false;
+                setTileStatus("loading");
+                setTileRetry(value => value + 1);
+              }}>{t("map.tilesRetry")}</button>}
+            </div>
           )}
-        </MapContainer>
-        {tileStatus !== "ready" && (
-          <div className={`store-map__tile-status${tileStatus === "error" ? " is-error" : ""}`} role="status" aria-live="polite">
-            <span>{tileStatus === "error" ? t("map.tilesError") : t("map.tilesLoading")}</span>
-            {tileStatus === "error" && <button type="button" onClick={() => { setTileStatus("loading"); setTileRetry(value => value + 1); }}>{t("map.tilesRetry")}</button>}
-          </div>
-        )}
         </div>
       </div>
     </section>
