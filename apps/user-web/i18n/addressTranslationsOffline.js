@@ -5,6 +5,18 @@ const words = {
   zh: { city: '胡志明市', ward: '坊', district: '郡', town: '镇', county: '县', street: '街', number: '门牌号', old: '原', country: '越南', residential: '住宅区', urban: '城区' },
 };
 
+// Kiểm tra địa chỉ offline có đủ thuật ngữ cho từng ngôn ngữ hỗ trợ.
+export function getOfflineAddressTranslationCoverage() {
+  // Khai báo hàm và lấy từ điển chuẩn
+  const referenceKeys = Object.keys(words.en);
+
+  // Kiểm tra và quét qua từng ngôn ngữ
+  return Object.fromEntries(Object.entries(words).map(([languageCode, dictionary]) => {
+    const missingTerms = referenceKeys.filter(key => !dictionary[key]?.trim()); //Gom các từ thiếu vào mảng missing
+    return [languageCode, { missingTerms, complete: missingTerms.length === 0 }]; // Trả về mảng missing những từ còn thiếu ở những ngôn ngữ khác
+  }));
+}
+
 export function getOfflineAddressTranslation(address, languageCode) {
   const w = words[languageCode];
   if (!w || !address?.trim()) return null;

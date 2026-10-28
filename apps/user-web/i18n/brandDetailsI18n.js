@@ -71,6 +71,24 @@ const categories = {
   "ca phe specialty, banh pastry": { en: "Specialty coffee, pastries", ja: "スペシャルティコーヒー、ペストリー", zh: "精品咖啡、糕点" }
 };
 
+// Kiểm tra các chuỗi trang thương hiệu và màn hình theo bộ khóa tiếng Việt.
+export function getBrandDetailsI18nCoverage() {
+  // Xác định ngôn ngữ chuẩn
+  const referenceLanguage = "vi";
+
+  // Quét và lọc các nhãn bị thiếu cho từng ngôn ngữ
+  return Object.fromEntries(Object.keys(labels).map(languageCode => {
+    const missingLabels = Object.keys(labels[referenceLanguage]).filter(key => !labels[languageCode]?.[key]?.trim()); // Lọc các từ khóa mà ngôn ngữ hiện tại bị bỏ trống hoặc chưa dịch
+    const missingScreenLabels = Object.keys(screenLabels[referenceLanguage]).filter(key => !screenLabels[languageCode]?.[key]?.trim()); // như trên nhưng kiểm tra đối chiếu nhãn màn hình
+
+    return [languageCode, {
+      missingLabels,
+      missingScreenLabels,
+      complete: missingLabels.length === 0 && missingScreenLabels.length === 0,
+    }];
+  }));
+}
+
 function normalize(value) {
   return String(value).toLocaleLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replaceAll("đ", "d").trim();
 }

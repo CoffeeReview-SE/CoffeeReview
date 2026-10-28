@@ -51,6 +51,18 @@ const translations = {
   },
 };
 
+// Kiểm tra mỗi thương hiệu có bản dịch cho đủ ngôn ngữ offline.
+export function getOfflineBrandTranslationCoverage() {
+  // Khai báo danh sách ngôn ngữ
+  const requiredLanguages = ["en", "ja", "zh"];
+
+  // Quét từng thương hiệu và kiểm tra ngôn ngữ còn thiếu
+  return Object.fromEntries(Object.entries(translations).map(([brand, localized]) => {
+    const missingLanguages = requiredLanguages.filter(language => !localized[language]?.trim());
+    return [brand, { missingLanguages, complete: missingLanguages.length === 0 }];
+  }));
+}
+
 export function getOfflineBrandTranslation(brandOrName, languageCode) {
   const name = typeof brandOrName === "string"
     ? brandOrName
