@@ -23,7 +23,7 @@ var adminEnabled = cfg.GetValue<bool>("Admin:Enabled");      // false = /api/adm
 var gatewayKey = cfg["Gateway:SharedKey"] ?? "";
 var edgeSecret = cfg["Gateway:EdgeSecret"] ?? "";
 var groqApiKey = (cfg["Chat:GroqApiKey"] ?? "").Trim();
-var groqModel = cfg["Chat:GroqModel"] ?? "openai/gpt-oss-120b";
+var groqModel = (cfg["Chat:GroqModel"] ?? "openai/gpt-oss-120b").Trim();
 var supabaseConnectionString = cfg.GetConnectionString("Supabase") ?? "";
 NpgsqlDataSource? supabase = string.IsNullOrWhiteSpace(supabaseConnectionString)
     ? null
