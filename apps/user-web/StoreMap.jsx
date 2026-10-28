@@ -89,7 +89,6 @@ export default function StoreMap() {
   const [nearbyAudioStatus, setNearbyAudioStatus] = useState("");
   const [tileStatus, setTileStatus] = useState("loading");
   const [tileRetry, setTileRetry] = useState(0);
-  const tileHadError = useRef(false);
   const requestedLocation = useRef(false);
   const playedNearbyBrands = useRef(new Set());
   const nearbyAudioQueue = useRef([]);
@@ -99,11 +98,8 @@ export default function StoreMap() {
   const proximityAudioActive = useRef(nearbyAudioEnabled);
   const proximityAudioGeneration = useRef(0);
   const tileEventHandlers = useMemo(() => ({
-    load: () => setTileStatus(tileHadError.current ? "error" : "ready"),
-    tileerror: () => {
-      tileHadError.current = true;
-      setTileStatus("error");
-    },
+    load: () => setTileStatus("ready"),
+    tileerror: () => setTileStatus("error"),
   }), []);
   proximityAudioActive.current = nearbyAudioEnabled;
   useEffect(() => {
@@ -255,11 +251,8 @@ export default function StoreMap() {
   });
 
   const selectLocation = (item) => {
-    if (item.lat == null || item.lat === "" || item.lng == null || item.lng === "") return;
-    const lat = Number(item.lat);
-    const lng = Number(item.lng);
-    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
-    setMapCenter([lat, lng]);
+    if (item.lat == null || item.lng == null) return;
+    setMapCenter([item.lat, item.lng]);
     setMapZoom(16);
   };
 
@@ -354,7 +347,7 @@ export default function StoreMap() {
                   {item.lat == null || item.lng == null ? <small>{t("map.unverified")}</small> : null}
                 </span>
                 </button>
-                {item.lat != null && item.lat !== "" && item.lng != null && item.lng !== "" && Number.isFinite(Number(item.lat)) && Number.isFinite(Number(item.lng)) && (
+                {Number.isFinite(item.lat) && Number.isFinite(item.lng) && (
                   <a className="store-map__directions" href={googleDirectionsUrl(item, userPosition)} target="_blank" rel="noopener noreferrer">
                     {t("map.directions")}
                   </a>
@@ -415,11 +408,7 @@ export default function StoreMap() {
           {tileStatus !== "ready" && (
             <div className={`store-map__tile-status${tileStatus === "error" ? " is-error" : ""}`} role="status" aria-live="polite">
               <span>{tileStatus === "error" ? t("map.tilesError") : t("map.tilesLoading")}</span>
-              {tileStatus === "error" && <button type="button" onClick={() => {
-                tileHadError.current = false;
-                setTileStatus("loading");
-                setTileRetry(value => value + 1);
-              }}>{t("map.tilesRetry")}</button>}
+              {tileStatus === "error" && <button type="button" onClick={() => { setTileStatus("loading"); setTileRetry(value => value + 1); }}>{t("map.tilesRetry")}</button>}
             </div>
           )}
         </div>
