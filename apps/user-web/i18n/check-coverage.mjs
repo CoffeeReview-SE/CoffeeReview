@@ -1,3 +1,4 @@
+// Lệnh check node apps/user-web/i18n/check-coverage.mjs
 import { createServer } from "vite";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
