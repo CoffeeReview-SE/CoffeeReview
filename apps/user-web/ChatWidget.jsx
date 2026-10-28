@@ -1,4 +1,12 @@
 import React, { useEffect, useRef, useState } from "react";
+import { useLanguage } from "./LanguageContext.jsx";
+
+const chatLabels = {
+  vi: { open: "Mở chatbot", close: "Đóng chatbot", connected: "Đang kết nối", disconnected: "Chưa kết nối", hello: "Xin chào! Bạn đang muốn tìm quán cà phê như thế nào?", typing: "Đang soạn câu trả lời…", placeholder: "Nhập tin nhắn…", send: "Gửi tin nhắn", title: "Trò chuyện với SaigonCoffee", failed: "Chatbot chưa thể trả lời lúc này.", failedConnection: "Không thể kết nối chatbot." },
+  en: { open: "Open chatbot", close: "Close chatbot", connected: "Connected", disconnected: "Not connected", hello: "Hello! What kind of coffee shop are you looking for?", typing: "Writing a reply…", placeholder: "Type a message…", send: "Send message", title: "Chat with SaigonCoffee", failed: "The chatbot cannot reply right now.", failedConnection: "Could not connect to the chatbot." },
+  ja: { open: "チャットボットを開く", close: "チャットボットを閉じる", connected: "接続中", disconnected: "未接続", hello: "こんにちは。どのようなカフェをお探しですか？", typing: "返信を作成中…", placeholder: "メッセージを入力…", send: "メッセージを送信", title: "SaigonCoffeeとチャット", failed: "現在チャットボットは返信できません。", failedConnection: "チャットボットに接続できません。" },
+  zh: { open: "打开聊天助手", close: "关闭聊天助手", connected: "已连接", disconnected: "未连接", hello: "你好！你想找什么样的咖啡馆？", typing: "正在组织回复…", placeholder: "输入消息…", send: "发送消息", title: "与 SaigonCoffee 聊天", failed: "聊天助手暂时无法回复。", failedConnection: "无法连接聊天助手。" },
+};
 
 const styles = `
 .sc-chat { position: fixed; z-index: 1200; right: 24px; bottom: 24px; }
@@ -30,6 +38,8 @@ const styles = `
 `;
 
 export default function ChatWidget() {
+  const { languageCode } = useLanguage();
+  const labels = chatLabels[languageCode] || chatLabels.vi;
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState([]);
   const [draft, setDraft] = useState("");
@@ -86,15 +96,15 @@ export default function ChatWidget() {
       const response = await fetch("/api/assistant/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: nextMessages.slice(-12) }),
+        body: JSON.stringify({ messages: nextMessages.slice(-12), languageCode }),
       });
       const data = await response.json().catch(() => ({}));
-      if (!response.ok) throw new Error(data.detail || data.error || "Chatbot chưa thể trả lời lúc này.");
+      if (!response.ok) throw new Error(data.detail || data.error || labels.failed);
       setConnected(true);
       setMessages(current => [...current, { role: "assistant", content: data.answer }]);
     } catch (err) {
       setConnected(false);
-      setError(err.message || "Không thể kết nối chatbot.");
+      setError(err.message || labels.failedConnection);
     } finally {
       setBusy(false);
     }
@@ -103,28 +113,28 @@ export default function ChatWidget() {
   return <>
     <style>{styles}</style>
     <div className="sc-chat">
-      <button className="sc-chat-toggle" type="button" aria-label={open ? "Đóng chatbot" : "Mở chatbot"} aria-expanded={open} title={connected ? "Chatbot đang kết nối" : "Chatbot chưa kết nối"} onClick={() => setOpen(value => !value)}>
+      <button className="sc-chat-toggle" type="button" aria-label={open ? labels.close : labels.open} aria-expanded={open} title={connected ? labels.connected : labels.disconnected} onClick={() => setOpen(value => !value)}>
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
           {open ? <path d="m6 6 12 12M18 6 6 18" /> : <><path d="M21 11.5a8.4 8.4 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.4 8.4 0 0 1-3.8-.9L3 21l1.9-5.7a8.4 8.4 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.4 8.4 0 0 1 3.8-.9h.5a8.5 8.5 0 0 1 8 8z" /><path d="M8 12h.01M12 12h.01M16 12h.01" /></>}
         </svg>
-        <span className={`sc-chat-dot${connected ? " connected" : ""}`} aria-label={connected ? "Đang kết nối" : "Chưa kết nối"} />
+        <span className={`sc-chat-dot${connected ? " connected" : ""}`} aria-label={connected ? labels.connected : labels.disconnected} />
       </button>
 
-      {open && <section className="sc-chat-panel" role="dialog" aria-label="Trò chuyện với SaigonCoffee">
+      {open && <section className="sc-chat-panel" role="dialog" aria-label={labels.title}>
         <header className="sc-chat-head">
           <span className="sc-chat-avatar" aria-hidden="true">☕</span>
-          <span className="sc-chat-title"><strong>SaigonCoffee</strong><small>{connected ? "Đang kết nối" : "Chưa kết nối"}</small></span>
-          <button className="sc-chat-close" type="button" aria-label="Đóng chatbot" onClick={() => setOpen(false)}>×</button>
+          <span className="sc-chat-title"><strong>SaigonCoffee</strong><small>{connected ? labels.connected : labels.disconnected}</small></span>
+          <button className="sc-chat-close" type="button" aria-label={labels.close} onClick={() => setOpen(false)}>×</button>
         </header>
         <div className="sc-chat-messages" ref={listRef} aria-live="polite">
-          <div className="sc-chat-bubble assistant">Xin chào! Bạn đang muốn tìm quán cà phê như thế nào?</div>
+          <div className="sc-chat-bubble assistant">{labels.hello}</div>
           {messages.map((message, index) => <div className={`sc-chat-bubble ${message.role}`} key={`${index}-${message.role}`}>{message.content}</div>)}
-          {busy && <span className="sc-chat-status">Đang soạn câu trả lời…</span>}
+          {busy && <span className="sc-chat-status">{labels.typing}</span>}
           {error && <div className="sc-chat-error" role="alert">{error}</div>}
         </div>
         <form className="sc-chat-form" onSubmit={sendMessage}>
-          <textarea ref={inputRef} className="sc-chat-input" rows="1" maxLength="2000" placeholder="Nhập tin nhắn…" aria-label="Tin nhắn" value={draft} onChange={event => setDraft(event.target.value)} onKeyDown={event => { if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); event.currentTarget.form.requestSubmit(); } }} />
-          <button className="sc-chat-send" type="submit" aria-label="Gửi tin nhắn" disabled={busy || !draft.trim()}>
+          <textarea ref={inputRef} className="sc-chat-input" rows="1" maxLength="2000" placeholder={labels.placeholder} aria-label={labels.placeholder} value={draft} onChange={event => setDraft(event.target.value)} onKeyDown={event => { if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); event.currentTarget.form.requestSubmit(); } }} />
+          <button className="sc-chat-send" type="submit" aria-label={labels.send} disabled={busy || !draft.trim()}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m22 2-7 20-4-9-9-4Z" /><path d="M22 2 11 13" /></svg>
           </button>
         </form>
