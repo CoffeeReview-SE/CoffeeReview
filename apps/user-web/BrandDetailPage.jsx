@@ -4,6 +4,114 @@ import DescriptionSpeech from "./DescriptionSpeech.jsx";
 import { LANGUAGES, useLanguage } from "./LanguageContext.jsx";
 import { detailText, localizedCategory } from "./brandDetailTranslations.js";
 
+// 1. Ảnh Không gian (image coffee shop/)
+import coverHighlands from "../../public/image/High land coffee.jpg";
+import coverKatinat from "../../public/image/katinat.jpg";
+import coverKoi from "../../public/image/KOI the.jpg";
+import coverMilano from "../../public/image/milano.jpg";
+import coverPheLa from "../../public/image/Phe la.jpg";
+import coverPhucLong from "../../public/image/Phuc long.jpg";
+import coverStarbucks from "../../public/image/Starbuck.jpg";
+import coverTheCoffeeHouse from "../../public/image/The coffe house.jpg";
+import coverTrungNguyen from "../../public/image/Trung nguyen.jpg";
+import coverVivaStar from "../../public/image/viva star.jpg";
+
+// 2. Ảnh Logo (image logo/)
+import logoHighlands from "../../public/image/logo highlands coffee.jpg";
+import logoKatinat from "../../public/image/logo katinat.png";
+import logoKoi from "../../public/image/logo koi the.jpg";
+import logoMilano from "../../public/image/logo milano.png";
+import logoPheLa from "../../public/image/logo phe la.jpg";
+import logoPhucLong from "../../public/image/logo phuc long.jpg";
+import logoStarbucks from "../../public/image/logo starbuck.png";
+import logoTheCoffeeHouse from "../../public/image/logo the coffee house.jpg";
+import logoTrungNguyen from "../../public/image/logo Trung nguyen.png";
+import logoVivaStar from "../../public/image/logo viva.png";
+
+
+const DATABASE_BRANDS_IMAGES = {
+  // 1. Phúc Long
+  "phuc-long": {
+    cover: coverPhucLong,
+    image: logoPhucLong
+  },
+  // 2. Highlands Coffee
+  "highlands-coffee": {
+    cover: coverHighlands,
+    image: logoHighlands
+  },
+  // 3. Trung Nguyên
+  "trung-nguyen": {
+    cover: coverTrungNguyen,
+    image: logoTrungNguyen
+  },
+  // 4. KATINAT
+  "katinat": {
+    cover: coverKatinat,
+    image: logoKatinat
+  },
+  // 5. KOI Thé
+  "koi-the": {
+    cover: coverKoi,
+    image: logoKoi
+  },
+  // 6. Phê La
+  "phe-la": {
+    cover: coverPheLa,
+    image: logoPheLa
+  },
+  // 7. Milano Coffee
+  "milano-coffee": {
+    cover: coverMilano,
+    image: logoMilano
+  },
+  // 8. Viva Star Coffee
+  "viva-star-coffee": {
+    cover: coverVivaStar,
+    image: logoVivaStar
+  },
+  // 9. The Coffee House
+  "the-coffee-house": {
+    cover: coverTheCoffeeHouse,
+    image: logoTheCoffeeHouse
+  },
+  // 10. Starbucks
+  "starbucks": {
+    cover: coverStarbucks,
+    image: logoStarbucks
+  }
+};
+
+/* [PHẦN CHÈN THÊM - ĐỂ MÌNH CHÈN]: Hàm nhận diện và khớp đường dẫn ảnh */
+function getDatabaseBrandImages(brandId, brandName) {
+  const idKey = String(brandId || "").toLowerCase().trim();
+  if (DATABASE_BRANDS_IMAGES[idKey]) return DATABASE_BRANDS_IMAGES[idKey];
+
+  const nameKey = String(brandName || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "");
+
+  if (DATABASE_BRANDS_IMAGES[nameKey]) return DATABASE_BRANDS_IMAGES[nameKey];
+
+  // Tìm tương đối theo chuỗi tên
+  if (nameKey.includes("phuc-long") || nameKey.includes("phuclong")) return DATABASE_BRANDS_IMAGES["phuc-long"];
+  if (nameKey.includes("highland")) return DATABASE_BRANDS_IMAGES["highlands-coffee"];
+  if (nameKey.includes("trung-nguyen")) return DATABASE_BRANDS_IMAGES["trung-nguyen"];
+  if (nameKey.includes("katinat")) return DATABASE_BRANDS_IMAGES["katinat"];
+  if (nameKey.includes("koi")) return DATABASE_BRANDS_IMAGES["koi-the"];
+  if (nameKey.includes("phe-la")) return DATABASE_BRANDS_IMAGES["phe-la"];
+  if (nameKey.includes("milano")) return DATABASE_BRANDS_IMAGES["milano-coffee"];
+  if (nameKey.includes("viva")) return DATABASE_BRANDS_IMAGES["viva-star-coffee"];
+  if (nameKey.includes("coffee-house") || nameKey.includes("tch")) return DATABASE_BRANDS_IMAGES["the-coffee-house"];
+  if (nameKey.includes("starbuck")) return DATABASE_BRANDS_IMAGES["starbucks"];
+
+  return null;
+}
+
 const TILE_BG = ["linear-gradient(135deg,#F3E3CC,#E4C7A0)", "linear-gradient(135deg,#FBE7A8,#F0B84F)", "linear-gradient(135deg,#F6E1CB,#C98B5A)"];
 function branchMapsUrl(branch) {
   const hasCoordinates = Number.isFinite(branch.latitude) && Number.isFinite(branch.longitude);
@@ -56,7 +164,7 @@ function Header({ go, goBrands }) {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Cấu hình menu: "brands" được đánh dấu active để hiển thị nổi bật và gạch chân giống trang chủ
+  // Cấu hình menu: "brands" được đánh đấu active để hiển thị nổi bật và gạch chân giống trang chủ
   const items = [
     ["home", t("nav.home"), () => go("home")],
     ["brands", t("nav.brands"), () => goBrands()],
@@ -94,6 +202,7 @@ function Header({ go, goBrands }) {
           </span>
         </button>
         
+        {/* [PHẦN CHÈN THÊM - ĐỂ MÌNH CHÈN]: Menu chọn ngôn ngữ */}
         {isOpen && (
           <div className="bd-lang-menu">
             {languages.map((item) => (
@@ -116,9 +225,24 @@ function Header({ go, goBrands }) {
 }
 
 function Logo({ item, size }) {
-  if (item.logo) return <img src={item.logo} alt={`Logo ${item.name}`} style={{ width: size, height: size, borderRadius: "50%", objectFit: "cover" }} />;
+  const dbBrandImgs = getDatabaseBrandImages(item.id, item.name);
+  const resolvedLogo = item.logo || item.image || dbBrandImgs?.image;
+
+  if (resolvedLogo) {
+    const isKoiOrTrungNguyen = String(item.id || "").toLowerCase().includes("koi") || 
+                               String(item.name || "").toLowerCase().includes("koi") ||
+                               String(item.id || "").toLowerCase().includes("trung") || 
+                               String(item.name || "").toLowerCase().includes("trung");
+
+    const extraLogoStyle = isKoiOrTrungNguyen
+      ? { width: size, height: size, borderRadius: "50%", objectFit: "contain", background: "#fff", padding: "4px" }
+      : { width: size, height: size, borderRadius: "50%", objectFit: "cover" };
+
+    return <img src={resolvedLogo} alt={`Logo ${item.name}`} style={extraLogoStyle} />;
+  }
+
   const big = size > 60;
-  const text = big ? (item.mark || [item.name]) : [item.name.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase()];
+  const text = big ? (item.mark || [item.name]) : [item.name?.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase() || ""];
   return <span className="bd-mark" style={{ width: size, height: size, background: item.badge || "#1F6B45", fontSize: big ? size * 0.13 : size * 0.34, boxShadow: big ? "inset 0 0 0 4px rgba(255,255,255,.85)" : "none" }}>
     {text.map(l => <span key={l}>{l}</span>)}
   </span>;
@@ -247,6 +371,11 @@ export default function BrandDetailPage({ brandId, brand, onBack, onNavigate, on
     return () => { active = false; };
   }, [brandId, languageCode, sourceBrand?.description, sourceBrand?.descriptionLanguageCode]);
   const item = (loaded?.id === brandId ? loaded : null) || brand || { id: brandId };
+
+  
+  const dbBrandImgs = getDatabaseBrandImages(item.id, item.name);
+  const resolvedCover = item.cover || dbBrandImgs?.cover;
+
   const localized = translation?.languageCode === languageCode ? translation : null;
   const currentDescription = localized?.description ?? item.description;
   const descriptionLanguage = localized?.isTranslated ? languageCode : item.descriptionLanguageCode;
@@ -287,7 +416,8 @@ export default function BrandDetailPage({ brandId, brand, onBack, onNavigate, on
     <Header go={go} goBrands={goBrands} />
     {loadError && <div className="bd-data-notice" role="status">{loadError}</div>}
     <div className="bd-wrap">
-      <div className="bd-cover" style={item.cover ? { backgroundImage: `url(${item.cover})` } : undefined}>
+      
+      <div className="bd-cover" style={resolvedCover ? { backgroundImage: `url(${resolvedCover})` } : undefined}>
         <div className="bd-logo-big"><Logo item={item} size={104} /></div>
       </div>
 
