@@ -22,7 +22,7 @@ builder.Services.Configure<ForwardedHeadersOptions>(o =>
 var adminEnabled = cfg.GetValue<bool>("Admin:Enabled");      // false = /api/admin/* returns 404
 var gatewayKey = cfg["Gateway:SharedKey"] ?? "";
 var edgeSecret = cfg["Gateway:EdgeSecret"] ?? "";
-var groqApiKey = cfg["Chat:GroqApiKey"] ?? "";
+var groqApiKey = (cfg["Chat:GroqApiKey"] ?? "").Trim();
 var groqModel = cfg["Chat:GroqModel"] ?? "openai/gpt-oss-120b";
 var supabaseConnectionString = cfg.GetConnectionString("Supabase") ?? "";
 NpgsqlDataSource? supabase = string.IsNullOrWhiteSpace(supabaseConnectionString)
