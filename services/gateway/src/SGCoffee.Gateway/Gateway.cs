@@ -182,6 +182,7 @@ app.MapPost("/api/assistant/chat", async (ChatRequest input, IHttpClientFactory 
         using var response = await client.SendAsync(request, cancellationToken);
         if (!response.IsSuccessStatusCode)
         {
+            app.Logger.LogWarning("Groq chat request failed with HTTP {StatusCode}", (int)response.StatusCode);
             var status = response.StatusCode == System.Net.HttpStatusCode.TooManyRequests
                 ? StatusCodes.Status503ServiceUnavailable
                 : StatusCodes.Status502BadGateway;
