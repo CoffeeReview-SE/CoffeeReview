@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { divIcon } from "leaflet";
 import { MapContainer, Marker, Popup, TileLayer, Tooltip, useMap } from "react-leaflet";
 import { useLanguage } from "./LanguageContext.jsx";
@@ -60,6 +60,11 @@ export default function StoreMap() {
   const [isLocating, setIsLocating] = useState(false);
   const [nearbyAudioEnabled, setNearbyAudioEnabled] = useState(false);
   const [nearbyAudioStatus, setNearbyAudioStatus] = useState("");
+  const [tileStatus, setTileStatus] = useState("loading");
+  const [tileAttempt, setTileAttempt] = useState(0);
+  const [tileAutoRetries, setTileAutoRetries] = useState(0);
+  const tileErrors = useRef(0);
+  const tileRetryTimer = useRef(null);
   const requestedLocation = useRef(false);
   const playedNearbyBrands = useRef(new Set());
   const nearbyAudioQueue = useRef([]);
@@ -68,7 +73,40 @@ export default function StoreMap() {
   const speakNextNearby = useRef(null);
   const proximityAudioActive = useRef(nearbyAudioEnabled);
   const proximityAudioGeneration = useRef(0);
+  const tileEventHandlers = useMemo(() => ({
+    loading: () => {
+      tileErrors.current = 0;
+      setTileStatus("loading");
+    },
+    tileerror: () => {
+      tileErrors.current += 1;
+      setTileStatus("error");
+    },
+    load: () => {
+      if (tileErrors.current === 0) {
+        setTileStatus("ready");
+        return;
+      }
+      if (tileAutoRetries < 2 && tileRetryTimer.current === null) {
+        tileRetryTimer.current = window.setTimeout(() => {
+          tileRetryTimer.current = null;
+          tileErrors.current = 0;
+          setTileStatus("loading");
+          setTileAutoRetries(count => count + 1);
+          setTileAttempt(attempt => attempt + 1);
+        }, 800);
+      } else {
+        setTileStatus("error");
+      }
+    },
+  }), [tileAutoRetries]);
   proximityAudioActive.current = nearbyAudioEnabled;
+  useEffect(() => () => {
+    if (tileRetryTimer.current !== null) window.clearTimeout(tileRetryTimer.current);
+  }, []);
+  useEffect(() => () => {
+    if (tileRetryTimer.current !== null) window.clearTimeout(tileRetryTimer.current);
+  }, []);
   useEffect(() => {
     const controller = new AbortController();
     getUserApi("/api/catalog/branches", { signal: controller.signal })
@@ -314,16 +352,19 @@ export default function StoreMap() {
           )}
         </aside>
 
-        <MapContainer
-          className="store-map__canvas"
-          center={mapCenter}
-          zoom={mapZoom}
-          scrollWheelZoom
-        >
+        <div className="store-map__map-wrap">
+          <MapContainer
+            className="store-map__canvas"
+            center={mapCenter}
+            zoom={mapZoom}
+            scrollWheelZoom
+          >
           <ChangeView center={mapCenter} zoom={mapZoom} />
           <TileLayer
+            key={tileAttempt}
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+            eventHandlers={tileEventHandlers}
           />
           {mappedLocations.map((item) => (
             <Marker key={item.id} position={[item.lat, item.lng]} icon={coffeeMarkerIcon(item.brandId)} riseOnHover>
@@ -354,7 +395,21 @@ export default function StoreMap() {
               </Popup>
             </Marker>
           )}
-        </MapContainer>
+          </MapContainer>
+          {tileStatus === "error" && tileAutoRetries >= 2 && (
+            <div className="store-map__tile-error" role="status" aria-live="polite">
+              <span>{t("map.tilesError")}</span>
+              <button type="button" onClick={() => {
+                if (tileRetryTimer.current !== null) window.clearTimeout(tileRetryTimer.current);
+                tileRetryTimer.current = null;
+                tileErrors.current = 0;
+                setTileAutoRetries(0);
+                setTileStatus("loading");
+                setTileAttempt(attempt => attempt + 1);
+              }}>{t("map.tilesRetry")}</button>
+            </div>
+          )}
+        </div>
       </div>
     </section>
   );
