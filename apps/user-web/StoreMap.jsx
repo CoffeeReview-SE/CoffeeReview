@@ -12,6 +12,17 @@ const currentLocationIcon = divIcon({
   iconAnchor: [14, 14],
 });
 
+const brandPinColors = ["#273b2e", "#8a4f2d", "#536c54", "#9a3d32", "#745c3f", "#35566b"];
+function coffeeMarkerIcon(brandId) {
+  const color = brandPinColors[Math.abs(Number(brandId) || 0) % brandPinColors.length];
+  return divIcon({
+    className: "coffee-map-marker-icon",
+    html: `<span class="coffee-map-pin" style="--pin-color:${color}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h12v6a5 5 0 0 1-5 5h-2a5 5 0 0 1-5-5V8Zm12 2h2a2 2 0 0 1 0 4h-2M4 21h15M8 3c0 2 2 2 2 4m2-4c0 2 2 2 2 4" /></svg></span>`,
+    iconSize: [34, 40],
+    iconAnchor: [17, 38],
+  });
+}
+
 function ChangeView({ center, zoom }) {
   const map = useMap();
 
@@ -150,11 +161,15 @@ export default function StoreMap() {
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
           {mappedLocations.map((item) => (
-            <Marker key={item.id} position={[item.lat, item.lng]}>
+            <Marker key={item.id} position={[item.lat, item.lng]} icon={coffeeMarkerIcon(item.brandId)} riseOnHover>
+              <Tooltip direction="top" sticky className="coffee-map-tooltip">
+                {item.brand || item.name}
+              </Tooltip>
               <Popup>
-                <strong>{item.name}</strong>
+                <strong>{item.brand || item.name}</strong>
                 <br />
                 {item.address}
+                {item.phone && <><br />{item.phone}</>}
               </Popup>
             </Marker>
           ))}

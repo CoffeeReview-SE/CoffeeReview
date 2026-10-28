@@ -65,6 +65,13 @@
 .current-location-icon__dot { position: absolute; top: 8px; left: 8px; width: 12px; height: 12px; border: 2px solid #fff; border-radius: 50%; background: #0878ed; box-shadow: 0 1px 5px #163c67a6; }
 .store-map__canvas .leaflet-tooltip { padding: 5px 9px; border: 0; border-radius: 6px; background: #0878ed; color: #fff; font-size: 12px; font-weight: 700; box-shadow: 0 2px 8px #163c6740; }
 .store-map__canvas .leaflet-tooltip-top::before { border-top-color: #0878ed; }
+.coffee-map-marker-icon { border: 0; background: transparent; }
+.coffee-map-pin { position: relative; display: grid; width: 32px; height: 32px; place-items: center; border: 2px solid #fff; border-radius: 50% 50% 50% 8px; background: var(--pin-color); box-shadow: 0 4px 10px #24150c55, 0 0 0 1px #24150c18; transform: rotate(-45deg); transition: transform .16s ease, box-shadow .16s ease; }
+.coffee-map-pin::after { position: absolute; inset: 3px; border: 1px solid #ffffff70; border-radius: inherit; content: ""; }
+.coffee-map-pin svg { z-index: 1; width: 17px; height: 17px; fill: none; stroke: #fff; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; transform: rotate(45deg); }
+.coffee-map-marker-icon:hover .coffee-map-pin { box-shadow: 0 6px 14px #24150c70, 0 0 0 4px #ffffffa8; transform: rotate(-45deg) scale(1.13); }
+.store-map__canvas .coffee-map-tooltip { padding: 6px 10px; border: 1px solid #ffffffc9; border-radius: 9px; background: #273b2e; color: #fff; font-size: 12px; font-weight: 700; box-shadow: 0 4px 14px #24150c35; }
+.store-map__canvas .coffee-map-tooltip::before { border-top-color: #273b2e; }
 @keyframes current-location-pulse { 0% { transform: scale(.55); opacity: .9; } 100% { transform: scale(1.45); opacity: 0; } }
 .store-map__note { margin: 8px 0 0; color: #75675d; font-size: 12px; }
 
