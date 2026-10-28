@@ -101,7 +101,7 @@ app.MapGet("/api/assistant/status", async (IHttpClientFactory clients, Cancellat
     }
 
     if (string.IsNullOrWhiteSpace(groqApiKey))
-        return Results.Ok(new { connected = false, groqConnected = false, supabaseConnected });
+        return Results.Ok(new { connected = false, groqConnected = false, groqKeyConfigured = false, groqAuthenticated = false, groqHttpStatus = (int?)null, groqModelAvailable = false, groqModel, supabaseConnected });
 
     var client = clients.CreateClient("groq");
     using var request = new HttpRequestMessage(HttpMethod.Get, "models");
@@ -111,16 +111,19 @@ app.MapGet("/api/assistant/status", async (IHttpClientFactory clients, Cancellat
     {
         using var response = await client.SendAsync(request, cancellationToken);
         if (!response.IsSuccessStatusCode)
-            return Results.Ok(new { connected = false, groqConnected = false, supabaseConnected });
+        {
+            app.Logger.LogWarning("Groq model check failed with HTTP {StatusCode}", (int)response.StatusCode);
+            return Results.Ok(new { connected = false, groqConnected = false, groqKeyConfigured = true, groqAuthenticated = false, groqHttpStatus = (int)response.StatusCode, groqModelAvailable = false, groqModel, supabaseConnected });
+        }
 
         using var payload = await JsonDocument.ParseAsync(await response.Content.ReadAsStreamAsync(cancellationToken), cancellationToken: cancellationToken);
         var modelAvailable = payload.RootElement.GetProperty("data").EnumerateArray()
             .Any(model => model.TryGetProperty("id", out var id) && id.GetString() == groqModel);
-        return Results.Ok(new { connected = modelAvailable && supabaseConnected, groqConnected = modelAvailable, supabaseConnected });
+        return Results.Ok(new { connected = modelAvailable && supabaseConnected, groqConnected = modelAvailable, groqKeyConfigured = true, groqAuthenticated = true, groqHttpStatus = (int)response.StatusCode, groqModelAvailable = modelAvailable, groqModel, supabaseConnected });
     }
     catch (Exception ex) when (ex is HttpRequestException or OperationCanceledException or JsonException or InvalidOperationException)
     {
-        return Results.Ok(new { connected = false, groqConnected = false, supabaseConnected });
+        return Results.Ok(new { connected = false, groqConnected = false, groqKeyConfigured = true, groqAuthenticated = false, groqHttpStatus = (int?)null, groqModelAvailable = false, groqModel, supabaseConnected });
     }
 })
     .RequireCors("web")
