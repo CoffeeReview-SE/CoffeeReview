@@ -7,6 +7,71 @@ import BrandDescriptionAudio from "./BrandDescriptionAudio.jsx";
 
 const HERO_IMAGE = "";
 
+// 1. Ảnh Không gian (image coffee shop/)
+import coverHighlands from "../../public/image/High land coffee.jpg";
+import coverKatinat from "../../public/image/katinat.jpg";
+import coverKoi from "../../public/image/KOI the.jpg";
+import coverMilano from "../../public/image/milano.jpg";
+import coverPheLa from "../../public/image/Phe la.jpg";
+import coverPhucLong from "../../public/image/Phuc long.jpg";
+import coverStarbucks from "../../public/image/Starbuck.jpg";
+import coverTheCoffeeHouse from "../../public/image/The coffe house.jpg";
+import coverTrungNguyen from "../../public/image/Trung nguyen.jpg";
+import coverVivaStar from "../../public/image/viva star.jpg";
+
+// 2. Ảnh Logo (image logo/)
+import logoHighlands from "../../public/image/logo highlands coffee.jpg";
+import logoKatinat from "../../public/image/logo katinat.png";
+import logoKoi from "../../public/image/logo koi the.jpg";
+import logoMilano from "../../public/image/logo milano.png";
+import logoPheLa from "../../public/image/logo phe la.jpg";
+import logoPhucLong from "../../public/image/logo phuc long.jpg";
+import logoStarbucks from "../../public/image/logo starbuck.png";
+import logoTheCoffeeHouse from "../../public/image/logo the coffee house.jpg";
+import logoTrungNguyen from "../../public/image/logo Trung nguyen.png";
+import logoVivaStar from "../../public/image/logo viva.png";
+
+const DATABASE_BRANDS_IMAGES = {
+  "phuc-long": { cover: coverPhucLong, image: logoPhucLong },
+  "highlands-coffee": { cover: coverHighlands, image: logoHighlands },
+  "trung-nguyen": { cover: coverTrungNguyen, image: logoTrungNguyen },
+  "katinat": { cover: coverKatinat, image: logoKatinat },
+  "koi-the": { cover: coverKoi, image: logoKoi },
+  "phe-la": { cover: coverPheLa, image: logoPheLa },
+  "milano-coffee": { cover: coverMilano, image: logoMilano },
+  "viva-star-coffee": { cover: coverVivaStar, image: logoVivaStar },
+  "the-coffee-house": { cover: coverTheCoffeeHouse, image: logoTheCoffeeHouse },
+  "starbucks": { cover: coverStarbucks, image: logoStarbucks }
+};
+
+function getDatabaseBrandImages(brandId, brandName) {
+  const idKey = String(brandId || "").toLowerCase().trim();
+  if (DATABASE_BRANDS_IMAGES[idKey]) return DATABASE_BRANDS_IMAGES[idKey];
+
+  const nameKey = String(brandName || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "");
+
+  if (DATABASE_BRANDS_IMAGES[nameKey]) return DATABASE_BRANDS_IMAGES[nameKey];
+
+  if (nameKey.includes("phuc-long") || nameKey.includes("phuclong")) return DATABASE_BRANDS_IMAGES["phuc-long"];
+  if (nameKey.includes("highland")) return DATABASE_BRANDS_IMAGES["highlands-coffee"];
+  if (nameKey.includes("trung-nguyen")) return DATABASE_BRANDS_IMAGES["trung-nguyen"];
+  if (nameKey.includes("katinat")) return DATABASE_BRANDS_IMAGES["katinat"];
+  if (nameKey.includes("koi")) return DATABASE_BRANDS_IMAGES["koi-the"];
+  if (nameKey.includes("phe-la")) return DATABASE_BRANDS_IMAGES["phe-la"];
+  if (nameKey.includes("milano")) return DATABASE_BRANDS_IMAGES["milano-coffee"];
+  if (nameKey.includes("viva")) return DATABASE_BRANDS_IMAGES["viva-star-coffee"];
+  if (nameKey.includes("coffee-house") || nameKey.includes("tch")) return DATABASE_BRANDS_IMAGES["the-coffee-house"];
+  if (nameKey.includes("starbuck")) return DATABASE_BRANDS_IMAGES["starbucks"];
+
+  return null;
+}
+
 const fold = s => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d");
 
 const paths = {
@@ -109,10 +174,27 @@ function Cup() {
 }
 
 function Mark({ b }) {
-  const lines = b.mark.map(l => <span key={l}>{l}</span>);
+  const dbBrandImgs = getDatabaseBrandImages(b.id, b.name);
+  const resolvedLogo = b.logo || b.image || dbBrandImgs?.image;
+
+  if (resolvedLogo) {
+    // Xử lý tối ưu logo tròn đặc thù cho KOI Thé và Trung Nguyên
+    const isKoiOrTrungNguyen = String(b.id || "").toLowerCase().includes("koi") || 
+                               String(b.name || "").toLowerCase().includes("koi") ||
+                               String(b.id || "").toLowerCase().includes("trung") || 
+                               String(b.name || "").toLowerCase().includes("trung");
+
+    const logoStyle = isKoiOrTrungNguyen
+      ? { width: "84px", height: "84px", borderRadius: "50%", objectFit: "contain", background: "#fff", padding: "4px", boxShadow: "0 0 0 3px rgba(255,255,255,.9),0 6px 16px rgba(0,0,0,.35)" }
+      : { width: "84px", height: "84px", borderRadius: "50%", objectFit: "cover", boxShadow: "0 0 0 3px rgba(255,255,255,.9),0 6px 16px rgba(0,0,0,.35)" };
+
+    return <img src={resolvedLogo} alt={`Logo ${b.name}`} style={logoStyle} />;
+  }
+
+  const lines = b.mark ? b.mark.map(l => <span key={l}>{l}</span>) : [b.name];
   return b.badge
     ? <span className="hp-badge" style={{ background: b.badge }}>{lines}</span>
-    : <span className={`hp-word${b.mark.length === 1 ? " one" : ""}`} style={{ color: b.ink || "#fff" }}>{lines}</span>;
+    : <span className={`hp-word${b.mark?.length === 1 ? " one" : ""}`} style={{ color: b.ink || "#fff" }}>{lines}</span>;
 }
 
 export default function HomePage({ onOpenBrand, onNavigate }) {
@@ -164,23 +246,33 @@ export default function HomePage({ onOpenBrand, onNavigate }) {
         </button>
       </div>
       {shown.length ? <div className="hp-grid">
-        {shown.map(b => <article key={b.id} className="hp-card">
-          <button className="hp-cover" onClick={() => open(b)} aria-label={t("home.viewBrand", { name: b.name })} style={b.cover ? { backgroundImage: `linear-gradient(rgba(0,0,0,.15),rgba(0,0,0,.25)),url(${b.cover})` } : undefined}>
-            {!b.cover && <Mark b={b} />}
-          </button>
-          <BrandDescriptionAudio
-            brand={b}
-            className="hp-play"
-            playLabel={t("home.listen", { name: b.name })}
-            stopLabel={t("home.pauseAudio", { name: b.name })}
-            renderIcon={speaking => <Icon n={speaking ? "pause" : "play"} size={13} />}
-          />
-          <div className="hp-body">
-            <h3><button onClick={() => open(b)}>{b.name}</button></h3>
-            <p>{localizedCategory(b.type, languageCode)}</p>
-            <span><Icon n="pin" size={13} /> {t("home.branches", { count: b.branches })}</span>
-          </div>
-        </article>)}
+        {shown.map(b => {
+          const dbImgs = getDatabaseBrandImages(b.id, b.name);
+          const resolvedCover = b.cover || dbImgs?.cover;
+
+          return <article key={b.id} className="hp-card">
+            <button 
+              className="hp-cover" 
+              onClick={() => open(b)} 
+              aria-label={t("home.viewBrand", { name: b.name })} 
+              style={resolvedCover ? { backgroundImage: `linear-gradient(rgba(0,0,0,.15),rgba(0,0,0,.25)),url(${resolvedCover})` } : undefined}
+            >
+              <Mark b={b} />
+            </button>
+            <BrandDescriptionAudio
+              brand={b}
+              className="hp-play"
+              playLabel={t("home.listen", { name: b.name })}
+              stopLabel={t("home.pauseAudio", { name: b.name })}
+              renderIcon={speaking => <Icon n={speaking ? "pause" : "play"} size={13} />}
+            />
+            <div className="hp-body">
+              <h3><button onClick={() => open(b)}>{b.name}</button></h3>
+              <p>{localizedCategory(b.type, languageCode)}</p>
+              <span><Icon n="pin" size={13} /> {t("home.branches", { count: b.branches })}</span>
+            </div>
+          </article>;
+        })}
       </div> : <p className="hp-empty">{loadError ? "Không tải được danh sách từ máy chủ. Vui lòng thử tải lại trang." : t("home.noResults")}</p>}
     </main>
   </div>;
