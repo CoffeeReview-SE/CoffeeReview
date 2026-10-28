@@ -23,6 +23,12 @@ function coffeeMarkerIcon(brandId) {
   });
 }
 
+function googleDirectionsUrl(item, userPosition) {
+  const params = new URLSearchParams({ api: "1", destination: `${item.lat},${item.lng}` });
+  if (userPosition) params.set("origin", `${userPosition.position[0]},${userPosition.position[1]}`);
+  return `https://www.google.com/maps/dir/?${params.toString()}`;
+}
+
 function ChangeView({ center, zoom }) {
   const map = useMap();
 
@@ -130,19 +136,21 @@ export default function StoreMap() {
           <p className="store-map__count">{t("map.count", { count: filteredLocations.length })}</p>
           {filteredLocations.length ? (
             filteredLocations.map((item) => (
-              <button
-                className="store-map__result"
-                key={item.id}
-                onClick={() => selectLocation(item)}
-                type="button"
-              >
+              <div className="store-map__result" key={item.id}>
+                <button className="store-map__select" onClick={() => selectLocation(item)} type="button">
                 <span className="store-map__pin" aria-hidden="true">●</span>
                 <span>
                   <strong>{item.name}</strong>
                   <small>{item.address}</small>
                   {item.lat == null || item.lng == null ? <small>Vị trí trên bản đồ chưa được xác minh</small> : null}
                 </span>
-              </button>
+                </button>
+                {Number.isFinite(item.lat) && Number.isFinite(item.lng) && (
+                  <a className="store-map__directions" href={googleDirectionsUrl(item, userPosition)} target="_blank" rel="noopener noreferrer">
+                    Chỉ đường
+                  </a>
+                )}
+              </div>
             ))
           ) : (
             <p className="store-map__empty">{t("map.empty")}</p>
@@ -170,6 +178,10 @@ export default function StoreMap() {
                 <br />
                 {item.address}
                 {item.phone && <><br />{item.phone}</>}
+                <br />
+                <a className="store-map__directions" href={googleDirectionsUrl(item, userPosition)} target="_blank" rel="noopener noreferrer">
+                  Chỉ đường trên Google Maps
+                </a>
               </Popup>
             </Marker>
           ))}
