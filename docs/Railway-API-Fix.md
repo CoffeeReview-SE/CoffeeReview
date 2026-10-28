@@ -1,5 +1,7 @@
 # Sửa API trả HTML trên Railway
 
+**Phương án hiện tại:** do giới hạn số service, dùng Dockerfile gốc để chạy tất cả trong một service. Làm theo `docs/Railway-Single-Service.md`; hướng dẫn tách nhiều service bên dưới chỉ còn là phương án thay thế.
+
 Lỗi `Unexpected token '<', '<!doctype' ... is not valid JSON` xuất hiện vì `/api/...` nhận trang frontend. Import SQL không sửa được lỗi routing này.
 
 Lệnh start cũ `serve -s dist` trả `index.html` cho các đường dẫn không tồn tại, bao gồm `/api`. Proxy Vite chỉ được cấu hình cho dev. Lệnh start mới `node scripts/web-server.mjs` phục vụ frontend và chuyển `/api/...` tới Gateway, giữ cùng origin để tất cả màn hình Admin, trang thương hiệu và tracking cùng hoạt động.

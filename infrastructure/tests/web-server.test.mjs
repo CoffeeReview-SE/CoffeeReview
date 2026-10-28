@@ -74,3 +74,13 @@ test('gateway configuration rejects credentials and API path suffixes', () => {
   assert.throws(() => createWebServer({ gatewayUrl: 'https://name:password@example.com' }));
   assert.throws(() => createWebServer({ gatewayUrl: 'https://example.com/api' }));
 });
+
+test('container health endpoint reflects backend readiness', async t => {
+  let ready = true;
+  const url = await listen(createWebServer({ healthCheck: async () => ready }), t);
+  assert.equal((await fetch(`${url}/health`)).status, 200);
+  ready = false;
+  const unhealthy = await fetch(`${url}/health`);
+  assert.equal(unhealthy.status, 503);
+  assert.equal((await unhealthy.json()).status, 'unavailable');
+});

@@ -21,7 +21,7 @@ function cleanHeaders(headers) {
 }
 
 // Serve the React build and proxy same-origin API requests to the backend Gateway.
-export function createWebServer({ distDir = root, gatewayUrl = process.env.API_GATEWAY_URL || '', edgeSecret = process.env.API_EDGE_SECRET || '' } = {}) {
+export function createWebServer({ distDir = root, gatewayUrl = process.env.API_GATEWAY_URL || '', edgeSecret = process.env.API_EDGE_SECRET || '', healthCheck } = {}) {
   const directory = resolve(distDir);
   let gateway;
   if (gatewayUrl) {
@@ -31,6 +31,13 @@ export function createWebServer({ distDir = root, gatewayUrl = process.env.API_G
   }
   return http.createServer(async (request, response) => {
     const rawPath = (request.url || '/').split('?')[0];
+    if (rawPath === '/health' && ['GET', 'HEAD'].includes(request.method)) {
+      let ready = true;
+      try { if (healthCheck) ready = await healthCheck(); } catch { ready = false; }
+      response.writeHead(ready ? 200 : 503, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
+      response.end(request.method === 'HEAD' ? undefined : JSON.stringify({ status: ready ? 'ok' : 'unavailable' }));
+      return;
+    }
     if (rawPath === '/api' || rawPath.startsWith('/api/')) {
       if (!gateway) { json(response, 503, 'Chưa cấu hình API_GATEWAY_URL trên service frontend Railway.'); return; }
       const headers = cleanHeaders(request.headers);

@@ -1,0 +1,22 @@
+.git
+.github
+.agents
+.claude
+.codex
+.aws
+.tmp
+.turbo
+.expo
+node_modules
+dist
+**/bin
+**/obj
+**/node_modules
+**/.env
+**/.env.*
+**/secrets.json
+**/appsettings.Development.json
+**/appsettings (*).json
+**/*.log
+docs
+infrastructure
