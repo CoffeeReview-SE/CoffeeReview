@@ -38,7 +38,7 @@ import menuPhucLong from "../../public/image/menu phuc long.jpg";
 import menuStarbucks from "../../public/image/menu startbuck.jpg";
 import menuTheCoffeeHouse from "../../public/image/menu the coffee house.jpg";
 import menuTrungNguyen from "../../public/image/menu trung nguyen.jpg";
-
+import menuViva from "../../public/image/menu viva.jpg"; 
 
 const DATABASE_BRANDS_IMAGES = {
   "phuc-long": { cover: coverPhucLong, image: logoPhucLong, menu: [menuPhucLong] },
@@ -48,7 +48,7 @@ const DATABASE_BRANDS_IMAGES = {
   "koi-the": { cover: coverKoi, image: logoKoi, menu: [menuKoi] },
   "phe-la": { cover: coverPheLa, image: logoPheLa, menu: [menuPheLa] },
   "milano-coffee": { cover: coverMilano, image: logoMilano, menu: [menuMilano] },
-  "viva-star-coffee": { cover: coverVivaStar, image: logoVivaStar, menu: [null] },
+  "viva-star-coffee": { cover: coverVivaStar, image: logoVivaStar, menu: [menuViva] },
   "the-coffee-house": { cover: coverTheCoffeeHouse, image: logoTheCoffeeHouse, menu: [menuTheCoffeeHouse] },
   "starbucks": { cover: coverStarbucks, image: logoStarbucks, menu: [menuStarbucks] }
 };
@@ -403,10 +403,8 @@ export default function BrandDetailPage({ brandId, brand, onBack, onNavigate, on
           <p className="bd-desc">{currentDescription || (loadError ? dt("noSampleDescription") : dt("loadingBrand"))}</p>
 
           <section className="bd-card">
-            {/* Đã xóa nút xem tất cả / mũi tên ở tiêu đề */}
             <div className="bd-card-h"><h2>{dt("menu")}</h2></div>
             
-            {/* Khung hiển thị ảnh menu đơn, click vào để phóng to */}
             <div className="bd-gal-single">
               <button className="bd-single-img-btn" onClick={() => setView(0)} aria-label={dt("zoomMenu", { number: 1 })}>
                 <Tile src={images[0]} i={0} alt={dt("menuImage", { number: 1 })} />
@@ -505,7 +503,6 @@ const css = `
 .bd-card-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
 .bd-card-h h2{margin:0;font-size:13.5px}
 
-/* CSS tinh chỉnh phần ảnh menu khớp khung trắng và phóng lớn */
 .bd-gal-single{display:flex;flex-direction:column;padding:8px;border:1px solid var(--line);border-radius:10px;background:#fff}
 .bd-single-img-btn{padding:0;border:0;background:none;cursor:zoom-in;width:100%;height:460px;overflow:hidden;border-radius:8px;display:block}
 .bd-single-img-btn img{display:block;width:100%;height:100%;object-fit:contain;background:#faf7f3;border-radius:6px}
