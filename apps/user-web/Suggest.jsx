@@ -1,4 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
+import { LANGUAGES, useLanguage } from "./LanguageContext.jsx";
+import { localizedCategory, screenText } from "./brandDetailTranslations.js";
 
 // Dữ liệu mẫu thương hiệu đã chọn trước đó (nếu không được truyền qua props)
 const DEFAULT_SELECTED_BRANDS = [
@@ -24,15 +26,12 @@ const Icon = ({ n, size = 18 }) => (
 );
 
 function Header({ currentNav = "suggestions", onNavigate }) {
-  const [lang, setLang] = useState("VI");
+  const { languageCode, setLanguageCode, t } = useLanguage();
+  const lang = languageCode.toUpperCase();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
 
-  const languages = [
-    { code: "VI", label: "Tiếng Việt" },
-    { code: "EN", label: "English" },
-    { code: "KO", label: "한국어" }
-  ];
+  const languages = LANGUAGES;
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -44,7 +43,7 @@ function Header({ currentNav = "suggestions", onNavigate }) {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const items = [["home", "Trang chủ"], ["brands", "Thương hiệu"], ["map", "Bản đồ"], ["suggestions", "Đề xuất"]];
+  const items = [["home", t("nav.home")], ["brands", t("nav.brands")], ["map", t("nav.map")], ["suggestions", t("nav.suggestions")]];
 
   const handleNavClick = (key) => {
     if (onNavigate) {
@@ -58,7 +57,7 @@ function Header({ currentNav = "suggestions", onNavigate }) {
         <Icon n="cup" size={30} />
         <span>
           <b>SaigonCoffee</b>
-          <small>Khám phá cà phê Sài Gòn</small>
+          <small>{t("brand.tagline")}</small>
         </span>
       </button>
 
@@ -94,9 +93,9 @@ function Header({ currentNav = "suggestions", onNavigate }) {
               {languages.map((item) => (
                 <button
                   key={item.code}
-                  className={`sg-lang-item ${lang === item.code ? "active" : ""}`}
+                  className={`sg-lang-item ${lang === item.code.toUpperCase() ? "active" : ""}`}
                   onClick={() => {
-                    setLang(item.code);
+                    setLanguageCode(item.code);
                     setIsOpen(false);
                   }}
                 >
@@ -126,6 +125,8 @@ function BrandBadge({ item }) {
 }
 
 export default function SuggestionsPage({ recentBrands = [], onSelectBrand, onNavigate }) {
+  const { languageCode } = useLanguage();
+  const st = (key, values) => screenText(languageCode, key, values);
   const displayBrands = recentBrands.length > 0 ? recentBrands : DEFAULT_SELECTED_BRANDS;
 
   const [formData, setFormData] = useState({
@@ -156,7 +157,7 @@ export default function SuggestionsPage({ recentBrands = [], onSelectBrand, onNa
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!formData.name.trim() || !formData.phone.trim() || !formData.brandName.trim()) {
-      alert("Vui lòng điền đầy đủ Họ tên, Số điện thoại và Thương hiệu!");
+      alert(st("validation"));
       return;
     }
     setSubmitted(true);
@@ -175,11 +176,8 @@ export default function SuggestionsPage({ recentBrands = [], onSelectBrand, onNa
 
       <section className="sg-hero">
         <div className="sg-hero-in">
-          <h1>Đề xuất Thương hiệu & Địa điểm</h1>
-          <p>
-            Bạn biết một quán cà phê tuyệt vời hoặc thương hiệu chưa có trên SaigonCoffee? 
-            Hãy chia sẻ ngay với chúng tôi để cùng lan tỏa văn hóa cà phê Sài Gòn!
-          </p>
+          <h1>{st("suggestTitle")}</h1>
+          <p>{st("suggestIntro")}</p>
         </div>
       </section>
 
@@ -187,8 +185,8 @@ export default function SuggestionsPage({ recentBrands = [], onSelectBrand, onNa
         {displayBrands.length > 0 && (
           <section className="sg-selected-section">
             <div className="sg-section-title">
-              <h2>Các thương hiệu bạn đã xem / chọn trước đó</h2>
-              <p>Bấm vào thương hiệu bên dưới để tự động điền vào mẫu đề xuất</p>
+              <h2>{st("recentBrands")}</h2>
+              <p>{st("clickBrand")}</p>
             </div>
             <div className="sg-selected-grid">
               {displayBrands.map((b) => (
@@ -200,8 +198,8 @@ export default function SuggestionsPage({ recentBrands = [], onSelectBrand, onNa
                   <BrandBadge item={b} />
                   <div className="sg-card-info">
                     <h4>{b.name}</h4>
-                    <p>{b.type}</p>
-                    <span><Icon n="pin" size={12} /> {b.branchCount || b.branches || 0} chi nhánh</span>
+                    <p>{localizedCategory(b.type, languageCode)}</p>
+                    <span><Icon n="pin" size={12} /> {st("branchCount", { count: b.branchCount || b.branches || 0 })}</span>
                   </div>
                   {formData.brandName === b.name && (
                     <span className="sg-card-check"><Icon n="check" size={14} /></span>
@@ -219,28 +217,28 @@ export default function SuggestionsPage({ recentBrands = [], onSelectBrand, onNa
                 <div className="sg-success-icon">
                   <Icon n="check" size={36} />
                 </div>
-                <h3>Gửi đề xuất thành công!</h3>
-                <p>Cảm ơn <strong>{formData.name}</strong> đã đóng góp thông tin về <strong>{formData.brandName}</strong>. Chúng tôi sẽ xác minh và cập nhật sớm nhất.</p>
+                <h3>{st("success")}</h3>
+                <p>{st("thanks", { name: formData.name, brand: formData.brandName })}</p>
                 <button className="sg-btn-primary" onClick={handleReset}>
-                  Gửi đề xuất khác
+                  {st("submitAnother")}
                 </button>
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="sg-form">
                 <div className="sg-form-header">
-                  <h3>Biểu mẫu gửi đề xuất</h3>
-                  <p>Vui lòng điền thông tin chi tiết dưới đây</p>
+                  <h3>{st("formTitle")}</h3>
+                  <p>{st("formIntro")}</p>
                 </div>
 
                 <div className="sg-field-group">
                   <label htmlFor="name">
-                    <Icon n="user" size={15} /> Họ và tên <span className="req">*</span>
+                    <Icon n="user" size={15} /> {st("fullName")} <span className="req">*</span>
                   </label>
                   <input
                     type="text"
                     id="name"
                     name="name"
-                    placeholder="Nhập họ và tên của bạn"
+                    placeholder={st("fullNamePlaceholder")}
                     value={formData.name}
                     onChange={handleChange}
                     required
@@ -249,13 +247,13 @@ export default function SuggestionsPage({ recentBrands = [], onSelectBrand, onNa
 
                 <div className="sg-field-group">
                   <label htmlFor="phone">
-                    <Icon n="phone" size={15} /> Số điện thoại <span className="req">*</span>
+                    <Icon n="phone" size={15} /> {st("phone")} <span className="req">*</span>
                   </label>
                   <input
                     type="tel"
                     id="phone"
                     name="phone"
-                    placeholder="Nhập số điện thoại liên hệ"
+                    placeholder={st("phonePlaceholder")}
                     value={formData.phone}
                     onChange={handleChange}
                     required
@@ -264,13 +262,13 @@ export default function SuggestionsPage({ recentBrands = [], onSelectBrand, onNa
 
                 <div className="sg-field-group">
                   <label htmlFor="brandName">
-                    <Icon n="store" size={15} /> Thương hiệu muốn đề xuất <span className="req">*</span>
+                    <Icon n="store" size={15} /> {st("brandToSuggest")} <span className="req">*</span>
                   </label>
                   <input
                     type="text"
                     id="brandName"
                     name="brandName"
-                    placeholder="Tên quán hoặc thương hiệu cà phê"
+                    placeholder={st("brandPlaceholder")}
                     value={formData.brandName}
                     onChange={handleChange}
                     required
@@ -279,32 +277,32 @@ export default function SuggestionsPage({ recentBrands = [], onSelectBrand, onNa
 
                 <div className="sg-field-group">
                   <label htmlFor="address">
-                    <Icon n="pin" size={15} /> Địa chỉ chi tiết
+                    <Icon n="pin" size={15} /> {st("address")}
                   </label>
                   <input
                     type="text"
                     id="address"
                     name="address"
-                    placeholder="Số nhà, tên đường, Quận/Huyện tại TP.HCM"
+                    placeholder={st("addressPlaceholder")}
                     value={formData.address}
                     onChange={handleChange}
                   />
                 </div>
 
                 <div className="sg-field-group">
-                  <label htmlFor="note">Ghi chú / Mới có gì đặc biệt?</label>
+                  <label htmlFor="note">{st("notes")}</label>
                   <textarea
                     id="note"
                     name="note"
                     rows="3"
-                    placeholder="Chia sẻ lý do bạn thích hoặc thông tin chi tiết thêm về thương hiệu này..."
+                    placeholder={st("notesPlaceholder")}
                     value={formData.note}
                     onChange={handleChange}
                   ></textarea>
                 </div>
 
                 <button type="submit" className="sg-btn-submit">
-                  <Icon n="send" size={16} /> Gửi đề xuất
+                  <Icon n="send" size={16} /> {st("submit")}
                 </button>
               </form>
             )}

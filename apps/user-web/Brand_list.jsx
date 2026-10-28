@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
+import { LANGUAGES, useLanguage } from "./LanguageContext.jsx";
+import { localizedCategory, screenText } from "./brandDetailTranslations.js";
 
 const INITIAL_BRANDS = [
   { id: 1, name: "The Coffee House", type: "Cà phê, trà, bánh", branchCount: 12, badge: "#1A2518", mark: ["THE", "COFFEE", "HOUSE"], logo: "" },
@@ -26,15 +28,12 @@ const Icon = ({ n, size = 18 }) => (
 );
 
 function Header({ active = "brands", go }) {
-  const [lang, setLang] = useState("VI");
+  const { languageCode, setLanguageCode, t } = useLanguage();
+  const lang = languageCode.toUpperCase();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
 
-  const languages = [
-    { code: "VI", label: "Tiếng Việt" },
-    { code: "EN", label: "English" },
-    { code: "KO", label: "한국어" }
-  ];
+  const languages = LANGUAGES;
 
   // Đóng dropdown khi click ra bên ngoài
   useEffect(() => {
@@ -47,7 +46,7 @@ function Header({ active = "brands", go }) {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const items = [["home", "Trang chủ"], ["brands", "Thương hiệu"], ["map", "Bản đồ"], ["suggestions", "Đề xuất"]];
+  const items = [["home", t("nav.home")], ["brands", t("nav.brands")], ["map", t("nav.map")], ["suggestions", t("nav.suggestions")]];
   
   return (
     <header className="hp-bar">
@@ -55,7 +54,7 @@ function Header({ active = "brands", go }) {
         <Icon n="cup" size={30} />
         <span>
           <b>SaigonCoffee</b>
-          <small>Khám phá cà phê Sài Gòn</small>
+          <small>{t("brand.tagline")}</small>
         </span>
       </button>
 
@@ -91,9 +90,9 @@ function Header({ active = "brands", go }) {
               {languages.map((item) => (
                 <button
                   key={item.code}
-                  className={`hp-lang-item ${lang === item.code ? "active" : ""}`}
+                  className={`hp-lang-item ${lang === item.code.toUpperCase() ? "active" : ""}`}
                   onClick={() => {
-                    setLang(item.code);
+                    setLanguageCode(item.code);
                     setIsOpen(false);
                   }}
                 >
@@ -143,20 +142,20 @@ function BrandBadge({ item }) {
   );
 }
 
-function BrandCard({ brand, onSelect }) {
+function BrandCard({ brand, onSelect, languageCode }) {
   return (
     <div className="bl-card" onClick={() => onSelect && onSelect(brand)}>
       <div className="bl-card-hero">
         <BrandBadge item={brand} />
-        <button className="bl-play-btn" aria-label={`Xem thông tin ${brand.name}`}>
+        <button className="bl-play-btn" aria-label={screenText(languageCode, "viewBrand", { name: brand.name })}>
           <Icon n="play" size={14} />
         </button>
       </div>
       <div className="bl-card-info">
         <h3>{brand.name}</h3>
-        <p className="bl-card-type">{brand.type}</p>
+        <p className="bl-card-type">{localizedCategory(brand.type, languageCode)}</p>
         <p className="bl-card-branch">
-          <Icon n="pin" size={14} /> {brand.branchCount} chi nhánh
+          <Icon n="pin" size={14} /> {screenText(languageCode, "branchCount", { count: brand.branchCount })}
         </p>
       </div>
     </div>
@@ -164,6 +163,8 @@ function BrandCard({ brand, onSelect }) {
 }
 
 export default function BrandListPage({ onSelectBrand, onNavigate }) {
+  const { languageCode } = useLanguage();
+  const st = (key, values) => screenText(languageCode, key, values);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedFilter, setSelectedFilter] = useState("all");
 
@@ -188,21 +189,18 @@ export default function BrandListPage({ onSelectBrand, onNavigate }) {
 
       <section className="hp-hero">
         <div className="hp-hero-in">
-          <h1>Khám phá những thương hiệu<br />cà phê đặc sắc tại Sài Gòn</h1>
-          <p>
-            Từ những quán cà phê lâu đời đến những thương hiệu hiện đại, chúng tôi mang
-            đến cho bạn hành trình vị cà phê độc đáo.
-          </p>
+          <h1>{st("brandTitle")}</h1>
+          <p>{st("brandIntro")}</p>
 
           <form className="hp-search" role="search" onSubmit={e => e.preventDefault()}>
             <input
               type="text"
-              placeholder="Tìm kiếm thương hiệu, khu vực, loại hình..."
+              placeholder={st("searchPlaceholder")}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              aria-label="Tìm kiếm thương hiệu"
+              aria-label={st("search")}
             />
-            <button aria-label="Tìm kiếm">
+            <button aria-label={st("search")}>
               <Icon n="search" size={18} />
             </button>
           </form>
@@ -212,26 +210,26 @@ export default function BrandListPage({ onSelectBrand, onNavigate }) {
 
       <main className="bl-main">
         <div className="bl-section-header">
-          <h2>Tất cả thương hiệu ({filteredBrands.length})</h2>
+          <h2>{st("allBrands", { count: filteredBrands.length })}</h2>
 
           <div className="bl-filter-tabs">
             <button 
               className={selectedFilter === "all" ? "active" : ""} 
               onClick={() => setSelectedFilter("all")}
             >
-              Tất cả
+              {st("all")}
             </button>
             <button 
               className={selectedFilter === "trà" ? "active" : ""} 
               onClick={() => setSelectedFilter("trà")}
             >
-              Trà & Cà phê
+              {st("teaCoffee")}
             </button>
             <button 
               className={selectedFilter === "bánh" ? "active" : ""} 
               onClick={() => setSelectedFilter("bánh")}
             >
-              Cà phê & Bánh
+              {st("coffeeCake")}
             </button>
           </div>
         </div>
@@ -239,13 +237,13 @@ export default function BrandListPage({ onSelectBrand, onNavigate }) {
         {filteredBrands.length > 0 ? (
           <div className="bl-grid">
             {filteredBrands.map((brand) => (
-              <BrandCard key={brand.id} brand={brand} onSelect={onSelectBrand} />
+              <BrandCard key={brand.id} brand={brand} onSelect={onSelectBrand} languageCode={languageCode} />
             ))}
           </div>
         ) : (
           <div className="bl-empty">
             <Icon n="cup" size={48} />
-            <p>Không tìm thấy thương hiệu phù hợp với từ khóa "{searchTerm}"</p>
+            <p>{st("noBrands", { query: searchTerm })}</p>
           </div>
         )}
       </main>

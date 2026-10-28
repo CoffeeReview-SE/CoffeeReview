@@ -1,0 +1,111 @@
+import { createContext, useContext, useState } from "react";
+
+export const LANGUAGES = [
+  { code: "vi", label: "Tiếng Việt" },
+  { code: "en", label: "English" },
+  { code: "ja", label: "日本語" },
+  { code: "zh", label: "中文" },
+];
+
+const messages = {
+  vi: {
+    "brand.tagline": "Khám phá cà phê Sài Gòn",
+    "nav.home": "Trang chủ", "nav.brands": "Thương hiệu", "nav.map": "Bản đồ", "nav.suggestions": "Đề xuất",
+    "home.title": "Khám phá những thương hiệu cà phê đặc sắc tại Sài Gòn",
+    "home.intro": "Từ những quán cà phê lâu đời đến những thương hiệu hiện đại, chúng tôi mang đến cho bạn hành trình vị cà phê độc đáo.",
+    "home.search": "Tìm kiếm", "home.searchPlaceholder": "Tìm kiếm thương hiệu, khu vực, loại hình...",
+    "home.featured": "Thương hiệu nổi bật", "home.seeAll": "Xem tất cả", "home.viewBrand": "Xem thương hiệu {name}",
+    "home.pauseAudio": "Dừng audio {name}", "home.listen": "Nghe giới thiệu {name}", "home.branches": "{count} chi nhánh",
+    "home.noResults": "Không tìm thấy thương hiệu phù hợp. Hãy thử từ khóa khác.",
+    "map.eyebrow": "KHÁM PHÁ SÀI GÒN", "map.title": "Tìm quán cà phê trên bản đồ",
+    "map.description": "Dữ liệu địa điểm mẫu để bạn trải nghiệm giao diện bản đồ và tìm kiếm.",
+    "map.searchLabel": "Tìm theo tên quán hoặc địa chỉ", "map.searchPlaceholder": "Ví dụ: Quận 1, Highlands...",
+    "map.locate": "Vị trí của tôi", "map.locating": "Đang định vị...",
+    "map.requesting": "Đang yêu cầu quyền truy cập vị trí...", "map.unsupported": "Trình duyệt này không hỗ trợ định vị vị trí.",
+    "map.locatingStatus": "Đang lấy vị trí hiện tại...", "map.located": "Đã xác định vị trí (sai số khoảng {accuracy} m).",
+    "map.denied": "Bạn đã từ chối quyền truy cập vị trí. Hãy cấp quyền trong cài đặt trình duyệt rồi thử lại.",
+    "map.unavailable": "Thiết bị chưa cung cấp được vị trí. Hãy bật GPS/Wi-Fi rồi thử lại.",
+    "map.timeout": "Đã hết thời gian chờ lấy vị trí. Hãy thử lại ở nơi có tín hiệu tốt hơn.",
+    "map.count": "{count} địa điểm", "map.results": "Địa điểm tìm thấy", "map.empty": "Không tìm thấy địa điểm phù hợp.",
+    "map.current": "Vị trí của tôi", "map.userCurrent": "Vị trí hiện tại của bạn",
+    "map.note": "Địa điểm hiện là dữ liệu mẫu trong frontend; chưa kết nối backend hoặc database."
+  },
+  en: {
+    "brand.tagline": "Explore Saigon coffee",
+    "nav.home": "Home", "nav.brands": "Brands", "nav.map": "Map", "nav.suggestions": "Suggestions",
+    "home.title": "Discover distinctive coffee brands in Saigon",
+    "home.intro": "From long-established cafés to modern brands, discover a unique coffee journey with us.",
+    "home.search": "Search", "home.searchPlaceholder": "Search brands, areas, or categories...",
+    "home.featured": "Featured brands", "home.seeAll": "View all", "home.viewBrand": "View {name}",
+    "home.pauseAudio": "Stop audio for {name}", "home.listen": "Listen to {name}'s introduction", "home.branches": "{count} branches",
+    "home.noResults": "No matching brands found. Try another search.",
+    "map.eyebrow": "EXPLORE SAIGON", "map.title": "Find cafés on the map",
+    "map.description": "Sample locations let you explore the map and search interface.",
+    "map.searchLabel": "Search by café name or address", "map.searchPlaceholder": "For example: District 1, Highlands...",
+    "map.locate": "My location", "map.locating": "Locating...", "map.requesting": "Requesting location access...",
+    "map.unsupported": "This browser does not support geolocation.", "map.locatingStatus": "Getting your current location...",
+    "map.located": "Location found (accuracy about {accuracy} m).", "map.denied": "Location access was denied. Allow it in your browser settings and try again.",
+    "map.unavailable": "Your device could not provide a location. Turn on GPS or Wi-Fi and try again.",
+    "map.timeout": "Location request timed out. Try again where the signal is stronger.",
+    "map.count": "{count} locations", "map.results": "Locations found", "map.empty": "No matching locations found.",
+    "map.current": "My location", "map.userCurrent": "Your current location",
+    "map.note": "Locations are currently sample frontend data and are not connected to a backend or database."
+  },
+  ja: {
+    "brand.tagline": "サイゴンのコーヒーを探す",
+    "nav.home": "ホーム", "nav.brands": "ブランド", "nav.map": "地図", "nav.suggestions": "おすすめ",
+    "home.title": "サイゴンの個性豊かなコーヒーブランドを見つけよう",
+    "home.intro": "老舗カフェから現代的なブランドまで、個性的なコーヒーの旅をご案内します。",
+    "home.search": "検索", "home.searchPlaceholder": "ブランド、エリア、種類を検索...",
+    "home.featured": "注目のブランド", "home.seeAll": "すべて見る", "home.viewBrand": "{name}を見る",
+    "home.pauseAudio": "{name}の音声を停止", "home.listen": "{name}の紹介を聞く", "home.branches": "支店 {count} 店",
+    "home.noResults": "該当するブランドがありません。別のキーワードをお試しください。",
+    "map.eyebrow": "サイゴンを探す", "map.title": "地図でカフェを探す",
+    "map.description": "サンプルの場所データで地図と検索機能をお試しいただけます。",
+    "map.searchLabel": "店名または住所で検索", "map.searchPlaceholder": "例：1区、Highlands...",
+    "map.locate": "現在地", "map.locating": "位置を特定中...", "map.requesting": "位置情報へのアクセスを確認中...",
+    "map.unsupported": "このブラウザーは位置情報に対応していません。", "map.locatingStatus": "現在地を取得中...",
+    "map.located": "位置を確認しました（誤差約 {accuracy} m）。", "map.denied": "位置情報へのアクセスが拒否されました。ブラウザーの設定で許可して再試行してください。",
+    "map.unavailable": "位置情報を取得できません。GPSまたはWi-Fiを有効にして再試行してください。", "map.timeout": "位置情報の取得がタイムアウトしました。電波の良い場所で再試行してください。",
+    "map.count": "場所 {count} 件", "map.results": "検索結果", "map.empty": "該当する場所がありません。",
+    "map.current": "現在地", "map.userCurrent": "あなたの現在地", "map.note": "場所はフロントエンドのサンプルデータで、バックエンドやデータベースには未接続です。"
+  },
+  zh: {
+    "brand.tagline": "探索西贡咖啡",
+    "nav.home": "首页", "nav.brands": "品牌", "nav.map": "地图", "nav.suggestions": "推荐",
+    "home.title": "探索西贡特色咖啡品牌",
+    "home.intro": "从历史悠久的咖啡馆到现代品牌，开启独特的咖啡之旅。",
+    "home.search": "搜索", "home.searchPlaceholder": "搜索品牌、地区或类型...",
+    "home.featured": "精选品牌", "home.seeAll": "查看全部", "home.viewBrand": "查看{name}",
+    "home.pauseAudio": "停止{name}的音频", "home.listen": "收听{name}介绍", "home.branches": "{count}家分店",
+    "home.noResults": "没有找到符合条件的品牌，请尝试其他关键词。",
+    "map.eyebrow": "探索西贡", "map.title": "在地图上寻找咖啡馆",
+    "map.description": "使用示例地点体验地图界面和搜索功能。",
+    "map.searchLabel": "按店名或地址搜索", "map.searchPlaceholder": "例如：第一郡、Highlands...",
+    "map.locate": "我的位置", "map.locating": "正在定位...", "map.requesting": "正在请求位置权限...",
+    "map.unsupported": "此浏览器不支持定位功能。", "map.locatingStatus": "正在获取当前位置...",
+    "map.located": "已定位（误差约{accuracy}米）。", "map.denied": "您拒绝了位置访问权限。请在浏览器设置中允许后重试。",
+    "map.unavailable": "设备暂时无法提供位置。请开启GPS或Wi-Fi后重试。", "map.timeout": "定位超时，请在信号较好的地方重试。",
+    "map.count": "{count}个地点", "map.results": "搜索到的地点", "map.empty": "没有找到符合条件的地点。",
+    "map.current": "我的位置", "map.userCurrent": "您的当前位置", "map.note": "地点目前是前端示例数据，尚未连接后端或数据库。"
+  }
+};
+
+const LanguageContext = createContext(null);
+
+export function LanguageProvider({ children }) {
+  const [languageCode, setLanguageCode] = useState("vi");
+  return <LanguageContext.Provider value={{ languageCode, setLanguageCode }}>{children}</LanguageContext.Provider>;
+}
+
+export function useLanguage() {
+  const context = useContext(LanguageContext);
+  if (!context) throw new Error("useLanguage must be used inside LanguageProvider");
+  const dictionary = messages[context.languageCode] || messages.vi;
+  const t = (key, values = {}) => {
+    let value = dictionary[key] ?? messages.vi[key] ?? key;
+    for (const [name, replacement] of Object.entries(values)) value = value.replaceAll(`{${name}}`, String(replacement));
+    return value;
+  };
+  return { ...context, t };
+}

@@ -1,5 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import StoreMap from "./StoreMap.jsx";
+import { LANGUAGES, useLanguage } from "./LanguageContext.jsx";
+import { localizedCategory } from "./brandDetailTranslations.js";
 
 const HERO_IMAGE = "";
 const brands = [
@@ -26,15 +28,12 @@ const Icon = ({ n, size = 18 }) => (
 );
 
 function Header({ active, go }) {
-  const [lang, setLang] = useState("VI");
+  const { languageCode, setLanguageCode, t } = useLanguage();
+  const lang = languageCode.toUpperCase();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
 
-  const languages = [
-    { code: "VI", label: "Tiếng Việt" },
-    { code: "EN", label: "English" },
-    { code: "KO", label: "한국어" }
-  ];
+  const languages = LANGUAGES;
 
   // Đóng dropdown khi click ra bên ngoài
   useEffect(() => {
@@ -47,11 +46,11 @@ function Header({ active, go }) {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const items = [["home", "Trang chủ"], ["brands", "Thương hiệu"], ["map", "Bản đồ"], ["suggestions", "Đề xuất"]];
+  const items = [["home", t("nav.home")], ["brands", t("nav.brands")], ["map", t("nav.map")], ["suggestions", t("nav.suggestions")]];
   
   return <header className="hp-bar">
     <button className="hp-logo" onClick={() => go("home")}>
-      <Icon n="cup" size={30} /><span><b>SaigonCoffee</b><small>Khám phá cà phê Sài Gòn</small></span>
+      <Icon n="cup" size={30} /><span><b>SaigonCoffee</b><small>{t("brand.tagline")}</small></span>
     </button>
     <nav className="hp-nav" aria-label="Điều hướng chính">
       {items.map(([k, label]) => (
@@ -84,9 +83,9 @@ function Header({ active, go }) {
             {languages.map((item) => (
               <button
                 key={item.code}
-                className={`hp-lang-item ${lang === item.code ? "active" : ""}`}
+                className={`hp-lang-item ${lang === item.code.toUpperCase() ? "active" : ""}`}
                 onClick={() => {
-                  setLang(item.code);
+                  setLanguageCode(item.code);
                   setIsOpen(false);
                 }}
               >
@@ -121,6 +120,7 @@ function Mark({ b }) {
 }
 
 export default function HomePage({ onOpenBrand, onNavigate }) {
+  const { languageCode, t } = useLanguage();
   const [query, setQuery] = useState("");
   const [playing, setPlaying] = useState(null);
   const audio = useRef(null);
@@ -136,18 +136,18 @@ export default function HomePage({ onOpenBrand, onNavigate }) {
   };
 
   const shown = brands.filter(b => fold(`${b.name}${b.type}`).includes(fold(query.trim())));
-  const open = b => onOpenBrand ? onOpenBrand(b.id) : window.alert(`Mở chi tiết thương hiệu ID ${b.id}; cần kết nối router/API.`);
+  const open = b => onOpenBrand ? onOpenBrand(b.id, b) : window.alert(`Mở chi tiết thương hiệu ID ${b.id}; cần kết nối router/API.`);
 
   const stop = () => { audio.current?.pause(); audio.current = null; setPlaying(null); };
   const toggle = b => {
     if (playing === b.id) return stop();
     if (!b.audio) return window.alert(`Chưa có file audio giới thiệu cho ${b.name}.`); stop(); const a = new Audio(b.audio); a.onended = () => setPlaying(null); a.play().then(() => setPlaying(b.id)).catch(() => setPlaying(null)); audio.current = a; }; useEffect(() => () => audio.current?.pause(), []);  return <div className="hp"> <style>{css}</style> <Header active="home" go={go} /> <section className="hp-hero" style={HERO_IMAGE ? { backgroundImage: `linear-gradient(90deg,rgba(30,14,6,.88),rgba(30,14,6,.25)),url(${HERO_IMAGE})` } : undefined}>
       <div className="hp-hero-in">
-        <h1>Khám phá những thương hiệu<br />cà phê đặc sắc tại Sài Gòn</h1>
-        <p>Từ những quán cà phê lâu đời đến những thương hiệu hiện đại, chúng tôi mang đến cho bạn hành trình vị cà phê độc đáo.</p>
+        <h1>{t("home.title")}</h1>
+        <p>{t("home.intro")}</p>
         <form className="hp-search" role="search" onSubmit={e => e.preventDefault()}>
-          <input value={query} onChange={e => setQuery(e.target.value)} placeholder="Tìm kiếm thương hiệu, khu vực, loại hình..." aria-label="Tìm kiếm thương hiệu" />
-          <button aria-label="Tìm kiếm"><Icon n="search" size={18} /></button>
+          <input value={query} onChange={e => setQuery(e.target.value)} placeholder={t("home.searchPlaceholder")} aria-label={t("home.search")} />
+          <button aria-label={t("home.search")}><Icon n="search" size={18} /></button>
         </form>
       </div>
       {!HERO_IMAGE && <Cup />}
@@ -157,27 +157,27 @@ export default function HomePage({ onOpenBrand, onNavigate }) {
 
     <main className="hp-main">
       <div className="hp-head">
-        <h2>Thương hiệu nổi bật</h2>
+        <h2>{t("home.featured")}</h2>
         <button className="hp-link" onClick={() => go("brands")}>
-          Xem tất cả <Icon n="arrow" size={14} />
+          {t("home.seeAll")} <Icon n="arrow" size={14} />
         </button>
       </div>
       {shown.length ? <div className="hp-grid">
         {shown.map(b => <article key={b.id} className="hp-card">
-          <button className="hp-cover" onClick={() => open(b)} aria-label={`Xem thương hiệu ${b.name}`} style={b.cover ? { backgroundImage: `linear-gradient(rgba(0,0,0,.15),rgba(0,0,0,.25)),url(${b.cover})` } : undefined}>
+          <button className="hp-cover" onClick={() => open(b)} aria-label={t("home.viewBrand", { name: b.name })} style={b.cover ? { backgroundImage: `linear-gradient(rgba(0,0,0,.15),rgba(0,0,0,.25)),url(${b.cover})` } : undefined}>
             {!b.cover && <Mark b={b} />}
           </button>
           <button className="hp-play" onClick={() => toggle(b)} aria-pressed={playing === b.id}
-            aria-label={playing === b.id ? `Dừng audio ${b.name}` : `Nghe giới thiệu ${b.name}`}>
+            aria-label={playing === b.id ? t("home.pauseAudio", { name: b.name }) : t("home.listen", { name: b.name })}>
             <Icon n={playing === b.id ? "pause" : "play"} size={13} />
           </button>
           <div className="hp-body">
             <h3><button onClick={() => open(b)}>{b.name}</button></h3>
-            <p>{b.type}</p>
-            <span><Icon n="pin" size={13} /> {b.branches} chi nhánh</span>
+            <p>{localizedCategory(b.type, languageCode)}</p>
+            <span><Icon n="pin" size={13} /> {t("home.branches", { count: b.branches })}</span>
           </div>
         </article>)}
-      </div> : <p className="hp-empty">Không tìm thấy thương hiệu phù hợp. Hãy thử từ khóa khác.</p>}
+      </div> : <p className="hp-empty">{t("home.noResults")}</p>}
     </main>
   </div>;
 }

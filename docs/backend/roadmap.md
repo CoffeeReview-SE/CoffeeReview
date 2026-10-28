@@ -14,8 +14,11 @@ Keep the existing React + Vite frontend. The Next.js example in the proposal des
    - Next, provide relevant brand and branch data to the assistant so recommendations come from SaigonCoffee's catalog.
 
 2. **Translation**
-   - Add a backend translation capability and persist reviewed translations against the existing language/catalog data.
-   - Prefer an official provider API for a maintainable integration; verify current quotas and cost before deployment. A free wrapper around the consumer Google Translate site is not a guaranteed free or stable API.
+   - Prototype with the user's selected unofficial Google Translate wrapper endpoint through backend `HttpClient`; do not call it directly from the browser.
+   - Translate the stored source description on demand and return it without writing translation data to the database.
+   - Cache translations in page memory for the current session; reloading starts with an empty translation cache.
+   - The shared language selector triggers on-demand translation on brand detail pages; static UI strings remain a separate localization task.
+   - Treat the wrapper as an experimental dependency without a free-use or uptime guarantee. Keep the translation provider behind a service interface so it can be replaced by an official API later.
 
 3. **Text to speech**
    - Keep browser speech as the fallback.

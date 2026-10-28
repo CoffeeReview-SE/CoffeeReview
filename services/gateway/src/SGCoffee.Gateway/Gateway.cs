@@ -45,6 +45,9 @@ builder.Services.AddRateLimiter(o =>
     o.AddPolicy("assistant-status", c => RateLimitPartition.GetFixedWindowLimiter(
         "chat-status:" + ClientKey(c),
         _ => new FixedWindowRateLimiterOptions { PermitLimit = 6, Window = TimeSpan.FromMinutes(1) }));
+    o.AddPolicy("translation-on-demand", c => RateLimitPartition.GetFixedWindowLimiter(
+        "translation:" + ClientKey(c),
+        _ => new FixedWindowRateLimiterOptions { PermitLimit = 10, Window = TimeSpan.FromMinutes(1) }));
 });
 
 builder.Services.AddHttpClient("groq", client =>

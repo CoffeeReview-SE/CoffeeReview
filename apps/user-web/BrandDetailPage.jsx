@@ -1,8 +1,20 @@
 import React, { useEffect, useRef, useState } from "react";
 import { trackAudio } from "../analytics/tracking.js";
 import DescriptionSpeech from "./DescriptionSpeech.jsx";
+import { LANGUAGES, useLanguage } from "./LanguageContext.jsx";
+import { detailText, localizedCategory } from "./brandDetailTranslations.js";
 
 const TILE_BG = ["linear-gradient(135deg,#F3E3CC,#E4C7A0)", "linear-gradient(135deg,#FBE7A8,#F0B84F)", "linear-gradient(135deg,#F6E1CB,#C98B5A)"];
+const DEMO_BRANDS = {
+  1: { id: 1, name: "The Coffee House", type: "Cà phê, trà, bánh", branchCount: 12 },
+  2: { id: 2, name: "Phúc Long", type: "Trà, cà phê", branchCount: 18 },
+  3: { id: 3, name: "Highlands Coffee", type: "Cà phê, trà, bánh", branchCount: 25 },
+  4: { id: 4, name: "Cộng Cà Phê", type: "Cà phê, đồ uống", branchCount: 14 },
+  5: { id: 5, name: "Trung Nguyên Legend", type: "Cà phê năng lượng, sách", branchCount: 20 },
+  6: { id: 6, name: "Katinat Saigon Kafe", type: "Trà sữa, cà phê", branchCount: 16 },
+  7: { id: 7, name: "Cheese Coffee", type: "Cà phê, trà, bánh", branchCount: 10 },
+  8: { id: 8, name: "Mellower Coffee", type: "Cà phê specialty, bánh", branchCount: 5 },
+};
 
 const paths = {
   search: <><circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" /></>,
@@ -25,15 +37,12 @@ const Icon = ({ n, size = 18 }) => (
 );
 
 function Header({ go, goBrands }) {
-  const [lang, setLang] = useState("VI");
+  const { languageCode, setLanguageCode, t } = useLanguage();
+  const lang = languageCode.toUpperCase();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
 
-  const languages = [
-    { code: "VI", label: "Tiếng Việt" },
-    { code: "EN", label: "English" },
-    { code: "KO", label: "한국어" }
-  ];
+  const languages = LANGUAGES;
 
   // Đóng dropdown khi click ra bên ngoài
   useEffect(() => {
@@ -48,15 +57,15 @@ function Header({ go, goBrands }) {
 
   // Cấu hình menu: "brands" được đánh dấu active để hiển thị nổi bật và gạch chân giống trang chủ
   const items = [
-    ["home", "Trang chủ", () => go("home")], 
-    ["brands", "Thương hiệu", () => goBrands()], 
-    ["map", "Bản đồ", () => go("map")], 
-    ["suggestions", "Đề xuất", () => go("suggestions")]
+    ["home", t("nav.home"), () => go("home")],
+    ["brands", t("nav.brands"), () => goBrands()],
+    ["map", t("nav.map"), () => go("map")],
+    ["suggestions", t("nav.suggestions"), () => go("suggestions")]
   ];
   
   return <header className="bd-bar">
     <button className="bd-logo" onClick={() => go("home")}>
-      <Icon n="cup" size={30} /><span><b>SaigonCoffee</b><small>Khám phá cà phê Sài Gòn</small></span>
+      <Icon n="cup" size={30} /><span><b>SaigonCoffee</b><small>{t("brand.tagline")}</small></span>
     </button>
     <nav className="bd-nav" aria-label="Điều hướng chính">
       {items.map(([k, label, fn]) => (
@@ -89,9 +98,9 @@ function Header({ go, goBrands }) {
             {languages.map((item) => (
               <button
                 key={item.code}
-                className={`bd-lang-item ${lang === item.code ? "active" : ""}`}
+                className={`bd-lang-item ${lang === item.code.toUpperCase() ? "active" : ""}`}
                 onClick={() => {
-                  setLang(item.code);
+                  setLanguageCode(item.code);
                   setIsOpen(false);
                 }}
               >
@@ -178,20 +187,74 @@ const Tile = ({ src, i, alt }) => src
 export default function BrandDetailPage({ brandId, brand, onBack, onNavigate, onOpenBranch }) {
   const [loaded, setLoaded] = useState(null);
   const [loadError, setLoadError] = useState('');
+  const { languageCode } = useLanguage();
+  const dt = (key, values) => detailText(languageCode, key, values);
+  const [translation, setTranslation] = useState(null);
+  const [translationStatus, setTranslationStatus] = useState({ languageCode: "", status: "idle" });
+  const translationCache = useRef(new Map());
   useEffect(() => {
-    if (brand) return;
     const controller = new AbortController();
     setLoaded(null); setLoadError('');
     fetch(`/api/catalog/brands/${brandId}`, { signal: controller.signal })
       .then(response => { if (!response.ok) throw new Error(`API ${response.status}`); return response.json(); })
       .then(result => { if (!controller.signal.aborted) setLoaded(result); })
-      .catch(error => { if (!controller.signal.aborted) setLoadError(error.message); });
+      .catch(() => {
+        if (controller.signal.aborted) return;
+        setLoadError('offline');
+        setLoaded(brand || DEMO_BRANDS[brandId] || null);
+      });
     return () => controller.abort();
   }, [brandId, brand]);
-  const item = brand || (loaded?.id === brandId ? loaded : null) || { id: brandId };
+  const sourceBrand = loaded?.id === brandId ? loaded : brand || null;
+  useEffect(() => {
+    if (!sourceBrand?.description || !brandId) return;
+    let active = true;
+    const sourceLanguage = sourceBrand.descriptionLanguageCode?.toLowerCase();
+
+    if (sourceLanguage === languageCode) {
+      setTranslation({ languageCode, description: sourceBrand.description, isTranslated: false });
+      setTranslationStatus({ languageCode, status: "idle" });
+      return () => { active = false; };
+    }
+
+    const cacheKey = `${brandId}:${languageCode}:${sourceBrand.description}`;
+    const cachedDescription = translationCache.current.get(cacheKey);
+    if (cachedDescription) {
+      setTranslation({ languageCode, description: cachedDescription, isTranslated: true });
+      setTranslationStatus({ languageCode, status: "idle" });
+      return () => { active = false; };
+    }
+
+    setTranslationStatus({ languageCode, status: "loading" });
+    fetch(`/api/localization/brands/${brandId}/translations/${languageCode}`, { method: "POST" })
+      .then(async response => {
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data.detail || data.error || `API ${response.status}`);
+        return data;
+      })
+      .then(data => {
+        if (!active) return;
+        translationCache.current.set(cacheKey, data.description);
+        setTranslation({ languageCode, description: data.description, isTranslated: data.isTranslated === true });
+        setTranslationStatus({ languageCode, status: "idle" });
+      })
+      .catch(() => {
+        if (!active) return;
+        setTranslation(null);
+        setTranslationStatus({ languageCode, status: "error" });
+      });
+    return () => { active = false; };
+  }, [brandId, languageCode, sourceBrand?.description, sourceBrand?.descriptionLanguageCode]);
+  const item = (loaded?.id === brandId ? loaded : null) || brand || DEMO_BRANDS[brandId] || { id: brandId };
+  const localized = translation?.languageCode === languageCode ? translation : null;
+  const currentDescription = localized?.description ?? item.description;
+  const descriptionLanguage = localized?.isTranslated ? languageCode : item.descriptionLanguageCode;
+  const isTranslating = translationStatus.languageCode === languageCode && translationStatus.status === "loading";
+  const translationFailed = translationStatus.languageCode === languageCode && translationStatus.status === "error";
   const type = item.type || item.category || "";
-  const branches = item.branches || [];
-  const count = item.branchCount ?? branches.length;
+  const displayType = localizedCategory(type, languageCode);
+  const branches = Array.isArray(item.branches) ? item.branches : [];
+  const count = item.branchCount ?? (typeof item.branches === 'number' ? item.branches : branches.length);
   const images = item.menuImages?.length ? item.menuImages : [null, null, null];
   const [view, setView] = useState(null);
   const go = key => onNavigate && onNavigate(key);
@@ -209,18 +272,19 @@ export default function BrandDetailPage({ brandId, brand, onBack, onNavigate, on
     return () => window.removeEventListener("keydown", k);
   }, [view, images.length]);
 
-  if (!brand && (!loaded || loaded.id !== brandId)) return <main className="bd"><style>{css}</style><div className="bd-wrap"><button onClick={goBrands}>Quay lại</button><p role={loadError ? 'alert' : 'status'}>{loadError || 'Đang tải thương hiệu…'}</p></div></main>;
+  if (!brand && (!loaded || loaded.id !== brandId)) return <main className="bd"><style>{css}</style><div className="bd-wrap"><button onClick={goBrands}>{dt("back")}</button><p role={loadError ? 'alert' : 'status'}>{loadError || dt("loading")}</p></div></main>;
 
   const info = [
-    ["pin", `${count} chi nhánh tại TP.HCM`],
-    ["globe", item.website && <>Website: <a href={`https://${item.website.replace(/^https?:\/\//, "")}`} target="_blank" rel="noreferrer">{item.website}</a></>],
-    ["phone", item.hotline && `Hotline: ${item.hotline}`],
-    ["tag", type && `Loại hình: ${type}`],
+    ["pin", dt("branchesAt", { count })],
+    ["globe", item.website && <>{dt("website")}: <a href={`https://${item.website.replace(/^https?:\/\//, "")}`} target="_blank" rel="noreferrer">{item.website}</a></>],
+    ["phone", item.hotline && `${dt("hotline")}: ${item.hotline}`],
+    ["tag", displayType && dt("category", { type: displayType })],
   ].filter(r => r[1]);
 
   return <div className="bd">
     <style>{css}</style>
     <Header go={go} goBrands={goBrands} />
+    {loadError && <div className="bd-data-notice" role="status">{dt("backendFallback")}</div>}
     <div className="bd-wrap">
       <div className="bd-cover" style={item.cover ? { backgroundImage: `url(${item.cover})` } : undefined}>
         <div className="bd-logo-big"><Logo item={item} size={104} /></div>
@@ -229,24 +293,26 @@ export default function BrandDetailPage({ brandId, brand, onBack, onNavigate, on
       <div className="bd-cols">
         <div className="bd-left">
           <h1>{item.name || `Thương hiệu #${item.id}`}</h1>
-          <p className="bd-type">{type}</p>
-          <p className="bd-where"><Icon n="pin" size={15} /> {count} chi nhánh tại TP.HCM</p>
+          <p className="bd-type">{displayType}</p>
+          <p className="bd-where"><Icon n="pin" size={15} /> {dt("branchesAt", { count })}</p>
 
           {item.audio && (typeof item.audio === 'string' || Object.values(item.audio).some(Boolean))
             ? <AudioCard key={item.id} audio={item.audio} brandId={Number(item.id)} languageCode={item.audioLanguageCode || item.descriptionLanguageCode} />
-            : <DescriptionSpeech key={item.id} brandId={Number(item.id)} description={item.description} languageCode={item.descriptionLanguageCode} />}
+            : <DescriptionSpeech key={item.id} brandId={Number(item.id)} description={currentDescription} languageCode={descriptionLanguage} />}
 
-          <p className="bd-desc">{item.description || "Thông tin thương hiệu sẽ được tải từ hệ thống."}</p>
+          {isTranslating && <p className="bd-translation-status" role="status">{dt("translating")}</p>}
+          {translationFailed && <p className="bd-translation-status" role="status">{dt("translationFailed")}</p>}
+          <p className="bd-desc">{currentDescription || (loadError ? dt("noSampleDescription") : dt("loadingBrand"))}</p>
 
           <section className="bd-card">
-            <div className="bd-card-h"><h2>Hình ảnh thực đơn</h2><button onClick={() => setView(0)}>Xem tất cả <Icon n="arrow" size={12} /></button></div>
+            <div className="bd-card-h"><h2>{dt("menu")}</h2><button onClick={() => setView(0)}>{dt("viewAll")} <Icon n="arrow" size={12} /></button></div>
             <div className="bd-gal">
-              <button className="bd-big" onClick={() => setView(0)} aria-label="Phóng to hình thực đơn 1"><Tile src={images[0]} i={0} alt="Hình thực đơn 1" /></button>
+              <button className="bd-big" onClick={() => setView(0)} aria-label={dt("zoomMenu", { number: 1 })}><Tile src={images[0]} i={0} alt={dt("menuImage", { number: 1 })} /></button>
               <div className="bd-side">
                 <div className="bd-pair">
-                  {[1, 2].map(i => <button key={i} onClick={() => setView(i)} aria-label={`Phóng to hình thực đơn ${i + 1}`}><Tile src={images[i]} i={i} alt={`Hình thực đơn ${i + 1}`} /></button>)}
+                  {[1, 2].map(i => <button key={i} onClick={() => setView(i)} aria-label={dt("zoomMenu", { number: i + 1 })}><Tile src={images[i]} i={i} alt={dt("menuImage", { number: i + 1 })} /></button>)}
                 </div>
-                <div className="bd-cap"><span>{item.menuCaption || "Menu 2024"}</span><button onClick={() => setView(0)} aria-label="Phóng to"><Icon n="search" size={16} /></button></div>
+                <div className="bd-cap"><span>{item.menuCaption || "Menu 2024"}</span><button onClick={() => setView(0)} aria-label={dt("zoom")}><Icon n="search" size={16} /></button></div>
               </div>
             </div>
           </section>
@@ -254,29 +320,29 @@ export default function BrandDetailPage({ brandId, brand, onBack, onNavigate, on
 
         <aside className="bd-right">
           <section className="bd-card">
-            <h2>Thông tin nhanh</h2>
+            <h2>{dt("quickInfo")}</h2>
             <ul className="bd-info">{info.map(([ic, text]) => <li key={ic}><span><Icon n={ic} size={15} /></span><div>{text}</div></li>)}</ul>
           </section>
           <section className="bd-card">
-            <h2>Chi nhánh nổi bật</h2>
+            <h2>{dt("featured")}</h2>
             {branches.length ? <ul className="bd-br">
               {branches.map((b, i) => <li key={b.id || b.name || i}>
                 <Logo item={item} size={36} />
-                <div><strong>{b.name}</strong><span>{b.address || "Chưa cập nhật địa chỉ"}</span></div>
-                <button onClick={() => onOpenBranch ? onOpenBranch(b) : window.alert(`Mở chi tiết ${b.name}; cần kết nối router/API.`)}>Xem chi tiết</button>
+                <div><strong>{b.name}</strong><span>{b.address || dt("noAddress")}</span></div>
+                <button onClick={() => onOpenBranch ? onOpenBranch(b) : window.alert(`${dt("branchDetails")}: ${b.name}`)}>{dt("branchDetails")}</button>
               </li>)}
-            </ul> : <p className="bd-muted">Chưa có chi nhánh nổi bật.</p>}
+            </ul> : <p className="bd-muted">{dt("noFeatured")}</p>}
           </section>
         </aside>
       </div>
     </div>
 
-    {view !== null && <div className="bd-lb" role="dialog" aria-modal="true" aria-label="Xem hình thực đơn" onClick={() => setView(null)}>
-      <div className="bd-lb-in" onClick={e => e.stopPropagation()}><Tile src={images[view]} i={view} alt={`Hình thực đơn ${view + 1}`} /></div>
-      <button className="bd-lb-x" onClick={() => setView(null)} aria-label="Đóng"><Icon n="close" /></button>
+    {view !== null && <div className="bd-lb" role="dialog" aria-modal="true" aria-label={dt("menu")} onClick={() => setView(null)}>
+      <div className="bd-lb-in" onClick={e => e.stopPropagation()}><Tile src={images[view]} i={view} alt={dt("menuImage", { number: view + 1 })} /></div>
+      <button className="bd-lb-x" onClick={() => setView(null)} aria-label={dt("close")}><Icon n="close" /></button>
       {images.length > 1 && <>
-        <button className="bd-lb-n l" onClick={e => { e.stopPropagation(); setView((view - 1 + images.length) % images.length); }} aria-label="Ảnh trước"><Icon n="left" /></button>
-        <button className="bd-lb-n r" onClick={e => { e.stopPropagation(); setView((view + 1 + images.length) % images.length); }} aria-label="Ảnh sau"><Icon n="right" /></button>
+        <button className="bd-lb-n l" onClick={e => { e.stopPropagation(); setView((view - 1 + images.length) % images.length); }} aria-label={dt("previous")}><Icon n="left" /></button>
+        <button className="bd-lb-n r" onClick={e => { e.stopPropagation(); setView((view + 1 + images.length) % images.length); }} aria-label={dt("next")}><Icon n="right" /></button>
       </>}
     </div>}
   </div>;
@@ -336,6 +402,8 @@ const css = `
 .bd-audio-r{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:12.5px}
 .bd-audio-r button{display:grid;place-items:center;padding:4px;border:0;background:none;color:var(--muted);cursor:pointer}
 .bd-audio-r button.on{color:var(--brown-3)}
+.bd-translation-status{margin:14px 0 -10px;color:#8b6848;font-size:12px}
+.bd-data-notice{max-width:1160px;margin:12px auto 0;padding:10px 14px;border:1px solid #edd7a9;border-radius:8px;color:#72551d;background:#fff8e8;font-size:13px}
 .bd-desc{margin:18px 0 20px;color:#5C4B3F;font-size:13.5px;line-height:1.75}
 
 .bd-card{padding:18px;border:1px solid var(--line);border-radius:12px;background:#fff;box-shadow:0 2px 10px rgba(75,40,23,.05)}

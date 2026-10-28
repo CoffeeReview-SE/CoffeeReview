@@ -1,7 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { trackAudio } from '../analytics/tracking.js';
+import { useLanguage } from './LanguageContext.jsx';
+import { detailText } from './brandDetailTranslations.js';
 
 export default function DescriptionSpeech({ brandId, description, languageCode }) {
+  const { languageCode: uiLanguage } = useLanguage();
+  const dt = (key, values) => detailText(uiLanguage, key, values);
   const [speaking, setSpeaking] = useState(false);
   const [error, setError] = useState('');
   const utterance = useRef(null);
@@ -27,16 +31,16 @@ export default function DescriptionSpeech({ brandId, description, languageCode }
     speech.onerror = event => {
       if (utterance.current !== speech) return;
       setSpeaking(false); utterance.current = null;
-      if (!['canceled', 'interrupted'].includes(event.error)) setError('Trình duyệt chưa đọc được mô tả bằng ngôn ngữ này.');
+      if (!['canceled', 'interrupted'].includes(event.error)) setError(dt('speechError'));
     };
     window.speechSynthesis.cancel();
     utterance.current = speech;
     window.speechSynthesis.speak(speech);
   };
-  if (!description || !languageCode) return <p>Chưa có nội dung audio.</p>;
+  if (!description || !languageCode) return <p>{dt('noAudio')}</p>;
   return <div className="bd-audio">
-    <button className="bd-play" onClick={read} disabled={!supported} aria-label={speaking ? 'Dừng đọc' : 'Đọc mô tả'}>{speaking ? '■' : '▶'}</button>
-    <span>{supported ? `Đọc mô tả · ${languageCode.toUpperCase()}` : 'Trình duyệt chưa hỗ trợ đọc mô tả.'}</span>
+    <button className="bd-play" onClick={read} disabled={!supported} aria-label={speaking ? dt('stopReading') : dt('readDescription')}>{speaking ? '■' : '▶'}</button>
+    <span>{supported ? dt('readIn', { language: languageCode.toUpperCase() }) : dt('unsupportedSpeech')}</span>
     {error && <span role="alert">{error}</span>}
   </div>;
 }

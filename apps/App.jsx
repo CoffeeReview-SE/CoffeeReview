@@ -76,14 +76,16 @@ function BrandList({ addRecentBrand }) {
 }
 
 /* 3. Trang Chi tiết Thương hiệu */
-function BrandDetail() {
+function BrandDetail({ recentBrands }) {
   const { id } = useParams();
   const nav = useNavigate();
   const go = useUserNav();
+  const fallbackBrand = recentBrands.find((item) => String(item.id) === String(id));
 
   return (
     <BrandDetailPage
       brandId={id ? Number(id) : undefined}
+      brand={fallbackBrand}
       onBack={() => nav('/brands')}
       onNavigate={go}
     />
@@ -140,7 +142,7 @@ export default function App() {
         <Route path="/home" element={<Navigate to="/" replace />} />
         <Route path="/brands" element={<BrandList addRecentBrand={addRecentBrand} />} />
         <Route path="/brand" element={<BrandDetail />} />
-        <Route path="/brand/:id" element={<BrandDetail />} />
+        <Route path="/brand/:id" element={<BrandDetail recentBrands={recentBrands} />} />
         <Route path="/suggestions" element={<Suggestions recentBrands={recentBrands} />} />
 
         {/* Admin Routes */}

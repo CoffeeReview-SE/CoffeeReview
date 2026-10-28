@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { divIcon } from "leaflet";
 import { MapContainer, Marker, Popup, TileLayer, Tooltip, useMap } from "react-leaflet";
+import { useLanguage } from "./LanguageContext.jsx";
 import "./StoreMap.css";
 
 const currentLocationIcon = divIcon({
@@ -45,11 +46,12 @@ function ChangeView({ center, zoom }) {
 }
 
 export default function StoreMap() {
+  const { t } = useLanguage();
   const [searchTerm, setSearchTerm] = useState("");
   const [mapCenter, setMapCenter] = useState([10.7769, 106.7009]);
   const [mapZoom, setMapZoom] = useState(12);
   const [userPosition, setUserPosition] = useState(null);
-  const [locationStatus, setLocationStatus] = useState("Đang yêu cầu quyền truy cập vị trí...");
+  const [locationStatus, setLocationStatus] = useState({ key: "map.requesting" });
   const [isLocating, setIsLocating] = useState(false);
   const requestedLocation = useRef(false);
   const normalizedSearch = searchTerm.trim().toLocaleLowerCase("vi");
@@ -64,28 +66,28 @@ export default function StoreMap() {
 
   const locateMe = () => {
     if (!navigator.geolocation) {
-      setLocationStatus("Trình duyệt này không hỗ trợ định vị vị trí.");
+      setLocationStatus({ key: "map.unsupported" });
       return;
     }
 
     setIsLocating(true);
-    setLocationStatus("Đang lấy vị trí hiện tại...");
+    setLocationStatus({ key: "map.locatingStatus" });
     navigator.geolocation.getCurrentPosition(
       ({ coords }) => {
         const position = [coords.latitude, coords.longitude];
         setUserPosition({ position, accuracy: coords.accuracy });
         setMapCenter(position);
         setMapZoom(16);
-        setLocationStatus(`Đã xác định vị trí (sai số khoảng ${Math.round(coords.accuracy)} m).`);
+        setLocationStatus({ key: "map.located", values: { accuracy: Math.round(coords.accuracy) } });
         setIsLocating(false);
       },
       (error) => {
-        const message = error.code === error.PERMISSION_DENIED
-          ? "Bạn đã từ chối quyền truy cập vị trí. Hãy cấp quyền trong cài đặt trình duyệt rồi thử lại."
+        const key = error.code === error.PERMISSION_DENIED
+          ? "map.denied"
           : error.code === error.POSITION_UNAVAILABLE
-            ? "Thiết bị chưa cung cấp được vị trí. Hãy bật GPS/Wi-Fi rồi thử lại."
-            : "Đã hết thời gian chờ lấy vị trí. Hãy thử lại ở nơi có tín hiệu tốt hơn.";
-        setLocationStatus(message);
+            ? "map.unavailable"
+            : "map.timeout";
+        setLocationStatus({ key });
         setIsLocating(false);
       },
       { enableHighAccuracy: true, timeout: 15000, maximumAge: 30000 },
@@ -103,32 +105,32 @@ export default function StoreMap() {
   return (
     <section className="store-map" id="store-map" aria-labelledby="store-map-title">
       <div className="store-map__intro">
-        <p className="store-map__eyebrow">KHÁM PHÁ SÀI GÒN</p>
-        <h1 id="store-map-title">Tìm quán cà phê trên bản đồ</h1>
-        <p>Dữ liệu địa điểm mẫu để bạn trải nghiệm giao diện bản đồ và tìm kiếm.</p>
+        <p className="store-map__eyebrow">{t("map.eyebrow")}</p>
+        <h1 id="store-map-title">{t("map.title")}</h1>
+        <p>{t("map.description")}</p>
       </div>
 
       <label className="store-map__search-label" htmlFor="store-map-search">
-        Tìm theo tên quán hoặc địa chỉ
+        {t("map.searchLabel")}
       </label>
       <input
         id="store-map-search"
         className="store-map__search"
         type="search"
-        placeholder="Ví dụ: Quận 1, Highlands..."
+        placeholder={t("map.searchPlaceholder")}
         value={searchTerm}
         onChange={(event) => setSearchTerm(event.target.value)}
       />
       <button className="store-map__locate" type="button" onClick={locateMe} disabled={isLocating}>
-        {isLocating ? "Đang định vị..." : "Vị trí của tôi"}
+        {isLocating ? t("map.locating") : t("map.locate")}
       </button>
       <p className="store-map__location-status" role="status" aria-live="polite">
-        {locationStatus}
+        {t(locationStatus.key, locationStatus.values)}
       </p>
 
       <div className="store-map__layout">
-        <aside className="store-map__results" aria-label="Địa điểm tìm thấy">
-          <p className="store-map__count">{filteredLocations.length} địa điểm</p>
+        <aside className="store-map__results" aria-label={t("map.results")}>
+          <p className="store-map__count">{t("map.count", { count: filteredLocations.length })}</p>
           {filteredLocations.length ? (
             filteredLocations.map((item) => (
               <button
@@ -145,7 +147,7 @@ export default function StoreMap() {
               </button>
             ))
           ) : (
-            <p className="store-map__empty">Không tìm thấy địa điểm phù hợp.</p>
+            <p className="store-map__empty">{t("map.empty")}</p>
           )}
         </aside>
 
@@ -172,10 +174,10 @@ export default function StoreMap() {
           {userPosition && (
             <Marker position={userPosition.position} icon={currentLocationIcon} zIndexOffset={1000}>
               <Tooltip permanent direction="top" offset={[0, -12]}>
-                Vị trí của tôi
+                {t("map.current")}
               </Tooltip>
               <Popup>
-                <strong>Vị trí hiện tại của bạn</strong>
+                <strong>{t("map.userCurrent")}</strong>
                 <br />
                 {userPosition.position[0].toFixed(6)}, {userPosition.position[1].toFixed(6)}
               </Popup>
@@ -184,7 +186,7 @@ export default function StoreMap() {
         </MapContainer>
       </div>
       <p className="store-map__note">
-        Địa điểm hiện là dữ liệu mẫu trong frontend; chưa kết nối backend hoặc database.
+        {t("map.note")}
       </p>
     </section>
   );

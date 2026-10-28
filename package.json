@@ -9,6 +9,7 @@
   "scripts": {
     "start": "node scripts/web-server.mjs",
     "dev": "vite",
+    "dev:stack": "node scripts/dev-stack.mjs",
     "build": "vite build",
     "preview": "vite preview "
   },

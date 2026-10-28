@@ -26,18 +26,31 @@ The application and service directories are currently scaffolds. The existing pr
 
 - Node.js 20 or later
 - npm 10 or later
-- .NET SDK matching the backend project once its project files are added
+- .NET SDK 10 for the local backend services
 
 ## Getting started
 
 ```sh
 npm install
-npm run dev
 ```
 
-The current UI runs as a Vite React application from `apps/main.jsx`. Backend services remain independently buildable and deployable; `backend/` is the current .NET starting point.
+Copy `.env.example` to `.env`, set a real `ConnectionStrings__Supabase` and a private `Gateway__SharedKey`, then start the complete local stack:
 
-Copy `.env.example` to `.env` and set the values needed for local development. Never commit populated secrets.
+```sh
+npm run dev:stack
+```
+
+Open `http://localhost:8080`. The command starts Vite, the catalog service, localization service, and gateway; press `Ctrl+C` to stop them. Apply the existing SQL files in `infrastructure/Database` to Supabase before using database-backed pages.
+
+For frontend-only work, use `npm run dev`. Backend services can also be built and run independently.
+
+To run the frontend with the catalog, localization, and gateway services together, configure `ConnectionStrings__Supabase` and a private `Gateway__SharedKey` in `.env`, then run:
+
+```sh
+npm run dev:stack
+```
+
+Open `http://localhost:8080`. Press `Ctrl+C` to stop the services. This command does not run database migrations; apply the SQL files in `infrastructure/Database` to the Supabase project first.
 
 ## Workspace commands
 
