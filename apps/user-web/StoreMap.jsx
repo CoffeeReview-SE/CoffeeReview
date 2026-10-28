@@ -1,9 +1,8 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { divIcon } from "leaflet";
 import { MapContainer, Marker, Popup, TileLayer, Tooltip, useMap } from "react-leaflet";
 import { useLanguage } from "./LanguageContext.jsx";
 import { getUserApi } from "./api.js";
-import { trackAudio } from "../analytics/tracking.js";
 import "./StoreMap.css";
 
 const currentLocationIcon = divIcon({
@@ -49,32 +48,6 @@ function ChangeView({ center, zoom }) {
   return null;
 }
 
-function KeepMapSized() {
-  const map = useMap();
-
-  useEffect(() => {
-    let frame = 0;
-    const invalidate = () => {
-      window.cancelAnimationFrame(frame);
-      frame = window.requestAnimationFrame(() => map.invalidateSize({ pan: false }));
-    };
-    const container = map.getContainer();
-    const observer = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(invalidate);
-    observer?.observe(container);
-    window.addEventListener("resize", invalidate);
-    window.addEventListener("orientationchange", invalidate);
-    invalidate();
-    return () => {
-      observer?.disconnect();
-      window.removeEventListener("resize", invalidate);
-      window.removeEventListener("orientationchange", invalidate);
-      window.cancelAnimationFrame(frame);
-    };
-  }, [map]);
-
-  return null;
-}
-
 export default function StoreMap() {
   const { t, languageCode } = useLanguage();
   const [searchTerm, setSearchTerm] = useState("");
@@ -87,8 +60,6 @@ export default function StoreMap() {
   const [isLocating, setIsLocating] = useState(false);
   const [nearbyAudioEnabled, setNearbyAudioEnabled] = useState(false);
   const [nearbyAudioStatus, setNearbyAudioStatus] = useState("");
-  const [tileStatus, setTileStatus] = useState("loading");
-  const [tileRetry, setTileRetry] = useState(0);
   const requestedLocation = useRef(false);
   const playedNearbyBrands = useRef(new Set());
   const nearbyAudioQueue = useRef([]);
@@ -97,10 +68,6 @@ export default function StoreMap() {
   const speakNextNearby = useRef(null);
   const proximityAudioActive = useRef(nearbyAudioEnabled);
   const proximityAudioGeneration = useRef(0);
-  const tileEventHandlers = useMemo(() => ({
-    load: () => setTileStatus("ready"),
-    tileerror: () => setTileStatus("error"),
-  }), []);
   proximityAudioActive.current = nearbyAudioEnabled;
   useEffect(() => {
     const controller = new AbortController();
@@ -118,11 +85,11 @@ export default function StoreMap() {
   }, []);
 
   const proximityText = {
-    vi: { enable: "Lấy GPS & tự phát audio", disable: "Tắt audio gần bạn", enabled: "Đã bật. Đang tìm thương hiệu trong bán kính 2 km…", found: names => `Đang đọc mô tả: ${names.join(", ")}`, none: "Chưa có thương hiệu có mô tả trong bán kính 2 km.", noCoordinates: "Dữ liệu chi nhánh chưa có tọa độ để tìm cửa hàng gần bạn.", gps: "Cho phép GPS để tự phát audio thương hiệu gần bạn.", denied: "Không lấy được GPS. Hãy kiểm tra quyền vị trí của trình duyệt." },
-    en: { enable: "Use GPS & auto-play nearby audio", disable: "Disable nearby audio", enabled: "On. Looking for brands within 2 km…", found: names => `Reading: ${names.join(", ")}`, none: "No brands with descriptions found within 2 km.", noCoordinates: "Branch coordinates are missing, so nearby stores cannot be found.", gps: "Allow GPS to play audio for nearby brands.", denied: "Could not get GPS. Check your browser location permission." },
-    ja: { enable: "GPSで近くの音声を自動再生", disable: "近くの音声を無効にする", enabled: "有効です。半径2 km以内のブランドを検索中…", found: names => `再生中: ${names.join(", ")}`, none: "半径2 km以内に説明のあるブランドがありません。", noCoordinates: "支店の座標がないため、近くの店舗を検索できません。", gps: "近くのブランド音声を再生するにはGPSを許可してください。", denied: "GPSを取得できません。ブラウザーの位置情報権限を確認してください。" },
-    zh: { enable: "使用 GPS 自动播放附近品牌语音", disable: "关闭附近语音", enabled: "已开启，正在查找 2 公里内的品牌…", found: names => `正在朗读：${names.join("、")}`, none: "2 公里内没有带有介绍的品牌。", noCoordinates: "缺少分店坐标，无法查找附近门店。", gps: "允许 GPS 以自动播放附近品牌介绍。", denied: "无法获取 GPS。请检查浏览器的位置权限。" },
-  }[languageCode] || { enable: "Use GPS & auto-play nearby audio", disable: "Disable nearby audio", enabled: "On. Looking for brands within 2 km…", found: names => `Reading: ${names.join(", ")}`, none: "No brands with descriptions found within 2 km.", noCoordinates: "Branch coordinates are missing, so nearby stores cannot be found.", gps: "Allow GPS to play audio for nearby brands.", denied: "Could not get GPS. Check your browser location permission." };
+    vi: { enable: "Lấy GPS & tự phát audio", disable: "Tắt audio gần bạn", enabled: "Đã bật. Đang tìm thương hiệu trong bán kính 2 km…", found: names => `Đang đọc mô tả: ${names.join(", ")}`, none: "Chưa có thương hiệu có mô tả trong bán kính 2 km.", gps: "Cho phép GPS để tự phát audio thương hiệu gần bạn.", denied: "Không lấy được GPS. Hãy kiểm tra quyền vị trí của trình duyệt." },
+    en: { enable: "Use GPS & auto-play nearby audio", disable: "Disable nearby audio", enabled: "On. Looking for brands within 2 km…", found: names => `Reading: ${names.join(", ")}`, none: "No brands with descriptions found within 2 km.", gps: "Allow GPS to play audio for nearby brands.", denied: "Could not get GPS. Check your browser location permission." },
+    ja: { enable: "GPSで近くの音声を自動再生", disable: "近くの音声を無効にする", enabled: "有効です。半径2 km以内のブランドを検索中…", found: names => `再生中: ${names.join(", ")}`, none: "半径2 km以内に説明のあるブランドがありません。", gps: "近くのブランド音声を再生するにはGPSを許可してください。", denied: "GPSを取得できません。ブラウザーの位置情報権限を確認してください。" },
+    zh: { enable: "使用 GPS 自动播放附近品牌语音", disable: "关闭附近语音", enabled: "已开启，正在查找 2 公里内的品牌…", found: names => `正在朗读：${names.join("、")}`, none: "2 公里内没有带有介绍的品牌。", gps: "允许 GPS 以自动播放附近品牌介绍。", denied: "无法获取 GPS。请检查浏览器的位置权限。" },
+  }[languageCode] || { enable: "Use GPS & auto-play nearby audio", disable: "Disable nearby audio", enabled: "On. Looking for brands within 2 km…", found: names => `Reading: ${names.join(", ")}`, none: "No brands with descriptions found within 2 km.", gps: "Allow GPS to play audio for nearby brands.", denied: "Could not get GPS. Check your browser location permission." };
 
   useEffect(() => {
     speakNextNearby.current = async () => {
@@ -197,17 +164,10 @@ export default function StoreMap() {
 
   useEffect(() => {
     if (!nearbyAudioEnabled || !userPosition || !brandCatalog.length) return;
-    if (locations.length && !locations.some(branch => branch.lat != null && branch.lat !== "" && branch.lng != null && branch.lng !== "" && Number.isFinite(Number(branch.lat)) && Number.isFinite(Number(branch.lng)))) {
-      setNearbyAudioStatus(proximityText.noCoordinates);
-      return;
-    }
     const nearestByBrand = new Map();
     for (const branch of locations) {
-      if (branch.lat == null || branch.lat === "" || branch.lng == null || branch.lng === "") continue;
-      const lat = Number(branch.lat);
-      const lng = Number(branch.lng);
-      if (!Number.isFinite(lat) || !Number.isFinite(lng)) continue;
-      const distance = distanceMeters(userPosition.position[0], userPosition.position[1], lat, lng);
+      if (!Number.isFinite(branch.lat) || !Number.isFinite(branch.lng)) continue;
+      const distance = distanceMeters(userPosition.position[0], userPosition.position[1], branch.lat, branch.lng);
       if (distance > PROXIMITY_RADIUS_METERS) continue;
       const current = nearestByBrand.get(branch.brandId);
       if (!current || distance < current.distance) nearestByBrand.set(branch.brandId, { distance });
@@ -243,12 +203,7 @@ export default function StoreMap() {
   const filteredLocations = locations.filter((item) =>
     `${item.name} ${item.brand} ${item.address}`.toLocaleLowerCase("vi").includes(normalizedSearch),
   );
-  const mappedLocations = filteredLocations.flatMap(item => {
-    if (item.lat == null || item.lat === "" || item.lng == null || item.lng === "") return [];
-    const lat = Number(item.lat);
-    const lng = Number(item.lng);
-    return Number.isFinite(lat) && Number.isFinite(lng) ? [{ ...item, lat, lng }] : [];
-  });
+  const mappedLocations = filteredLocations.filter(item => Number.isFinite(item.lat) && Number.isFinite(item.lng));
 
   const selectLocation = (item) => {
     if (item.lat == null || item.lng == null) return;
@@ -344,12 +299,12 @@ export default function StoreMap() {
                 <span>
                   <strong>{item.name}</strong>
                   <small>{item.address}</small>
-                  {item.lat == null || item.lng == null ? <small>{t("map.unverified")}</small> : null}
+                  {item.lat == null || item.lng == null ? <small>Vị trí trên bản đồ chưa được xác minh</small> : null}
                 </span>
                 </button>
                 {Number.isFinite(item.lat) && Number.isFinite(item.lng) && (
                   <a className="store-map__directions" href={googleDirectionsUrl(item, userPosition)} target="_blank" rel="noopener noreferrer">
-                    {t("map.directions")}
+                    Chỉ đường
                   </a>
                 )}
               </div>
@@ -359,59 +314,47 @@ export default function StoreMap() {
           )}
         </aside>
 
-        <div className="store-map__canvas-wrap">
-          <MapContainer
-            className="store-map__canvas"
-            center={mapCenter}
-            zoom={mapZoom}
-            scrollWheelZoom
-          >
-            <KeepMapSized />
-            <ChangeView center={mapCenter} zoom={mapZoom} />
-            <TileLayer
-              key={tileRetry}
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-              url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
-              maxZoom={19}
-              eventHandlers={tileEventHandlers}
-            />
-            {mappedLocations.map((item) => (
-              <Marker key={item.id} position={[item.lat, item.lng]} icon={coffeeMarkerIcon(item.brandId)} riseOnHover>
-                <Tooltip direction="top" sticky className="coffee-map-tooltip">
-                  {item.brand || item.name}
-                </Tooltip>
-                <Popup>
-                  <strong>{item.brand || item.name}</strong>
-                  <br />
-                  {item.address}
-                  {item.phone && <><br />{item.phone}</>}
-                  <br />
-                  <a className="store-map__directions" href={googleDirectionsUrl(item, userPosition)} target="_blank" rel="noopener noreferrer">
-                    {t("map.directionsGoogle")}
-                  </a>
-                </Popup>
-              </Marker>
-            ))}
-            {userPosition && (
-              <Marker position={userPosition.position} icon={currentLocationIcon} zIndexOffset={1000}>
-                <Tooltip permanent direction="top" offset={[0, -12]}>
-                  {t("map.current")}
-                </Tooltip>
-                <Popup>
-                  <strong>{t("map.userCurrent")}</strong>
-                  <br />
-                  {userPosition.position[0].toFixed(6)}, {userPosition.position[1].toFixed(6)}
-                </Popup>
-              </Marker>
-            )}
-          </MapContainer>
-          {tileStatus !== "ready" && (
-            <div className={`store-map__tile-status${tileStatus === "error" ? " is-error" : ""}`} role="status" aria-live="polite">
-              <span>{tileStatus === "error" ? t("map.tilesError") : t("map.tilesLoading")}</span>
-              {tileStatus === "error" && <button type="button" onClick={() => { setTileStatus("loading"); setTileRetry(value => value + 1); }}>{t("map.tilesRetry")}</button>}
-            </div>
+        <MapContainer
+          className="store-map__canvas"
+          center={mapCenter}
+          zoom={mapZoom}
+          scrollWheelZoom
+        >
+          <ChangeView center={mapCenter} zoom={mapZoom} />
+          <TileLayer
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          />
+          {mappedLocations.map((item) => (
+            <Marker key={item.id} position={[item.lat, item.lng]} icon={coffeeMarkerIcon(item.brandId)} riseOnHover>
+              <Tooltip direction="top" sticky className="coffee-map-tooltip">
+                {item.brand || item.name}
+              </Tooltip>
+              <Popup>
+                <strong>{item.brand || item.name}</strong>
+                <br />
+                {item.address}
+                {item.phone && <><br />{item.phone}</>}
+                <br />
+                <a className="store-map__directions" href={googleDirectionsUrl(item, userPosition)} target="_blank" rel="noopener noreferrer">
+                  Chỉ đường trên Google Maps
+                </a>
+              </Popup>
+            </Marker>
+          ))}
+          {userPosition && (
+            <Marker position={userPosition.position} icon={currentLocationIcon} zIndexOffset={1000}>
+              <Tooltip permanent direction="top" offset={[0, -12]}>
+                {t("map.current")}
+              </Tooltip>
+              <Popup>
+                <strong>{t("map.userCurrent")}</strong>
+                <br />
+                {userPosition.position[0].toFixed(6)}, {userPosition.position[1].toFixed(6)}
+              </Popup>
+            </Marker>
           )}
-        </div>
+        </MapContainer>
       </div>
     </section>
   );
