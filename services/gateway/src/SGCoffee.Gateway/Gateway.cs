@@ -1,4 +1,7 @@
 using System.Threading.RateLimiting;
+using System.Net.Http.Headers;
+using System.Net.Http.Json;
+using System.Text.Json;
 using Microsoft.AspNetCore.HttpOverrides;
 using Yarp.ReverseProxy.Transforms;
 
@@ -18,6 +21,8 @@ builder.Services.Configure<ForwardedHeadersOptions>(o =>
 var adminEnabled = cfg.GetValue<bool>("Admin:Enabled");      // false = /api/admin/* returns 404
 var gatewayKey = cfg["Gateway:SharedKey"] ?? "";
 var edgeSecret = cfg["Gateway:EdgeSecret"] ?? "";
+var groqApiKey = cfg["Chat:GroqApiKey"] ?? "";
+var groqModel = cfg["Chat:GroqModel"] ?? "openai/gpt-oss-120b";
 var corsOrigins = cfg.GetSection("Cors:Origins").Get<string[]>() ?? Array.Empty<string>();
 
 // ---- Rate limiting for public write endpoints ----
@@ -34,6 +39,18 @@ builder.Services.AddRateLimiter(o =>
     o.AddPolicy("tracking", c => RateLimitPartition.GetFixedWindowLimiter(
         "t:" + ClientKey(c),
         _ => new FixedWindowRateLimiterOptions { PermitLimit = 120, Window = TimeSpan.FromMinutes(1) }));
+    o.AddPolicy("assistant-chat", c => RateLimitPartition.GetFixedWindowLimiter(
+        "chat:" + ClientKey(c),
+        _ => new FixedWindowRateLimiterOptions { PermitLimit = 10, Window = TimeSpan.FromMinutes(1) }));
+    o.AddPolicy("assistant-status", c => RateLimitPartition.GetFixedWindowLimiter(
+        "chat-status:" + ClientKey(c),
+        _ => new FixedWindowRateLimiterOptions { PermitLimit = 6, Window = TimeSpan.FromMinutes(1) }));
+});
+
+builder.Services.AddHttpClient("groq", client =>
+{
+    client.BaseAddress = new Uri("https://api.groq.com/openai/v1/");
+    client.Timeout = TimeSpan.FromSeconds(45);
 });
 
 // ---- CORS (needed for local dev; in production the web app calls /api on its own origin) ----
@@ -57,6 +74,92 @@ var app = builder.Build();
 app.UseForwardedHeaders();
 
 app.MapGet("/health", () => Results.Ok(new { status = "ok" }));
+
+app.MapGet("/api/assistant/status", async (IHttpClientFactory clients, CancellationToken cancellationToken) =>
+{
+    if (string.IsNullOrWhiteSpace(groqApiKey))
+        return Results.Ok(new { connected = false });
+
+    var client = clients.CreateClient("groq");
+    using var request = new HttpRequestMessage(HttpMethod.Get, "models");
+    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", groqApiKey);
+
+    try
+    {
+        using var response = await client.SendAsync(request, cancellationToken);
+        if (!response.IsSuccessStatusCode)
+            return Results.Ok(new { connected = false });
+
+        using var payload = await JsonDocument.ParseAsync(await response.Content.ReadAsStreamAsync(cancellationToken), cancellationToken: cancellationToken);
+        var modelAvailable = payload.RootElement.GetProperty("data").EnumerateArray()
+            .Any(model => model.TryGetProperty("id", out var id) && id.GetString() == groqModel);
+        return Results.Ok(new { connected = modelAvailable });
+    }
+    catch (Exception ex) when (ex is HttpRequestException or OperationCanceledException or JsonException or InvalidOperationException)
+    {
+        return Results.Ok(new { connected = false });
+    }
+})
+    .RequireCors("web")
+    .RequireRateLimiting("assistant-status");
+
+app.MapPost("/api/assistant/chat", async (ChatRequest input, IHttpClientFactory clients, CancellationToken cancellationToken) =>
+{
+    if (string.IsNullOrWhiteSpace(groqApiKey))
+        return Results.Problem("Chat service is not configured.", statusCode: StatusCodes.Status503ServiceUnavailable);
+
+    if (input.Messages is null || input.Messages.Count is < 1 or > 12 ||
+        input.Messages[^1] is null || input.Messages[^1].Role != "user" ||
+        input.Messages.Any(m => m is null || m.Role is not ("user" or "assistant") || string.IsNullOrWhiteSpace(m.Content) || m.Content.Length > 2000))
+        return Results.BadRequest(new { error = "Send 1–12 user/assistant messages; each message must contain 1–2000 characters and the last must be from the user." });
+
+    if (input.Messages.Sum(m => m.Content.Length) > 10000)
+        return Results.BadRequest(new { error = "The combined message content cannot exceed 10000 characters." });
+
+    var client = clients.CreateClient("groq");
+    using var request = new HttpRequestMessage(HttpMethod.Post, "chat/completions");
+    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", groqApiKey);
+    request.Content = JsonContent.Create(new
+    {
+        model = groqModel,
+        messages = new[] { new { role = "system", content = "You are SaigonCoffee's helpful Vietnamese coffee shop discovery assistant. Answer clearly and concisely. Use the user's language. Do not claim live business information unless it is provided in the conversation." } }
+            .Concat(input.Messages.Select(m => new { role = m.Role, content = m.Content.Trim() })),
+        temperature = 0.5,
+        max_tokens = 700
+    });
+
+    try
+    {
+        using var response = await client.SendAsync(request, cancellationToken);
+        if (!response.IsSuccessStatusCode)
+        {
+            var status = response.StatusCode == System.Net.HttpStatusCode.TooManyRequests
+                ? StatusCodes.Status503ServiceUnavailable
+                : StatusCodes.Status502BadGateway;
+            return Results.Problem("The chat provider could not complete the request.", statusCode: status);
+        }
+
+        using var payload = await JsonDocument.ParseAsync(await response.Content.ReadAsStreamAsync(cancellationToken), cancellationToken: cancellationToken);
+        var answer = payload.RootElement.GetProperty("choices")[0].GetProperty("message").GetProperty("content").GetString();
+        if (string.IsNullOrWhiteSpace(answer))
+            return Results.Problem("The chat provider returned an empty response.", statusCode: StatusCodes.Status502BadGateway);
+        return Results.Ok(new { answer, model = groqModel });
+    }
+    catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+    {
+        return Results.Problem("The chat provider timed out.", statusCode: StatusCodes.Status504GatewayTimeout);
+    }
+    catch (HttpRequestException)
+    {
+        return Results.Problem("The chat provider is unavailable.", statusCode: StatusCodes.Status502BadGateway);
+    }
+    catch (JsonException)
+    {
+        return Results.Problem("The chat provider returned an invalid response.", statusCode: StatusCodes.Status502BadGateway);
+    }
+})
+    .RequireCors("web")
+    .RequireRateLimiting("assistant-chat");
 
 // Only accept traffic that came through the Cloudflare Pages proxy (skipped when no secret is set, e.g. local dev)
 app.Use(async (ctx, next) =>
@@ -89,3 +192,6 @@ app.UseRateLimiter();
 app.MapReverseProxy();
 
 app.Run();
+
+record ChatRequest(List<ChatMessage> Messages);
+record ChatMessage(string Role, string Content);

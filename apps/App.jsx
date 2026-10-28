@@ -12,6 +12,7 @@ import BranchManagement from './admin/Branch_manage.jsx';
 import SuggestionsManagement from './admin/Sugguest_manage.jsx';
 import ApprovalsManagement from './admin/Approve_manage.jsx';
 import PageTracker from './analytics/PageTracker.jsx';
+import ChatWidget from './user-web/ChatWidget.jsx';
 /* Map: section trên URL -> trang quản trị tương ứng (đã bỏ menu) */
 const ADMIN_PAGES = {
   brands: BrandManagement,
@@ -131,6 +132,7 @@ export default function App() {
   return (
     <>
       <PageTracker />
+      <ChatWidget />
 
       <Routes>
         {/* User Routes */}
