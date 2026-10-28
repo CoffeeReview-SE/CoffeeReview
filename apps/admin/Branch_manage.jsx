@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { adminRequest, adminJson } from './adminApi';
 
 /* Navigation links - identical to AdminDashboard */
 const NAV = [
@@ -164,11 +165,22 @@ const Icon = ({ n, size = 18 }) => (
 );
 
 export default function BranchManagement({ onNavigate }) {
-  const [branches, setBranches] = useState(INITIAL_BRANCHES);
+  const [branches, setBranches] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [brandFilter, setBrandFilter] = useState('All');
   const [statusFilter, setStatusFilter] = useState('All');
 
+  const [apiError, setApiError] = useState('');
+  const [brandOptions, setBrandOptions] = useState([]);
+  const reload = async () => {
+    try {
+      const [rows, brands] = await Promise.all([adminRequest('catalog/branches'), adminRequest('catalog/brands')]);
+      setBrandOptions(brands);
+      setBranches(rows.map(b => ({ ...b, code: String(b.id), brandColor: '#4A2C1E', views: 0, audio: 0, status: b.isActive ? 'Đang hoạt động' : 'Tạm dừng' })));
+      setApiError('');
+    } catch(e) { setApiError(e.message); }
+  };
+  useEffect(() => { reload(); }, []);
   const go = (key) => {
     if (onNavigate) {
       onNavigate(key);
@@ -187,14 +199,24 @@ export default function BranchManagement({ onNavigate }) {
     return matchesSearch && matchesBrand && matchesStatus;
   });
 
-  const handleAddBranch = () => {
-    window.alert('Mở form thêm chi nhánh mới (Tính năng kết nối API sau).');
+  const handleAddBranch = async () => {
+    const brandId = Number(window.prompt(`ID thương hiệu (${brandOptions.map(b => `${b.id}: ${b.name}`).join(', ')}):`));
+    if (!brandOptions.some(b => b.id === brandId)) return;
+    const name = window.prompt('Tên chi nhánh:'); if (!name?.trim()) return;
+    const address = window.prompt('Địa chỉ:'); if (!address?.trim()) return;
+    try { await adminRequest('catalog/branches', adminJson('POST', { brandId, name: name.trim(), address: address.trim() })); await reload(); }
+    catch(e) { setApiError(e.message); }
   };
-
-  const handleDelete = (id, name) => {
-    if (window.confirm(`Bạn có chắc muốn xóa chi nhánh "${name}" không?`)) {
-      setBranches(branches.filter((b) => b.id !== id));
-    }
+  const handleEditBranch = async (b) => {
+    const name = window.prompt('Tên chi nhánh:', b.name); if (!name?.trim()) return;
+    const address = window.prompt('Địa chỉ:', b.address); if (!address?.trim()) return;
+    try { await adminRequest(`catalog/branches/${b.id}`, adminJson('PUT', { brandId: b.brandId, name: name.trim(), address: address.trim(), phone: b.phone, isActive: b.isActive })); await reload(); }
+    catch(e) { setApiError(e.message); }
+  };
+  const handleDelete = async (id, name) => {
+    if (!window.confirm(`Tạm ngừng chi nhánh "${name}"?`)) return;
+    try { await adminRequest(`catalog/branches/${id}`, { method: 'DELETE' }); await reload(); }
+    catch(e) { setApiError(e.message); }
   };
 
   const getBadgeClass = (status) => {
@@ -237,6 +259,7 @@ export default function BranchManagement({ onNavigate }) {
       </aside>
 
       <main className="ad-main">
+        {apiError && <p role="alert" style={{color:"#a22"}}>Lỗi API: {apiError}</p>}
         <header className="ad-head">
           <div>
             <h1>Quản lý chi nhánh</h1>
@@ -250,15 +273,15 @@ export default function BranchManagement({ onNavigate }) {
         </header>
 
         <section className="ad-kpis" aria-label="Chỉ số chi nhánh">
-          {branchStats.map((s) => (
+          {branchStats.map((s, i) => (
             <article key={s.label} className="ad-kpi">
               <span className="ad-ico">
                 <Icon n={s.icon} size={22} />
               </span>
               <div>
                 <p>{s.label}</p>
-                <strong>{s.value}</strong>
-                <small className={s.delta >= 0 ? 'up' : 'down'}>
+                <strong>{i === 0 ? branches.length : i === 1 ? new Set(branches.map(b => b.brandId)).size : "—"}</strong>
+                <small style={{display:"none"}} className={s.delta >= 0 ? 'up' : 'down'}>
                   {s.delta >= 0 ? '↑' : '↓'} {Math.abs(s.delta)}% <em>so với tháng trước</em>
                 </small>
               </div>
@@ -279,11 +302,7 @@ export default function BranchManagement({ onNavigate }) {
           <div className="ad-filter-group">
             <select value={brandFilter} onChange={(e) => setBrandFilter(e.target.value)}>
               <option value="All">Tất cả thương hiệu</option>
-              <option value="The Coffee House">The Coffee House</option>
-              <option value="Phúc Long">Phúc Long</option>
-              <option value="Highlands Coffee">Highlands Coffee</option>
-              <option value="Cộng Cà Phê">Cộng Cà Phê</option>
-              <option value="Starbucks">Starbucks</option>
+              {brandOptions.map(b => <option key={b.id} value={b.name}>{b.name}</option>)}
             </select>
             <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
               <option value="All">Tất cả trạng thái</option>
@@ -332,8 +351,8 @@ export default function BranchManagement({ onNavigate }) {
                           <Icon n="mapPin" size={13} /> {b.address}
                         </span>
                       </td>
-                      <td>{fmt(b.views)}</td>
-                      <td>{fmt(b.audio)}</td>
+                      <td>—</td>
+                      <td>—</td>
                       <td>
                         <span className={`ad-badge ${getBadgeClass(b.status)}`}>{b.status}</span>
                       </td>
@@ -347,7 +366,7 @@ export default function BranchManagement({ onNavigate }) {
                           </button>
                           <button
                             title="Chỉnh sửa"
-                            onClick={() => window.alert(`Sửa chi nhánh: ${b.name}`)}
+                            onClick={() => handleEditBranch(b)}
                           >
                             <Icon n="edit" size={15} />
                           </button>

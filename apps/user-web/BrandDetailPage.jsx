@@ -1,18 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
+import { trackAudio } from "../analytics/tracking.js";
+import DescriptionSpeech from "./DescriptionSpeech.jsx";
 
-/* Dữ liệu mẫu — thay bằng kết quả API theo brandId khi backend sẵn sàng. */
-const demo = {
-  id: 2, name: "Phúc Long", type: "Trà, cà phê", branchCount: 18,
-  description: "Phúc Long là thương hiệu trà và cà phê nổi tiếng tại Việt Nam, với hơn 50 năm phát triển. Từ những năm 1968, Phúc Long đã mang đến những sản phẩm chất lượng cao, kết hợp giữa hương vị truyền thống và hiện đại.",
-  website: "phuclong.com.vn", hotline: "1800 6779", menuCaption: "Menu 2024",
-  badge: "#1F6B45", mark: ["PHÚC", "LONG"],
-  cover: "", logo: "", audio: "", menuImages: [],
-  branches: [
-    { name: "Phúc Long - Quận 1", address: "42 Nguyễn Huệ, Quận 1" },
-    { name: "Phúc Long - Quận 7", address: "Riverside, Quận 7" },
-    { name: "Phúc Long - Bình Thạnh", address: "360 Điện Biên Phủ, Bình Thạnh" },
-  ],
-};
 const TILE_BG = ["linear-gradient(135deg,#F3E3CC,#E4C7A0)", "linear-gradient(135deg,#FBE7A8,#F0B84F)", "linear-gradient(135deg,#F6E1CB,#C98B5A)"];
 
 const paths = {
@@ -125,28 +114,49 @@ function Logo({ item, size }) {
   </span>;
 }
 
-function AudioCard({ audio }) {
+function AudioCard({ audio, brandId, languageCode }) {
   const ref = useRef(null);
   const [playing, setPlaying] = useState(false);
   const [loop, setLoop] = useState(false);
   const [t, setT] = useState({ cur: 0, dur: 0 });
   
-  const src = audio && typeof audio === "object" ? Object.values(audio)[0] : audio;
+  const sources = audio && typeof audio === "object" ? Object.entries(audio) : [];
+  const [selected, setSelected] = useState('');
+  const sourceKey = sources.some(([code]) => code === selected) ? selected : sources[0]?.[0];
+  const src = sources.length ? audio[sourceKey] : typeof audio === "string" ? audio : '';
+  const code = sourceKey || languageCode;
+  const counted = useRef(false);
+  const requested = useRef(false);
+  const playEvent = useRef(null);
 
-  useEffect(() => { setPlaying(false); setT({ cur: 0, dur: 0 }); }, [src]);
+  useEffect(() => {
+    setPlaying(false); setT({ cur: 0, dur: 0 }); counted.current = false; requested.current = false;
+  }, [src, brandId, code]);
+  const started = () => {
+    setPlaying(true);
+    if (!requested.current || counted.current || !code) return;
+    counted.current = true;
+    trackAudio({ brandId, languageCode: code.toLowerCase(), eventId: playEvent.current });
+  };
   const toggle = () => {
     const a = ref.current;
     if (!a || !src) return;
-    if (a.paused) a.play().catch(() => setPlaying(false)); else a.pause();
+    if (a.paused) {
+      requested.current = true;
+      if (!counted.current) playEvent.current = crypto.randomUUID();
+      a.play().catch(() => { requested.current = false; setPlaying(false); });
+    } else a.pause();
   };
   const seek = e => { const v = +e.target.value; ref.current.currentTime = v; setT(x => ({ ...x, cur: v })); };
   const pct = t.dur ? (t.cur / t.dur) * 100 : 0;
   return <div className="bd-audio">
     <audio ref={ref} src={src || undefined} loop={loop} preload="metadata"
-      onPlay={() => setPlaying(true)} onPause={() => setPlaying(false)} onEnded={() => setPlaying(false)}
+      onPlaying={started} onPause={() => setPlaying(false)}
+      onEnded={() => { setPlaying(false); counted.current = false; requested.current = false; }}
+      onError={() => { setPlaying(false); requested.current = false; }}
       onTimeUpdate={e => setT(x => ({ ...x, cur: e.target.currentTime }))}
       onLoadedMetadata={e => setT({ cur: 0, dur: e.target.duration })} />
-    <button className="bd-play" onClick={toggle} title={src ? undefined : "Chưa có file audio"} aria-label={playing ? "Tạm dừng" : "Nghe giới thiệu thương hiệu"}>
+    <button className="bd-play" disabled={!src || !code} onClick={toggle} title={src ? undefined : "Chưa có file audio"} aria-label={playing ? "Tạm dừng" : "Nghe giới thiệu thương hiệu"}>
       <Icon n={playing ? "pause" : "play"} size={20} />
     </button>
     <div className="bd-track">
@@ -154,6 +164,8 @@ function AudioCard({ audio }) {
       <input className="bd-range" type="range" min="0" max={t.dur || 1} step="0.1" value={t.cur} disabled={!src} onChange={seek} aria-label="Tua audio" style={{ "--p": `${pct}%` }} />
     </div>
     <div className="bd-audio-r">
+      {sources.length > 1 && <select aria-label="Ngôn ngữ audio" value={sourceKey} onChange={e => setSelected(e.target.value)}>{sources.map(([language]) => <option key={language} value={language}>{language.toUpperCase()}</option>)}</select>}
+      {!src && <span>Chưa có audio</span>}
       <button onClick={() => setLoop(v => !v)} aria-pressed={loop} aria-label="Lặp lại" className={loop ? "on" : ""}><Icon n="repeat" size={16} /></button>
     </div>
   </div>;
@@ -164,7 +176,19 @@ const Tile = ({ src, i, alt }) => src
   : <div className="bd-tile" style={{ background: TILE_BG[i % 3] }}><Icon n="cup" size={44} /></div>;
 
 export default function BrandDetailPage({ brandId, brand, onBack, onNavigate, onOpenBranch }) {
-  const item = brand || { ...demo, id: brandId || demo.id };
+  const [loaded, setLoaded] = useState(null);
+  const [loadError, setLoadError] = useState('');
+  useEffect(() => {
+    if (brand) return;
+    const controller = new AbortController();
+    setLoaded(null); setLoadError('');
+    fetch(`/api/catalog/brands/${brandId}`, { signal: controller.signal })
+      .then(response => { if (!response.ok) throw new Error(`API ${response.status}`); return response.json(); })
+      .then(result => { if (!controller.signal.aborted) setLoaded(result); })
+      .catch(error => { if (!controller.signal.aborted) setLoadError(error.message); });
+    return () => controller.abort();
+  }, [brandId, brand]);
+  const item = brand || (loaded?.id === brandId ? loaded : null) || { id: brandId };
   const type = item.type || item.category || "";
   const branches = item.branches || [];
   const count = item.branchCount ?? branches.length;
@@ -184,6 +208,8 @@ export default function BrandDetailPage({ brandId, brand, onBack, onNavigate, on
     window.addEventListener("keydown", k);
     return () => window.removeEventListener("keydown", k);
   }, [view, images.length]);
+
+  if (!brand && (!loaded || loaded.id !== brandId)) return <main className="bd"><style>{css}</style><div className="bd-wrap"><button onClick={goBrands}>Quay lại</button><p role={loadError ? 'alert' : 'status'}>{loadError || 'Đang tải thương hiệu…'}</p></div></main>;
 
   const info = [
     ["pin", `${count} chi nhánh tại TP.HCM`],
@@ -206,7 +232,9 @@ export default function BrandDetailPage({ brandId, brand, onBack, onNavigate, on
           <p className="bd-type">{type}</p>
           <p className="bd-where"><Icon n="pin" size={15} /> {count} chi nhánh tại TP.HCM</p>
 
-          <AudioCard audio={item.audio} />
+          {item.audio && (typeof item.audio === 'string' || Object.values(item.audio).some(Boolean))
+            ? <AudioCard key={item.id} audio={item.audio} brandId={Number(item.id)} languageCode={item.audioLanguageCode || item.descriptionLanguageCode} />
+            : <DescriptionSpeech key={item.id} brandId={Number(item.id)} description={item.description} languageCode={item.descriptionLanguageCode} />}
 
           <p className="bd-desc">{item.description || "Thông tin thương hiệu sẽ được tải từ hệ thống."}</p>
 

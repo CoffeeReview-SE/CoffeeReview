@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { adminRequest, adminJson } from './adminApi';
 
 /* Danh mục Navigation liên kết đồng bộ với AdminDashboard */
 const NAV = [
@@ -138,10 +139,18 @@ const Icon = ({ n, size = 18 }) => (
 );
 
 export default function BrandManagement({ onNavigate }) {
-  const [brands, setBrands] = useState(INITIAL_BRANDS);
+  const [brands, setBrands] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
 
+  const [apiError, setApiError] = useState('');
+  const reload = async () => {
+    try { const rows = await adminRequest('catalog/brands');
+      setBrands(rows.map(b => ({ ...b, code: String(b.id), color: '#4A2C1E', views: 0, audio: 0, rating: 0, status: b.isActive ? 'Hoạt động' : 'Tạm dừng' })));
+      setApiError('');
+    } catch (e) { setApiError(e.message); }
+  };
+  useEffect(() => { reload(); }, []);
   const go = (key) => {
     if (onNavigate) {
       onNavigate(key);
@@ -158,14 +167,22 @@ export default function BrandManagement({ onNavigate }) {
     return matchesSearch && matchesStatus;
   });
 
-  const handleAddBrand = () => {
-    window.alert('Mở form thêm thương hiệu mới (Tính năng kết nối API sau).');
+  const handleAddBrand = async () => {
+    const name = window.prompt('Tên thương hiệu:');
+    if (!name?.trim()) return;
+    try { await adminRequest('catalog/brands', adminJson('POST', { name: name.trim() })); await reload(); }
+    catch(e) { setApiError(e.message); }
   };
-
-  const handleDelete = (id, name) => {
-    if (window.confirm(`Bạn có chắc muốn xóa thương hiệu "${name}" không?`)) {
-      setBrands(brands.filter((b) => b.id !== id));
-    }
+  const handleEditBrand = async (b) => {
+    const name = window.prompt('Tên thương hiệu:', b.name);
+    if (!name?.trim()) return;
+    try { await adminRequest(`catalog/brands/${b.id}`, adminJson('PUT', { name: name.trim(), description: b.description, logoUrl: b.logoUrl, websiteUrl: b.websiteUrl, isActive: b.isActive })); await reload(); }
+    catch(e) { setApiError(e.message); }
+  };
+  const handleDelete = async (id, name) => {
+    if (!window.confirm(`Tạm ngừng thương hiệu "${name}"?`)) return;
+    try { await adminRequest(`catalog/brands/${id}`, { method: 'DELETE' }); await reload(); }
+    catch(e) { setApiError(e.message); }
   };
 
   return (
@@ -195,6 +212,7 @@ export default function BrandManagement({ onNavigate }) {
       </aside>
 
       <main className="ad-main">
+        {apiError && <p role="alert" style={{color:"#a22"}}>Lỗi API: {apiError}</p>}
         <header className="ad-head">
           <div>
             <h1>Quản lý thương hiệu</h1>
@@ -257,9 +275,9 @@ export default function BrandManagement({ onNavigate }) {
                         <code>{b.code}</code>
                       </td>
                       <td>{b.branches} chi nhánh</td>
-                      <td>{fmt(b.views)}</td>
-                      <td>{fmt(b.audio)}</td>
-                      <td>{b.rating.toFixed(1)} ★</td>
+                      <td>—</td>
+                      <td>—</td>
+                      <td>—</td>
                       <td>
                         <span className={`ad-badge ${b.status === 'Hoạt động' ? 'ok' : 'no'}`}>
                           {b.status}
@@ -273,7 +291,7 @@ export default function BrandManagement({ onNavigate }) {
                           >
                             <Icon n="eye" size={15} />
                           </button>
-                          <button title="Chỉnh sửa" onClick={() => window.alert(`Sửa ${b.name}`)}>
+                          <button title="Chỉnh sửa" onClick={() => handleEditBrand(b)}>
                             <Icon n="edit" size={15} />
                           </button>
                           <button

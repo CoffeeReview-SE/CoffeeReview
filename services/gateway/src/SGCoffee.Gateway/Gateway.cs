@@ -12,8 +12,7 @@ builder.WebHost.UseUrls($"http://0.0.0.0:{Environment.GetEnvironmentVariable("PO
 builder.Services.Configure<ForwardedHeadersOptions>(o =>
 {
     o.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
-    o.KnownIPNetworks.Clear();
-    o.KnownProxies.Clear();
+
 });
 
 var adminEnabled = cfg.GetValue<bool>("Admin:Enabled");      // false = /api/admin/* returns 404
@@ -23,13 +22,15 @@ var corsOrigins = cfg.GetSection("Cors:Origins").Get<string[]>() ?? Array.Empty<
 
 // ---- Rate limiting for public write endpoints ----
 static string ClientKey(HttpContext c) =>
-    c.Request.Headers["X-Client-Ip"].FirstOrDefault()
-    ?? c.Connection.RemoteIpAddress?.ToString()
+    c.Connection.RemoteIpAddress?.ToString()
     ?? "unknown";
 
 builder.Services.AddRateLimiter(o =>
 {
     o.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    o.AddPolicy("admin-login", c => RateLimitPartition.GetFixedWindowLimiter(
+        "login:" + ClientKey(c),
+        _ => new FixedWindowRateLimiterOptions { PermitLimit = 5, Window = TimeSpan.FromMinutes(1) }));
     o.AddPolicy("public-write", c => RateLimitPartition.GetFixedWindowLimiter(
         "w:" + ClientKey(c),
         _ => new FixedWindowRateLimiterOptions { PermitLimit = 10, Window = TimeSpan.FromMinutes(1) }));
@@ -54,6 +55,7 @@ builder.Services
         return ValueTask.CompletedTask;
     }));
 
+builder.AddAdminAuthentication();
 var app = builder.Build();
 
 app.UseForwardedHeaders();
@@ -72,28 +74,28 @@ app.Use(async (ctx, next) =>
     await next();
 });
 
-// Admin switch: no login, so admin routes only exist while Admin:Enabled=true
+app.UseAuthentication();
+// Require an admin cookie on every admin route and a same-origin request header on writes.
 app.Use(async (ctx, next) =>
 {
-    var isSummaryEndpoint =
-        HttpMethods.IsGet(ctx.Request.Method) &&
-        ctx.Request.Path.Equals(
-            "/api/admin/analytics/summary",
-            StringComparison.OrdinalIgnoreCase);
-
-    if (!isSummaryEndpoint &&
-        !adminEnabled &&
-        ctx.Request.Path.StartsWithSegments("/api/admin"))
+    if (ctx.Request.Path.StartsWithSegments("/api/admin"))
     {
-        ctx.Response.StatusCode = StatusCodes.Status404NotFound;
-        return;
+        ctx.Response.Headers.CacheControl = "no-store";
+        if (!adminEnabled) { ctx.Response.StatusCode = 404; return; }
+        if (!HttpMethods.IsGet(ctx.Request.Method) && !HttpMethods.IsHead(ctx.Request.Method) &&
+            ctx.Request.Headers["X-Admin-Request"] != "1")
+        { ctx.Response.StatusCode = 403; return; }
+        var login = ctx.Request.Path.Equals("/api/admin/auth/login", StringComparison.OrdinalIgnoreCase)
+            && HttpMethods.IsPost(ctx.Request.Method);
+        if (!login && !ctx.User.IsInRole("Admin"))
+        { ctx.Response.StatusCode = 401; return; }
     }
-
     await next();
 });
 
 app.UseCors();
 app.UseRateLimiter();
+app.MapAdminAuthentication();
 app.MapReverseProxy();
 
 app.Run();

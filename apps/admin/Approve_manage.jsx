@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { adminRequest, adminJson } from './adminApi';
 
 /* Danh mục điều hướng liên kết đồng bộ với AdminDashboard */
 const NAV = [
@@ -144,19 +145,31 @@ const Icon = ({ n, size = 18 }) => (
 );
 
 export default function ApprovalsManagement({ onNavigate }) {
-  const [approvals, setApprovals] = useState(INITIAL_APPROVALS);
+  const [approvals, setApprovals] = useState([]);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('Tất cả');
   const [typeFilter, setTypeFilter] = useState('Tất cả');
 
   const go = (key) => (onNavigate ? onNavigate(key) : window.alert(`Chuyển đến trang: ${key}`));
 
-  const handleStatusChange = (id, newStatus) => {
-    setApprovals((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, status: newStatus } : item)),
-    );
+  const [apiError, setApiError] = useState('');
+  const reload = async () => {
+    try { const rows = await adminRequest('submissions');
+      setApprovals(rows.map(x => ({ id:x.id, title:x.name || `Đề xuất #${x.id}`,
+        brand:x.targetType, type:x.targetType, sender:x.author || 'Khách',
+        date:new Date(x.createdAt).toLocaleDateString('vi-VN'), priority:'Trung bình',
+        status:({PENDING:'Chờ duyệt',APPROVED:'Đã duyệt',REJECTED:'Từ chối'})[x.status] || x.status,
+        dataJson:x.dataJson, address:x.address
+      })));
+      setApiError('');
+    } catch(e) { setApiError(e.message); }
   };
-
+  useEffect(() => { reload(); }, []);
+  const handleStatusChange = async (id, newStatus) => {
+    if (!window.confirm(`Xác nhận ${newStatus.toLowerCase()} đề xuất #${id}? Thao tác này chỉ cập nhật trạng thái, chưa tự thêm dữ liệu vào danh mục.`)) return;
+    try { await adminRequest(`submissions/${id}/decision`, adminJson('POST', { status: newStatus === 'Đã duyệt' ? 'APPROVED' : 'REJECTED' })); await reload(); }
+    catch(e) { setApiError(e.message); }
+  };
   const filteredList = approvals.filter((item) => {
     const matchSearch =
       item.title.toLowerCase().includes(search.toLowerCase()) ||
@@ -198,6 +211,7 @@ export default function ApprovalsManagement({ onNavigate }) {
       </aside>
 
       <main className="ad-main">
+        {apiError && <p role="alert" style={{color:"#a22"}}>Lỗi API: {apiError}</p>}
         <header className="ad-head">
           <div>
             <h1>Duyệt đề xuất</h1>
@@ -320,7 +334,7 @@ export default function ApprovalsManagement({ onNavigate }) {
                           <button
                             className="ad-btn-icon"
                             title="Xem chi tiết"
-                            onClick={() => window.alert(`Chi tiết đề xuất: ${item.title}`)}
+                            onClick={() => window.alert(`Chi tiết đề xuất #${item.id}:\n${item.dataJson}`)}
                           >
                             <Icon n="eye" size={15} />
                           </button>

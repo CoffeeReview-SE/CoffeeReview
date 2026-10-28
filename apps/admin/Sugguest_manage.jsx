@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { adminRequest } from './adminApi';
 
 const INITIAL_SUGGESTIONS = [
   {
@@ -150,7 +151,7 @@ const Icon = ({ n, size = 18 }) => (
 );
 
 export default function SuggestionsManagement({ onNavigate }) {
-  const [items, setItems] = useState(INITIAL_SUGGESTIONS);
+  const [items, setItems] = useState([]);
   const [filterStatus, setFilterStatus] = useState('Tất cả');
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -162,6 +163,15 @@ export default function SuggestionsManagement({ onNavigate }) {
     }
   };
 
+  const [apiError, setApiError] = useState('');
+  useEffect(() => {
+    adminRequest('submissions').then(rows => setItems(rows.map(x => ({
+      id: x.id, title: x.name || `Đề xuất #${x.id}`, brand: x.targetType,
+      branch: x.address || '—', type: x.targetType, author: x.author || 'Khách',
+      date: new Date(x.createdAt).toLocaleDateString('vi-VN'),
+      status: ({PENDING:'Chờ duyệt', APPROVED:'Đã duyệt', REJECTED:'Từ chối'})[x.status] || x.status,
+    })))).catch(e => setApiError(e.message));
+  }, []);
   const filteredItems = items.filter((item) => {
     const matchesStatus = filterStatus === 'Tất cả' || item.status === filterStatus;
     const matchesSearch =
@@ -171,11 +181,7 @@ export default function SuggestionsManagement({ onNavigate }) {
     return matchesStatus && matchesSearch;
   });
 
-  const handleDelete = (id) => {
-    if (window.confirm('Bạn có chắc chắn muốn xóa đề xuất này?')) {
-      setItems(items.filter((item) => item.id !== id));
-    }
-  };
+  const handleDelete = () => window.alert('Không xóa lịch sử đề xuất. Hãy sử dụng chức năng duyệt hoặc từ chối.');
 
   return (
     <div className="ad">
@@ -204,6 +210,7 @@ export default function SuggestionsManagement({ onNavigate }) {
       </aside>
 
       <main className="ad-main">
+        {apiError && <p role="alert" style={{color:"#a22"}}>Lỗi API: {apiError}</p>}
         <header className="ad-head">
           <div>
             <h1>Quản lý đề xuất</h1>
