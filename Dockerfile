@@ -14,6 +14,7 @@ RUN dotnet publish services/gateway/src/SGCoffee.Gateway/SGCoffee.Gateway.csproj
 RUN dotnet publish services/analytics/src/SGCoffee.Analytics/SGCoffee.Analytics.csproj -c Release -o /out/analytics -p:UseAppHost=false
 RUN dotnet publish services/catalog/src/SGCoffee.Catalog/SGCoffee.Catalog.csproj -c Release -o /out/catalog -p:UseAppHost=false
 RUN dotnet publish services/submission/src/SGCoffee.Submission/SGCoffee.Submission.csproj -c Release -o /out/submission -p:UseAppHost=false
+RUN dotnet publish services/localization/SGCoffee.Localization.csproj -c Release -o /out/localization -p:UseAppHost=false
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0-noble
 WORKDIR /app

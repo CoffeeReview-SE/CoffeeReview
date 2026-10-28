@@ -2,14 +2,9 @@ import React, { useEffect, useRef, useState } from "react";
 import StoreMap from "./StoreMap.jsx";
 import { LANGUAGES, useLanguage } from "./LanguageContext.jsx";
 import { localizedCategory } from "./brandDetailTranslations.js";
+import { getUserApi, toBrandCard } from "./api.js";
 
 const HERO_IMAGE = "";
-const brands = [
-  { id: 3, name: "The Coffee House", type: "Cà phê, trà, bánh", branches: 12, mark: ["THE", "COFFEE", "HOUSE"], cover: "", audio: "" },
-  { id: 2, name: "Phúc Long", type: "Trà, cà phê", branches: 18, mark: ["PHÚC", "LONG"], badge: "#1F6B45", cover: "", audio: "" },
-  { id: 1, name: "Highlands Coffee", type: "Cà phê, trà, bánh", branches: 25, mark: ["HIGHLANDS", "COFFEE"], badge: "#B3282D", cover: "", audio: "" },
-  { id: 7, name: "Cộng Cà Phê", type: "Cà phê, đồ uống", branches: 14, mark: ["CỘNG"], ink: "#E9A24B", cover: "", audio: "" },
-];
 
 const fold = s => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d");
 
@@ -123,7 +118,17 @@ export default function HomePage({ onOpenBrand, onNavigate }) {
   const { languageCode, t } = useLanguage();
   const [query, setQuery] = useState("");
   const [playing, setPlaying] = useState(null);
+  const [brands, setBrands] = useState([]);
+  const [loadError, setLoadError] = useState(false);
   const audio = useRef(null);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    getUserApi("/api/catalog/brands", { signal: controller.signal })
+      .then(rows => { if (Array.isArray(rows)) setBrands(rows.map(toBrandCard)); })
+      .catch(() => { if (!controller.signal.aborted) setLoadError(true); });
+    return () => controller.abort();
+  }, []);
   
   const go = key => {
     if (key === "map") {
@@ -136,7 +141,7 @@ export default function HomePage({ onOpenBrand, onNavigate }) {
   };
 
   const shown = brands.filter(b => fold(`${b.name}${b.type}`).includes(fold(query.trim())));
-  const open = b => onOpenBrand ? onOpenBrand(b.id, b) : window.alert(`Mở chi tiết thương hiệu ID ${b.id}; cần kết nối router/API.`);
+  const open = b => onOpenBrand && onOpenBrand(b.id, b);
 
   const stop = () => { audio.current?.pause(); audio.current = null; setPlaying(null); };
   const toggle = b => {
@@ -177,7 +182,7 @@ export default function HomePage({ onOpenBrand, onNavigate }) {
             <span><Icon n="pin" size={13} /> {t("home.branches", { count: b.branches })}</span>
           </div>
         </article>)}
-      </div> : <p className="hp-empty">{t("home.noResults")}</p>}
+      </div> : <p className="hp-empty">{loadError ? "Không tải được danh sách từ máy chủ. Vui lòng thử tải lại trang." : t("home.noResults")}</p>}
     </main>
   </div>;
 }

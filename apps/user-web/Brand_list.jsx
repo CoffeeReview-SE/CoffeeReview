@@ -1,17 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import { LANGUAGES, useLanguage } from "./LanguageContext.jsx";
 import { localizedCategory, screenText } from "./brandDetailTranslations.js";
+import { getUserApi, toBrandCard } from "./api.js";
 
-const INITIAL_BRANDS = [
-  { id: 1, name: "The Coffee House", type: "Cà phê, trà, bánh", branchCount: 12, badge: "#1A2518", mark: ["THE", "COFFEE", "HOUSE"], logo: "" },
-  { id: 2, name: "Phúc Long", type: "Trà, cà phê", branchCount: 18, badge: "#1F6B45", mark: ["PHÚC", "LONG"], logo: "" },
-  { id: 3, name: "Highlands Coffee", type: "Cà phê, trà, bánh", branchCount: 25, badge: "#B22222", mark: ["HIGHLANDS", "COFFEE"], logo: "" },
-  { id: 4, name: "Cộng Cà Phê", type: "Cà phê, đồ uống", branchCount: 14, badge: "#2B3A2A", mark: ["CỘNG"], logo: "" },
-  { id: 5, name: "Trung Nguyên Legend", type: "Cà phê năng lượng, sách", branchCount: 20, badge: "#1C1C1C", mark: ["TRUNG", "NGUYÊN"], logo: "" },
-  { id: 6, name: "Katinat Saigon Kafe", type: "Trà sữa, cà phê", branchCount: 16, badge: "#354A36", mark: ["KATINAT"], logo: "" },
-  { id: 7, name: "Cheese Coffee", type: "Cà phê, trà, bánh pastry", branchCount: 10, badge: "#1E2A38", mark: ["CHEESE", "COFFEE"], logo: "" },
-  { id: 8, name: "Mellower Coffee", type: "Cà phê specialty, bánh", branchCount: 5, badge: "#4A3B32", mark: ["MELLOWER"], logo: "" }
-];
 
 const paths = {
   search: <><circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" /></>,
@@ -167,6 +158,16 @@ export default function BrandListPage({ onSelectBrand, onNavigate }) {
   const st = (key, values) => screenText(languageCode, key, values);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedFilter, setSelectedFilter] = useState("all");
+  const [brands, setBrands] = useState([]);
+  const [loadError, setLoadError] = useState(false);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    getUserApi("/api/catalog/brands", { signal: controller.signal })
+      .then(rows => { if (Array.isArray(rows)) setBrands(rows.map(toBrandCard)); })
+      .catch(() => { if (!controller.signal.aborted) setLoadError(true); });
+    return () => controller.abort();
+  }, []);
 
   const go = key => {
     if (onNavigate) {
@@ -174,7 +175,7 @@ export default function BrandListPage({ onSelectBrand, onNavigate }) {
     }
   };
 
-  const filteredBrands = INITIAL_BRANDS.filter((b) => {
+  const filteredBrands = brands.filter((b) => {
     const matchesSearch = b.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                           b.type.toLowerCase().includes(searchTerm.toLowerCase());
     if (selectedFilter === "all") return matchesSearch;
@@ -243,7 +244,7 @@ export default function BrandListPage({ onSelectBrand, onNavigate }) {
         ) : (
           <div className="bl-empty">
             <Icon n="cup" size={48} />
-            <p>{st("noBrands", { query: searchTerm })}</p>
+            <p>{loadError ? "Không tải được danh sách từ máy chủ. Vui lòng thử tải lại trang." : st("noBrands", { query: searchTerm })}</p>
           </div>
         )}
       </main>

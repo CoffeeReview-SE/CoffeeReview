@@ -1,13 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
 import { LANGUAGES, useLanguage } from "./LanguageContext.jsx";
 import { localizedCategory, screenText } from "./brandDetailTranslations.js";
+import { getUserApi, toBrandCard } from "./api.js";
 
-// Dữ liệu mẫu thương hiệu đã chọn trước đó (nếu không được truyền qua props)
-const DEFAULT_SELECTED_BRANDS = [
-  { id: 2, name: "Phúc Long", type: "Trà, cà phê", branchCount: 18, badge: "#1F6B45", mark: ["PHÚC", "LONG"] },
-  { id: 3, name: "Highlands Coffee", type: "Cà phê, trà, bánh", branchCount: 25, badge: "#B22222", mark: ["HIGHLANDS", "COFFEE"] },
-  { id: 1, name: "The Coffee House", type: "Cà phê, trà, bánh", branchCount: 12, badge: "#1A2518", mark: ["THE", "COFFEE", "HOUSE"] }
-];
 
 const paths = {
   search: <><circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" /></>,
@@ -127,7 +122,8 @@ function BrandBadge({ item }) {
 export default function SuggestionsPage({ recentBrands = [], onSelectBrand, onNavigate }) {
   const { languageCode } = useLanguage();
   const st = (key, values) => screenText(languageCode, key, values);
-  const displayBrands = recentBrands.length > 0 ? recentBrands : DEFAULT_SELECTED_BRANDS;
+  const [catalogBrands, setCatalogBrands] = useState([]);
+  const displayBrands = recentBrands.length > 0 ? recentBrands : catalogBrands;
 
   const [formData, setFormData] = useState({
     name: "",
@@ -138,6 +134,16 @@ export default function SuggestionsPage({ recentBrands = [], onSelectBrand, onNa
   });
 
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
+
+  useEffect(() => {
+    const controller = new AbortController();
+    getUserApi("/api/catalog/brands", { signal: controller.signal })
+      .then(rows => { if (Array.isArray(rows)) setCatalogBrands(rows.map(toBrandCard)); })
+      .catch(() => {});
+    return () => controller.abort();
+  }, []);
 
   const handleSelectPreBrand = (brand) => {
     setFormData(prev => ({
@@ -154,17 +160,31 @@ export default function SuggestionsPage({ recentBrands = [], onSelectBrand, onNa
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.name.trim() || !formData.phone.trim() || !formData.brandName.trim()) {
       alert(st("validation"));
       return;
     }
-    setSubmitted(true);
+    setSubmitting(true);
+    setSubmitError("");
+    try {
+      await getUserApi("/api/submissions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+      setSubmitted(true);
+    } catch {
+      setSubmitError("Không gửi được đề xuất. Vui lòng kiểm tra kết nối và thử lại.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handleReset = () => {
     setSubmitted(false);
+    setSubmitError("");
     setFormData({ name: "", phone: "", brandName: "", address: "", note: "" });
   };
 
@@ -301,8 +321,9 @@ export default function SuggestionsPage({ recentBrands = [], onSelectBrand, onNa
                   ></textarea>
                 </div>
 
-                <button type="submit" className="sg-btn-submit">
-                  <Icon n="send" size={16} /> {st("submit")}
+                {submitError && <p role="alert" className="sg-submit-error">{submitError}</p>}
+                <button type="submit" className="sg-btn-submit" disabled={submitting}>
+                  <Icon n="send" size={16} /> {submitting ? "Đang gửi…" : st("submit")}
                 </button>
               </form>
             )}

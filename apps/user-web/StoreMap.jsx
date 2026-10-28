@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { divIcon } from "leaflet";
 import { MapContainer, Marker, Popup, TileLayer, Tooltip, useMap } from "react-leaflet";
 import { useLanguage } from "./LanguageContext.jsx";
+import { getUserApi } from "./api.js";
 import "./StoreMap.css";
 
 const currentLocationIcon = divIcon({
@@ -10,30 +11,6 @@ const currentLocationIcon = divIcon({
   iconSize: [28, 28],
   iconAnchor: [14, 14],
 });
-
-const locations = [
-  {
-    id: 1,
-    name: "The Coffee House - Nguyễn Huệ",
-    lat: 10.7741,
-    lng: 106.7034,
-    address: "45 Nguyễn Huệ, Quận 1, TP. Hồ Chí Minh",
-  },
-  {
-    id: 2,
-    name: "Highlands Coffee - Võ Văn Ngân",
-    lat: 10.8502,
-    lng: 106.772,
-    address: "125 Võ Văn Ngân, TP. Thủ Đức, TP. Hồ Chí Minh",
-  },
-  {
-    id: 3,
-    name: "Phúc Long - Quang Trung",
-    lat: 10.8334,
-    lng: 106.6652,
-    address: "Q. Gò Vấp, TP. Hồ Chí Minh",
-  },
-];
 
 function ChangeView({ center, zoom }) {
   const map = useMap();
@@ -48,18 +25,28 @@ function ChangeView({ center, zoom }) {
 export default function StoreMap() {
   const { t } = useLanguage();
   const [searchTerm, setSearchTerm] = useState("");
+  const [locations, setLocations] = useState([]);
   const [mapCenter, setMapCenter] = useState([10.7769, 106.7009]);
   const [mapZoom, setMapZoom] = useState(12);
   const [userPosition, setUserPosition] = useState(null);
   const [locationStatus, setLocationStatus] = useState({ key: "map.requesting" });
   const [isLocating, setIsLocating] = useState(false);
   const requestedLocation = useRef(false);
+  useEffect(() => {
+    const controller = new AbortController();
+    getUserApi("/api/catalog/branches", { signal: controller.signal })
+      .then(rows => { if (Array.isArray(rows)) setLocations(rows); })
+      .catch(() => { if (!controller.signal.aborted) setLocations([]); });
+    return () => controller.abort();
+  }, []);
   const normalizedSearch = searchTerm.trim().toLocaleLowerCase("vi");
   const filteredLocations = locations.filter((item) =>
-    `${item.name} ${item.address}`.toLocaleLowerCase("vi").includes(normalizedSearch),
+    `${item.name} ${item.brand} ${item.address}`.toLocaleLowerCase("vi").includes(normalizedSearch),
   );
+  const mappedLocations = filteredLocations.filter(item => Number.isFinite(item.lat) && Number.isFinite(item.lng));
 
   const selectLocation = (item) => {
+    if (item.lat == null || item.lng == null) return;
     setMapCenter([item.lat, item.lng]);
     setMapZoom(16);
   };
@@ -107,7 +94,6 @@ export default function StoreMap() {
       <div className="store-map__intro">
         <p className="store-map__eyebrow">{t("map.eyebrow")}</p>
         <h1 id="store-map-title">{t("map.title")}</h1>
-        <p>{t("map.description")}</p>
       </div>
 
       <label className="store-map__search-label" htmlFor="store-map-search">
@@ -143,6 +129,7 @@ export default function StoreMap() {
                 <span>
                   <strong>{item.name}</strong>
                   <small>{item.address}</small>
+                  {item.lat == null || item.lng == null ? <small>Vị trí trên bản đồ chưa được xác minh</small> : null}
                 </span>
               </button>
             ))
@@ -162,7 +149,7 @@ export default function StoreMap() {
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
-          {filteredLocations.map((item) => (
+          {mappedLocations.map((item) => (
             <Marker key={item.id} position={[item.lat, item.lng]}>
               <Popup>
                 <strong>{item.name}</strong>
@@ -185,9 +172,6 @@ export default function StoreMap() {
           )}
         </MapContainer>
       </div>
-      <p className="store-map__note">
-        {t("map.note")}
-      </p>
     </section>
   );
 }

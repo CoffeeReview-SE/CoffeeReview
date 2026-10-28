@@ -5,17 +5,6 @@ import { LANGUAGES, useLanguage } from "./LanguageContext.jsx";
 import { detailText, localizedCategory } from "./brandDetailTranslations.js";
 
 const TILE_BG = ["linear-gradient(135deg,#F3E3CC,#E4C7A0)", "linear-gradient(135deg,#FBE7A8,#F0B84F)", "linear-gradient(135deg,#F6E1CB,#C98B5A)"];
-const DEMO_BRANDS = {
-  1: { id: 1, name: "The Coffee House", type: "Cà phê, trà, bánh", branchCount: 12 },
-  2: { id: 2, name: "Phúc Long", type: "Trà, cà phê", branchCount: 18 },
-  3: { id: 3, name: "Highlands Coffee", type: "Cà phê, trà, bánh", branchCount: 25 },
-  4: { id: 4, name: "Cộng Cà Phê", type: "Cà phê, đồ uống", branchCount: 14 },
-  5: { id: 5, name: "Trung Nguyên Legend", type: "Cà phê năng lượng, sách", branchCount: 20 },
-  6: { id: 6, name: "Katinat Saigon Kafe", type: "Trà sữa, cà phê", branchCount: 16 },
-  7: { id: 7, name: "Cheese Coffee", type: "Cà phê, trà, bánh", branchCount: 10 },
-  8: { id: 8, name: "Mellower Coffee", type: "Cà phê specialty, bánh", branchCount: 5 },
-};
-
 const paths = {
   search: <><circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" /></>,
   pin: <><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z" /><circle cx="12" cy="10" r="2.5" /></>,
@@ -200,8 +189,8 @@ export default function BrandDetailPage({ brandId, brand, onBack, onNavigate, on
       .then(result => { if (!controller.signal.aborted) setLoaded(result); })
       .catch(() => {
         if (controller.signal.aborted) return;
-        setLoadError('offline');
-        setLoaded(brand || DEMO_BRANDS[brandId] || null);
+        setLoadError('Backend unavailable. Please retry.');
+        setLoaded(brand || null);
       });
     return () => controller.abort();
   }, [brandId, brand]);
@@ -245,7 +234,7 @@ export default function BrandDetailPage({ brandId, brand, onBack, onNavigate, on
       });
     return () => { active = false; };
   }, [brandId, languageCode, sourceBrand?.description, sourceBrand?.descriptionLanguageCode]);
-  const item = (loaded?.id === brandId ? loaded : null) || brand || DEMO_BRANDS[brandId] || { id: brandId };
+  const item = (loaded?.id === brandId ? loaded : null) || brand || { id: brandId };
   const localized = translation?.languageCode === languageCode ? translation : null;
   const currentDescription = localized?.description ?? item.description;
   const descriptionLanguage = localized?.isTranslated ? languageCode : item.descriptionLanguageCode;
@@ -284,7 +273,7 @@ export default function BrandDetailPage({ brandId, brand, onBack, onNavigate, on
   return <div className="bd">
     <style>{css}</style>
     <Header go={go} goBrands={goBrands} />
-    {loadError && <div className="bd-data-notice" role="status">{dt("backendFallback")}</div>}
+    {loadError && <div className="bd-data-notice" role="status">{loadError}</div>}
     <div className="bd-wrap">
       <div className="bd-cover" style={item.cover ? { backgroundImage: `url(${item.cover})` } : undefined}>
         <div className="bd-logo-big"><Logo item={item} size={104} /></div>

@@ -1,4 +1,4 @@
-# Railway: frontend và bốn backend trong một service
+# Railway: frontend và năm backend trong một service
 
 Dockerfile tại gốc repo build React và publish Gateway/Analytics/Catalog/Submission. Node khởi động bốn tiến trình .NET, chờ health check rồi mở frontend trên PORT của Railway. Backend dùng cổng nội bộ 5100/5101/5104/5105. Nếu một backend dừng, launcher dừng toàn bộ ứng dụng để Railway có thể restart.
 
@@ -20,9 +20,11 @@ RAILWAY_DOCKERFILE_PATH=Dockerfile
 Admin__Enabled=true
 Gateway__SharedKey=THAY_BANG_SHARED_KEY_HIEN_TAI
 ConnectionStrings__Supabase=THAY_BANG_CONNECTION_STRING_HIEN_TAI
+Chat__GroqApiKey=GROQ_API_KEY_MOI
+Chat__GroqModel=openai/gpt-oss-120b
 ```
 
-Thay hai giá trị mẫu bằng cấu hình thật trước khi Deploy. Không commit secret. Không cần API_GATEWAY_URL: launcher tự nối frontend tới Gateway nội bộ và tự đặt địa chỉ ba backend. Các biến API_GATEWAY_URL/ReverseProxy cũ có thể xóa để tránh nhầm; launcher ghi đè các địa chỉ mà bản gộp sử dụng. Không đặt PORT bằng các cổng nội bộ 5100/5101/5104/5105.
+Thay các giá trị mẫu bằng cấu hình thật trước khi Deploy. Không commit secret. Không cần API_GATEWAY_URL: launcher tự nối frontend tới Gateway nội bộ và tự đặt địa chỉ bốn backend. Các biến API_GATEWAY_URL/ReverseProxy cũ có thể xóa để tránh nhầm; launcher ghi đè các địa chỉ mà bản gộp sử dụng. Không đặt PORT bằng các cổng nội bộ 5100/5101/5102/5104/5105.
 
 Gateway__EdgeSecret không bắt buộc. Nếu giữ biến này, launcher dùng cùng giá trị cho proxy frontend. Không cần API_EDGE_SECRET riêng trong bản gộp.
 
@@ -33,12 +35,12 @@ Admin không có đăng nhập theo yêu cầu hiện tại. Database Supabase g
 Log thành công có dòng:
 
 ```text
-SGCoffee frontend and four backend services are ready
+SGCoffee frontend and five backend services are ready
 ```
 
 Kiểm tra trên domain frontend:
 
-- `/health`: JSON `status: ok` khi cả bốn backend trả health thành công. Đây là kiểm tra tiến trình HTTP, không xác nhận kết nối database.
+- `/health`: JSON `status: ok` khi cả năm backend trả health thành công. Đây là kiểm tra tiến trình HTTP, không xác nhận kết nối database.
 - `/api/admin/analytics/summary`: số liệu thật từ Supabase.
 - `/api/admin/catalog/brands`: danh sách thương hiệu.
 - `/api/admin/submissions`: dữ liệu Submission.

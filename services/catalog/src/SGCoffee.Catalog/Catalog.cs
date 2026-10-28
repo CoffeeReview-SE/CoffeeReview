@@ -59,21 +59,102 @@ app.MapPut("/admin/branches/{id:long}",async(long id,BranchInput input,NpgsqlDat
 app.MapDelete("/admin/branches/{id:long}",async(long id,NpgsqlDataSource db)=>{
     await using var cmd=db.CreateCommand("UPDATE branch SET is_active=false,updated_at=now() WHERE branch_id=@id");cmd.Parameters.AddWithValue("id",id);return await cmd.ExecuteNonQueryAsync()==0?Results.NotFound():Results.NoContent();
 });
-// Read public brand details and description from the database.
-app.MapGet("/brands/{id:long}", async (long id, NpgsqlDataSource db) =>
+// Public customer endpoints read only active records from Supabase.
+app.MapGet("/brands", async (NpgsqlDataSource db, CancellationToken ct) =>
 {
-    await using var cmd = db.CreateCommand("""
+    const string sql = """
+        SELECT b.brand_id, b.brand_name, COALESCE(b.description, ''), COALESCE(b.logo_url, ''),
+               COALESCE(b.website_url, ''), b.description_language_code,
+               COUNT(br.branch_id)::int AS branch_count
+        FROM brand b
+        LEFT JOIN branch br ON br.brand_id = b.brand_id AND br.is_active
+        WHERE b.is_active
+        GROUP BY b.brand_id
+        ORDER BY b.brand_name
+        LIMIT 200
+        """;
+    await using var cmd = db.CreateCommand(sql);
+    await using var reader = await cmd.ExecuteReaderAsync(ct);
+    var brands = new List<object>();
+    while (await reader.ReadAsync(ct))
+        brands.Add(new
+        {
+            id = reader.GetInt64(0), name = reader.GetString(1), description = reader.GetString(2),
+            logo = reader.GetString(3), website = reader.GetString(4),
+            descriptionLanguageCode = reader.IsDBNull(5) ? null : reader.GetString(5),
+            branchCount = reader.GetInt32(6)
+        });
+    return Results.Ok(brands);
+});
+
+app.MapGet("/branches", async (NpgsqlDataSource db, CancellationToken ct) =>
+{
+    const string sql = """
+        SELECT br.branch_id, br.brand_id, b.brand_name, COALESCE(br.branch_name, b.brand_name),
+               br.address, br.latitude, br.longitude, COALESCE(br.phone, '')
+        FROM branch br JOIN brand b ON b.brand_id = br.brand_id
+        WHERE b.is_active AND br.is_active
+        ORDER BY b.brand_name, br.branch_id
+        LIMIT 1000
+        """;
+    await using var cmd = db.CreateCommand(sql);
+    await using var reader = await cmd.ExecuteReaderAsync(ct);
+    var branches = new List<object>();
+    while (await reader.ReadAsync(ct))
+        branches.Add(new
+        {
+            id = reader.GetInt64(0), brandId = reader.GetInt64(1), brand = reader.GetString(2),
+            name = reader.GetString(3), address = reader.GetString(4),
+            lat = reader.IsDBNull(5) ? (double?)null : reader.GetDouble(5),
+            lng = reader.IsDBNull(6) ? (double?)null : reader.GetDouble(6), phone = reader.GetString(7)
+        });
+    return Results.Ok(branches);
+});
+
+// Read public brand details and verified active branches from Supabase.
+app.MapGet("/brands/{id:long}", async (long id, NpgsqlDataSource db, CancellationToken ct) =>
+{
+    long brandId;
+    string name, description, logo, website;
+    string? descriptionLanguageCode;
+    long branchCount;
+    await using (var cmd = db.CreateCommand("""
         SELECT b.brand_id, b.brand_name, COALESCE(b.description,''), COALESCE(b.logo_url,''),
           COALESCE(b.website_url,''), b.description_language_code,
           (SELECT COUNT(*) FROM branch br WHERE br.brand_id=b.brand_id AND br.is_active)
         FROM brand b WHERE b.brand_id=@id AND b.is_active
-        """);
-    cmd.Parameters.AddWithValue("id", id);
-    await using var r = await cmd.ExecuteReaderAsync();
-    if (!await r.ReadAsync()) return Results.NotFound();
-    return Results.Ok(new { id=r.GetInt64(0), name=r.GetString(1), description=r.GetString(2),
-        logo=r.GetString(3), website=r.GetString(4), descriptionLanguageCode=r.IsDBNull(5)?null:r.GetString(5),
-        branchCount=r.GetInt64(6), audio="", branches=Array.Empty<object>() });
+        """))
+    {
+        cmd.Parameters.AddWithValue("id", id);
+        await using var reader = await cmd.ExecuteReaderAsync(ct);
+        if (!await reader.ReadAsync(ct)) return Results.NotFound();
+        brandId = reader.GetInt64(0); name = reader.GetString(1); description = reader.GetString(2);
+        logo = reader.GetString(3); website = reader.GetString(4);
+        descriptionLanguageCode = reader.IsDBNull(5) ? null : reader.GetString(5);
+        branchCount = reader.GetInt64(6);
+    }
+
+    var branches = new List<object>();
+    await using (var cmd = db.CreateCommand("""
+        SELECT branch_id, COALESCE(branch_name, ''), address, phone, latitude, longitude, opening_hours::text
+        FROM branch WHERE brand_id=@id AND is_active ORDER BY branch_id LIMIT 100
+        """))
+    {
+        cmd.Parameters.AddWithValue("id", brandId);
+        await using var reader = await cmd.ExecuteReaderAsync(ct);
+        while (await reader.ReadAsync(ct))
+            branches.Add(new
+            {
+                id = reader.GetInt64(0), name = reader.GetString(1), address = reader.GetString(2),
+                phone = reader.IsDBNull(3) ? "" : reader.GetString(3),
+                latitude = reader.IsDBNull(4) ? (double?)null : reader.GetDouble(4),
+                longitude = reader.IsDBNull(5) ? (double?)null : reader.GetDouble(5),
+                openingHours = reader.IsDBNull(6) ? null : reader.GetString(6)
+            });
+    }
+
+    return Results.Ok(new { id = brandId, name, description, logo, website, descriptionLanguageCode,
+        branchCount, audio = "", branches });
 });
 app.Run();
 record BrandInput(string Name,string? Description,string? LogoUrl,string? WebsiteUrl,bool IsActive=true);
