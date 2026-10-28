@@ -1,6 +1,14 @@
 import React, { useEffect, useRef, useState } from "react";
-import { MapContainer, Marker, Popup, TileLayer, useMap } from "react-leaflet";
+import { divIcon } from "leaflet";
+import { MapContainer, Marker, Popup, TileLayer, Tooltip, useMap } from "react-leaflet";
 import "./StoreMap.css";
+
+const currentLocationIcon = divIcon({
+  className: "current-location-icon",
+  html: '<span class="current-location-icon__pulse"></span><span class="current-location-icon__dot"></span>',
+  iconSize: [28, 28],
+  iconAnchor: [14, 14],
+});
 
 const locations = [
   {
@@ -162,7 +170,10 @@ export default function StoreMap() {
             </Marker>
           ))}
           {userPosition && (
-            <Marker position={userPosition.position}>
+            <Marker position={userPosition.position} icon={currentLocationIcon} zIndexOffset={1000}>
+              <Tooltip permanent direction="top" offset={[0, -12]}>
+                Vị trí của tôi
+              </Tooltip>
               <Popup>
                 <strong>Vị trí hiện tại của bạn</strong>
                 <br />
