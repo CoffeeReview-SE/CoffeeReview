@@ -16,6 +16,12 @@ try
 {
     await using var connection = new NpgsqlConnection(connectionString);
     await connection.OpenAsync();
+    if (args.Length == 1 && args[0] == "--validate-current-sql")
+    {
+        var directory = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../../Database"));
+        await SqlValidation.RunAsync(connection, directory);
+        return 0;
+    }
     if (args.Length == 1 && args[0] == "--apply-dashboard-migration")
     {
         var sqlPath = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory,
@@ -27,7 +33,7 @@ try
     }
     else if (args.Length != 0)
     {
-        Console.Error.WriteLine("Usage: AnalyticsDatabase [--apply-dashboard-migration]");
+        Console.Error.WriteLine("Usage: AnalyticsDatabase [--apply-dashboard-migration | --validate-current-sql]");
         return 1;
     }
     await using var transaction = await connection.BeginTransactionAsync();
