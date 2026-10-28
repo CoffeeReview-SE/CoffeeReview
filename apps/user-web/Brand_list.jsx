@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { LANGUAGES, useLanguage } from "./LanguageContext.jsx";
 import { localizedCategory, screenText } from "./brandDetailTranslations.js";
 import { getUserApi, toBrandCard } from "./api.js";
+import BrandDescriptionAudio from "./BrandDescriptionAudio.jsx";
 
 
 const paths = {
@@ -138,9 +139,13 @@ function BrandCard({ brand, onSelect, languageCode }) {
     <div className="bl-card" onClick={() => onSelect && onSelect(brand)}>
       <div className="bl-card-hero">
         <BrandBadge item={brand} />
-        <button className="bl-play-btn" aria-label={screenText(languageCode, "viewBrand", { name: brand.name })}>
-          <Icon n="play" size={14} />
-        </button>
+        <BrandDescriptionAudio
+          brand={brand}
+          className="bl-play-btn"
+          playLabel={`Nghe mô tả ${brand.name}`}
+          stopLabel={`Dừng mô tả ${brand.name}`}
+          renderIcon={speaking => <Icon n={speaking ? "pause" : "play"} size={14} />}
+        />
       </div>
       <div className="bl-card-info">
         <h3>{brand.name}</h3>
@@ -542,7 +547,11 @@ const styles = `
   display: flex;
   align-items: center;
   justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0,0,0,.2);
 }
+.bl-play-btn[aria-pressed="true"] { background: #536c54; color: #fff; }
+.bl-play-btn:disabled { cursor: not-allowed; opacity: .5; }
 
 .bl-card-info { padding: 14px 16px; }
 .bl-card-info h3 { margin: 0 0 4px 0; font-size: 14px; font-weight: 700; }

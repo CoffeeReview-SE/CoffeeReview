@@ -3,6 +3,7 @@ import StoreMap from "./StoreMap.jsx";
 import { LANGUAGES, useLanguage } from "./LanguageContext.jsx";
 import { localizedCategory } from "./brandDetailTranslations.js";
 import { getUserApi, toBrandCard } from "./api.js";
+import BrandDescriptionAudio from "./BrandDescriptionAudio.jsx";
 
 const HERO_IMAGE = "";
 
@@ -117,10 +118,8 @@ function Mark({ b }) {
 export default function HomePage({ onOpenBrand, onNavigate }) {
   const { languageCode, t } = useLanguage();
   const [query, setQuery] = useState("");
-  const [playing, setPlaying] = useState(null);
   const [brands, setBrands] = useState([]);
   const [loadError, setLoadError] = useState(false);
-  const audio = useRef(null);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -143,10 +142,7 @@ export default function HomePage({ onOpenBrand, onNavigate }) {
   const shown = brands.filter(b => fold(`${b.name}${b.type}`).includes(fold(query.trim())));
   const open = b => onOpenBrand && onOpenBrand(b.id, b);
 
-  const stop = () => { audio.current?.pause(); audio.current = null; setPlaying(null); };
-  const toggle = b => {
-    if (playing === b.id) return stop();
-    if (!b.audio) return window.alert(`Chưa có file audio giới thiệu cho ${b.name}.`); stop(); const a = new Audio(b.audio); a.onended = () => setPlaying(null); a.play().then(() => setPlaying(b.id)).catch(() => setPlaying(null)); audio.current = a; }; useEffect(() => () => audio.current?.pause(), []);  return <div className="hp"> <style>{css}</style> <Header active="home" go={go} /> <section className="hp-hero" style={HERO_IMAGE ? { backgroundImage: `linear-gradient(90deg,rgba(30,14,6,.88),rgba(30,14,6,.25)),url(${HERO_IMAGE})` } : undefined}>
+  return <div className="hp"> <style>{css}</style> <Header active="home" go={go} /> <section className="hp-hero" style={HERO_IMAGE ? { backgroundImage: `linear-gradient(90deg,rgba(30,14,6,.88),rgba(30,14,6,.25)),url(${HERO_IMAGE})` } : undefined}>
       <div className="hp-hero-in">
         <h1>{t("home.title")}</h1>
         <p>{t("home.intro")}</p>
@@ -172,10 +168,13 @@ export default function HomePage({ onOpenBrand, onNavigate }) {
           <button className="hp-cover" onClick={() => open(b)} aria-label={t("home.viewBrand", { name: b.name })} style={b.cover ? { backgroundImage: `linear-gradient(rgba(0,0,0,.15),rgba(0,0,0,.25)),url(${b.cover})` } : undefined}>
             {!b.cover && <Mark b={b} />}
           </button>
-          <button className="hp-play" onClick={() => toggle(b)} aria-pressed={playing === b.id}
-            aria-label={playing === b.id ? t("home.pauseAudio", { name: b.name }) : t("home.listen", { name: b.name })}>
-            <Icon n={playing === b.id ? "pause" : "play"} size={13} />
-          </button>
+          <BrandDescriptionAudio
+            brand={b}
+            className="hp-play"
+            playLabel={t("home.listen", { name: b.name })}
+            stopLabel={t("home.pauseAudio", { name: b.name })}
+            renderIcon={speaking => <Icon n={speaking ? "pause" : "play"} size={13} />}
+          />
           <div className="hp-body">
             <h3><button onClick={() => open(b)}>{b.name}</button></h3>
             <p>{localizedCategory(b.type, languageCode)}</p>
