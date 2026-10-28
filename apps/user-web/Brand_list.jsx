@@ -4,6 +4,75 @@ import { localizedCategory, screenText } from "./brandDetailTranslations.js";
 import { getUserApi, toBrandCard } from "./api.js";
 import BrandDescriptionAudio from "./BrandDescriptionAudio.jsx";
 
+/* ==========================================================================
+   [PHẦN CHÈN THÊM - ĐỂ MÌNH CHÈN]: IMPORT HÌNH ẢNH TỪ 2 THƯ MỤC CỦA BẠN
+   (Giống hệt cấu hình ở trang BrandDetailPage)
+   ========================================================================== */
+
+// 1. Ảnh Không gian (image coffee shop/)
+import coverHighlands from "../../public/image/High land coffee.jpg";
+import coverKatinat from "../../public/image/katinat.jpg";
+import coverKoi from "../../public/image/KOI the.jpg";
+import coverMilano from "../../public/image/milano.jpg";
+import coverPheLa from "../../public/image/Phe la.jpg";
+import coverPhucLong from "../../public/image/Phuc long.jpg";
+import coverStarbucks from "../../public/image/Starbuck.jpg";
+import coverTheCoffeeHouse from "../../public/image/The coffe house.jpg";
+import coverTrungNguyen from "../../public/image/Trung nguyen.jpg";
+import coverVivaStar from "../../public/image/viva star.jpg";
+
+// 2. Ảnh Logo (image logo/)
+import logoHighlands from "../../public/image/logo highlands coffee.jpg";
+import logoKatinat from "../../public/image/logo katinat.png";
+import logoKoi from "../../public/image/logo koi the.jpg";
+import logoMilano from "../../public/image/logo milano.png";
+import logoPheLa from "../../public/image/logo phe la.jpg";
+import logoPhucLong from "../../public/image/logo phuc long.jpg";
+import logoStarbucks from "../../public/image/logo starbuck.png";
+import logoTheCoffeeHouse from "../../public/image/logo the coffee house.jpg";
+import logoTrungNguyen from "../../public/image/logo Trung nguyen.png";
+import logoVivaStar from "../../public/image/logo viva.png";
+
+const DATABASE_BRANDS_IMAGES = {
+  "phuc-long": { cover: coverPhucLong, image: logoPhucLong },
+  "highlands-coffee": { cover: coverHighlands, image: logoHighlands },
+  "trung-nguyen": { cover: coverTrungNguyen, image: logoTrungNguyen },
+  "katinat": { cover: coverKatinat, image: logoKatinat },
+  "koi-the": { cover: coverKoi, image: logoKoi },
+  "phe-la": { cover: coverPheLa, image: logoPheLa },
+  "milano-coffee": { cover: coverMilano, image: logoMilano },
+  "viva-star-coffee": { cover: coverVivaStar, image: logoVivaStar },
+  "the-coffee-house": { cover: coverTheCoffeeHouse, image: logoTheCoffeeHouse },
+  "starbucks": { cover: coverStarbucks, image: logoStarbucks }
+};
+
+function getDatabaseBrandImages(brandId, brandName) {
+  const idKey = String(brandId || "").toLowerCase().trim();
+  if (DATABASE_BRANDS_IMAGES[idKey]) return DATABASE_BRANDS_IMAGES[idKey];
+
+  const nameKey = String(brandName || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "");
+
+  if (DATABASE_BRANDS_IMAGES[nameKey]) return DATABASE_BRANDS_IMAGES[nameKey];
+
+  if (nameKey.includes("phuc-long") || nameKey.includes("phuclong")) return DATABASE_BRANDS_IMAGES["phuc-long"];
+  if (nameKey.includes("highland")) return DATABASE_BRANDS_IMAGES["highlands-coffee"];
+  if (nameKey.includes("trung-nguyen")) return DATABASE_BRANDS_IMAGES["trung-nguyen"];
+  if (nameKey.includes("katinat")) return DATABASE_BRANDS_IMAGES["katinat"];
+  if (nameKey.includes("koi")) return DATABASE_BRANDS_IMAGES["koi-the"];
+  if (nameKey.includes("phe-la")) return DATABASE_BRANDS_IMAGES["phe-la"];
+  if (nameKey.includes("milano")) return DATABASE_BRANDS_IMAGES["milano-coffee"];
+  if (nameKey.includes("viva")) return DATABASE_BRANDS_IMAGES["viva-star-coffee"];
+  if (nameKey.includes("coffee-house") || nameKey.includes("tch")) return DATABASE_BRANDS_IMAGES["the-coffee-house"];
+  if (nameKey.includes("starbuck")) return DATABASE_BRANDS_IMAGES["starbucks"];
+
+  return null;
+}
 
 const paths = {
   search: <><circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" /></>,
@@ -121,9 +190,22 @@ function Cup() {
 }
 
 function BrandBadge({ item }) {
-  if (item.logo) {
-    return <img src={item.logo} alt={`Logo ${item.name}`} className="bl-badge-img" />;
+  const dbBrandImgs = getDatabaseBrandImages(item.id, item.name);
+  const resolvedLogo = item.logo || item.image || dbBrandImgs?.image;
+
+  if (resolvedLogo) {
+    const isKoiOrTrungNguyen = String(item.id || "").toLowerCase().includes("koi") || 
+                               String(item.name || "").toLowerCase().includes("koi") ||
+                               String(item.id || "").toLowerCase().includes("trung") || 
+                               String(item.name || "").toLowerCase().includes("trung");
+
+    const logoStyle = isKoiOrTrungNguyen
+      ? { width: "78px", height: "78px", borderRadius: "50%", objectFit: "contain", background: "#fff", padding: "4px", border: "2px solid rgba(255, 255, 255, 0.85)" }
+      : { width: "78px", height: "78px", borderRadius: "50%", objectFit: "cover", border: "2px solid rgba(255, 255, 255, 0.85)" };
+
+    return <img src={resolvedLogo} alt={`Logo ${item.name}`} style={logoStyle} />;
   }
+
   const lines = item.mark || [item.name];
   return (
     <div className="bl-badge-circle" style={{ backgroundColor: item.badge || "#2B3A2A" }}>
@@ -135,9 +217,17 @@ function BrandBadge({ item }) {
 }
 
 function BrandCard({ brand, onSelect, languageCode }) {
+  /* [PHẦN CHÈN THÊM - ĐỂ MÌNH CHÈN]: Lấy ảnh quán (cover) chuẩn theo thư mục */
+  const dbImgs = getDatabaseBrandImages(brand.id, brand.name);
+  const resolvedCover = brand.cover || dbImgs?.cover;
+
+  const heroStyle = resolvedCover 
+    ? { backgroundImage: `linear-gradient(rgba(0,0,0,.15),rgba(0,0,0,.25)),url(${resolvedCover})`, backgroundSize: "cover", backgroundPosition: "center" }
+    : undefined;
+
   return (
     <div className="bl-card" onClick={() => onSelect && onSelect(brand)}>
-      <div className="bl-card-hero">
+      <div className="bl-card-hero" style={heroStyle}>
         <BrandBadge item={brand} />
         <BrandDescriptionAudio
           brand={brand}
