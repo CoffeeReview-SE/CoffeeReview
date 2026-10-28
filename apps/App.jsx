@@ -1,16 +1,16 @@
-import React, { useState } from 'react';
+import React, { lazy, Suspense, useState } from 'react';
 import { Navigate, Route, Routes, useNavigate, useParams } from 'react-router-dom';
 
-import HomePage from './user-web/HomePage.jsx';
-import BrandListPage from './user-web/Brand_list.jsx';
-import BrandDetailPage from './user-web/BrandDetailPage.jsx';
-import SuggestionsPage from './user-web/Suggest.jsx';
+const HomePage = lazy(() => import('./user-web/HomePage.jsx'));
+const BrandListPage = lazy(() => import('./user-web/Brand_list.jsx'));
+const BrandDetailPage = lazy(() => import('./user-web/BrandDetailPage.jsx'));
+const SuggestionsPage = lazy(() => import('./user-web/Suggest.jsx'));
 
-import AdminDashboard from './admin/AdminDashboard.jsx';
-import BrandManagement from './admin/Manage_Brand.jsx';
-import BranchManagement from './admin/Branch_manage.jsx';
-import SuggestionsManagement from './admin/Sugguest_manage.jsx';
-import ApprovalsManagement from './admin/Approve_manage.jsx';
+const AdminDashboard = lazy(() => import('./admin/AdminDashboard.jsx'));
+const BrandManagement = lazy(() => import('./admin/Manage_Brand.jsx'));
+const BranchManagement = lazy(() => import('./admin/Branch_manage.jsx'));
+const SuggestionsManagement = lazy(() => import('./admin/Sugguest_manage.jsx'));
+const ApprovalsManagement = lazy(() => import('./admin/Approve_manage.jsx'));
 import PageTracker from './analytics/PageTracker.jsx';
 import ChatWidget from './user-web/ChatWidget.jsx';
 /* Map: section trên URL -> trang quản trị tương ứng (đã bỏ menu) */
@@ -136,22 +136,24 @@ export default function App() {
       <PageTracker />
       <ChatWidget />
 
-      <Routes>
-        {/* User Routes */}
-        <Route path="/" element={<Home addRecentBrand={addRecentBrand} />} />
-        <Route path="/home" element={<Navigate to="/" replace />} />
-        <Route path="/brands" element={<BrandList addRecentBrand={addRecentBrand} />} />
-        <Route path="/brand" element={<BrandDetail />} />
-        <Route path="/brand/:id" element={<BrandDetail recentBrands={recentBrands} />} />
-        <Route path="/suggestions" element={<Suggestions recentBrands={recentBrands} />} />
+      <Suspense fallback={<div role="status" aria-live="polite" style={{ padding: 24, textAlign: 'center' }}>Đang tải…</div>}>
+        <Routes>
+          {/* User Routes */}
+          <Route path="/" element={<Home addRecentBrand={addRecentBrand} />} />
+          <Route path="/home" element={<Navigate to="/" replace />} />
+          <Route path="/brands" element={<BrandList addRecentBrand={addRecentBrand} />} />
+          <Route path="/brand" element={<BrandDetail />} />
+          <Route path="/brand/:id" element={<BrandDetail recentBrands={recentBrands} />} />
+          <Route path="/suggestions" element={<Suggestions recentBrands={recentBrands} />} />
 
-        {/* Admin Routes */}
-        <Route path="/admin" element={<Dashboard />} />
-        <Route path="/admin/:section" element={<Management />} />
+          {/* Admin Routes */}
+          <Route path="/admin" element={<Dashboard />} />
+          <Route path="/admin/:section" element={<Management />} />
 
-        {/* Wildcard Route */}
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+          {/* Wildcard Route */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Suspense>
     </>
   );
 }

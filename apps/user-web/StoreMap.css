@@ -67,7 +67,11 @@
 .store-map__directions:hover { border-color: #8a4f2d; background: #8a4f2d; color: #fff; }
 .leaflet-popup-content .store-map__directions { margin-top: 8px; }
 .store-map__empty { padding: 10px 0; color: #75675d; font-size: 13px; }
-.store-map__canvas { z-index: 0; width: 100%; height: 520px; border-radius: 12px; box-shadow: 0 5px 18px #2a181014; }
+.store-map__canvas-wrap { position: relative; z-index: 0; width: 100%; height: 520px; overflow: hidden; border-radius: 12px; box-shadow: 0 5px 18px #2a181014; background: #e8e5df; }
+.store-map__canvas { z-index: 0; width: 100%; height: 100%; }
+.store-map__tile-status { position: absolute; z-index: 500; top: 12px; left: 50%; display: flex; align-items: center; gap: 10px; max-width: calc(100% - 24px); padding: 9px 12px; border: 1px solid #ddd2c5; border-radius: 9px; background: #fffdf9ed; color: #55483e; box-shadow: 0 2px 8px #24150c20; font-size: 12px; transform: translateX(-50%); }
+.store-map__tile-status.is-error { border-color: #e5b9ae; color: #853c30; }
+.store-map__tile-status button { flex: none; padding: 5px 8px; border: 0; border-radius: 6px; background: #6b3d25; color: #fff; cursor: pointer; font: inherit; font-weight: 600; }
 .current-location-icon { position: relative; border: 0; background: transparent; }
 .current-location-icon__pulse { position: absolute; inset: 0; border: 2px solid #fff; border-radius: 50%; background: #1687ff38; box-shadow: 0 0 0 2px #1687ff; animation: current-location-pulse 1.8s ease-out infinite; }
 .current-location-icon__dot { position: absolute; top: 8px; left: 8px; width: 12px; height: 12px; border: 2px solid #fff; border-radius: 50%; background: #0878ed; box-shadow: 0 1px 5px #163c67a6; }
@@ -90,5 +94,5 @@
   .store-map__locate { margin: 10px 0 0; }
   .store-map__nearby-audio { margin: 10px 0 0 8px; }
   .store-map__results { max-height: 220px; }
-  .store-map__canvas { height: 420px; }
+  .store-map__canvas-wrap { height: 420px; }
 }

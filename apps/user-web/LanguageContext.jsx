@@ -28,6 +28,9 @@ const messages = {
     "map.timeout": "Đã hết thời gian chờ lấy vị trí. Hãy thử lại ở nơi có tín hiệu tốt hơn.",
     "map.count": "{count} địa điểm", "map.results": "Địa điểm tìm thấy", "map.empty": "Không tìm thấy địa điểm phù hợp.",
     "map.current": "Vị trí của tôi", "map.userCurrent": "Vị trí hiện tại của bạn",
+    "map.directions": "Chỉ đường", "map.directionsGoogle": "Chỉ đường trên Google Maps",
+    "map.unverified": "Vị trí trên bản đồ chưa được xác minh", "map.tilesLoading": "Đang tải bản đồ…",
+    "map.tilesError": "Một số ô bản đồ không tải được.", "map.tilesRetry": "Thử tải lại",
     "map.note": "Địa điểm hiện là dữ liệu mẫu trong frontend; chưa kết nối backend hoặc database."
   },
   en: {
@@ -49,6 +52,9 @@ const messages = {
     "map.timeout": "Location request timed out. Try again where the signal is stronger.",
     "map.count": "{count} locations", "map.results": "Locations found", "map.empty": "No matching locations found.",
     "map.current": "My location", "map.userCurrent": "Your current location",
+    "map.directions": "Get directions", "map.directionsGoogle": "Directions on Google Maps",
+    "map.unverified": "This location has not been verified on the map", "map.tilesLoading": "Loading map…",
+    "map.tilesError": "Some map tiles could not be loaded.", "map.tilesRetry": "Retry",
     "map.note": "Locations are currently sample frontend data and are not connected to a backend or database."
   },
   ja: {
@@ -68,6 +74,9 @@ const messages = {
     "map.located": "位置を確認しました（誤差約 {accuracy} m）。", "map.denied": "位置情報へのアクセスが拒否されました。ブラウザーの設定で許可して再試行してください。",
     "map.unavailable": "位置情報を取得できません。GPSまたはWi-Fiを有効にして再試行してください。", "map.timeout": "位置情報の取得がタイムアウトしました。電波の良い場所で再試行してください。",
     "map.count": "場所 {count} 件", "map.results": "検索結果", "map.empty": "該当する場所がありません。",
+    "map.directions": "道順", "map.directionsGoogle": "Google マップで道順を表示",
+    "map.unverified": "地図上の位置は未確認です", "map.tilesLoading": "地図を読み込み中…",
+    "map.tilesError": "一部の地図タイルを読み込めませんでした。", "map.tilesRetry": "再試行",
     "map.current": "現在地", "map.userCurrent": "あなたの現在地", "map.note": "場所はフロントエンドのサンプルデータで、バックエンドやデータベースには未接続です。"
   },
   zh: {
@@ -87,6 +96,9 @@ const messages = {
     "map.located": "已定位（误差约{accuracy}米）。", "map.denied": "您拒绝了位置访问权限。请在浏览器设置中允许后重试。",
     "map.unavailable": "设备暂时无法提供位置。请开启GPS或Wi-Fi后重试。", "map.timeout": "定位超时，请在信号较好的地方重试。",
     "map.count": "{count}个地点", "map.results": "搜索到的地点", "map.empty": "没有找到符合条件的地点。",
+    "map.directions": "路线导航", "map.directionsGoogle": "在 Google 地图中导航",
+    "map.unverified": "地图上的位置尚未验证", "map.tilesLoading": "正在加载地图…",
+    "map.tilesError": "部分地图图块无法加载。", "map.tilesRetry": "重试",
     "map.current": "我的位置", "map.userCurrent": "您的当前位置", "map.note": "地点目前是前端示例数据，尚未连接后端或数据库。"
   }
 };

@@ -42,6 +42,7 @@ export default function ChatWidget() {
   useEffect(() => {
     let active = true;
     const checkConnection = async () => {
+      if (document.visibilityState === "hidden") return;
       try {
         const response = await fetch("/api/assistant/status", { cache: "no-store" });
         const data = await response.json();
@@ -50,9 +51,17 @@ export default function ChatWidget() {
         if (active) setConnected(false);
       }
     };
+    const refreshWhenVisible = () => {
+      if (document.visibilityState === "visible") checkConnection();
+    };
     checkConnection();
     const timer = window.setInterval(checkConnection, 60000);
-    return () => { active = false; window.clearInterval(timer); };
+    document.addEventListener("visibilitychange", refreshWhenVisible);
+    return () => {
+      active = false;
+      window.clearInterval(timer);
+      document.removeEventListener("visibilitychange", refreshWhenVisible);
+    };
   }, []);
 
   useEffect(() => {
