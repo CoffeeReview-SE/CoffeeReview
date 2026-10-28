@@ -29,6 +29,15 @@ function googleDirectionsUrl(item, userPosition) {
   return `https://www.google.com/maps/dir/?${params.toString()}`;
 }
 
+const PROXIMITY_RADIUS_METERS = 2000;
+function distanceMeters(aLat, aLng, bLat, bLng) {
+  const radians = degrees => degrees * Math.PI / 180;
+  const dLat = radians(bLat - aLat);
+  const dLng = radians(bLng - aLng);
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(radians(aLat)) * Math.cos(radians(bLat)) * Math.sin(dLng / 2) ** 2;
+  return 6371000 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
 function ChangeView({ center, zoom }) {
   const map = useMap();
 
@@ -40,15 +49,22 @@ function ChangeView({ center, zoom }) {
 }
 
 export default function StoreMap() {
-  const { t } = useLanguage();
+  const { t, languageCode } = useLanguage();
   const [searchTerm, setSearchTerm] = useState("");
   const [locations, setLocations] = useState([]);
+  const [brandCatalog, setBrandCatalog] = useState([]);
   const [mapCenter, setMapCenter] = useState([10.7769, 106.7009]);
   const [mapZoom, setMapZoom] = useState(12);
   const [userPosition, setUserPosition] = useState(null);
   const [locationStatus, setLocationStatus] = useState({ key: "map.requesting" });
   const [isLocating, setIsLocating] = useState(false);
+  const [nearbyAudioEnabled, setNearbyAudioEnabled] = useState(false);
+  const [nearbyAudioStatus, setNearbyAudioStatus] = useState("");
   const requestedLocation = useRef(false);
+  const playedNearbyBrands = useRef(new Set());
+  const nearbyAudioQueue = useRef([]);
+  const isSpeakingNearby = useRef(false);
+  const speakNextNearby = useRef(null);
   useEffect(() => {
     const controller = new AbortController();
     getUserApi("/api/catalog/branches", { signal: controller.signal })
@@ -56,6 +72,106 @@ export default function StoreMap() {
       .catch(() => { if (!controller.signal.aborted) setLocations([]); });
     return () => controller.abort();
   }, []);
+  useEffect(() => {
+    const controller = new AbortController();
+    getUserApi("/api/catalog/brands", { signal: controller.signal })
+      .then(rows => { if (Array.isArray(rows)) setBrandCatalog(rows); })
+      .catch(() => { if (!controller.signal.aborted) setBrandCatalog([]); });
+    return () => controller.abort();
+  }, []);
+
+  const proximityText = {
+    vi: { enable: "Bật audio thương hiệu gần bạn", disable: "Tắt audio gần bạn", enabled: "Đã bật. Đang tìm thương hiệu trong bán kính 2 km…", found: names => `Đang đọc mô tả: ${names.join(", ")}`, none: "Chưa có thương hiệu có mô tả trong bán kính 2 km.", gps: "Cho phép GPS để tự phát audio thương hiệu gần bạn.", denied: "Không lấy được GPS. Hãy kiểm tra quyền vị trí của trình duyệt." },
+    en: { enable: "Enable nearby brand audio", disable: "Disable nearby audio", enabled: "On. Looking for brands within 2 km…", found: names => `Reading: ${names.join(", ")}`, none: "No brands with descriptions found within 2 km.", gps: "Allow GPS to play audio for nearby brands.", denied: "Could not get GPS. Check your browser location permission." },
+    ja: { enable: "近くのブランド音声を有効にする", disable: "近くの音声を無効にする", enabled: "有効です。半径2 km以内のブランドを検索中…", found: names => `再生中: ${names.join(", ")}`, none: "半径2 km以内に説明のあるブランドがありません。", gps: "近くのブランド音声を再生するにはGPSを許可してください。", denied: "GPSを取得できません。ブラウザーの位置情報権限を確認してください。" },
+    zh: { enable: "开启附近品牌语音", disable: "关闭附近语音", enabled: "已开启，正在查找 2 公里内的品牌…", found: names => `正在朗读：${names.join("、")}`, none: "2 公里内没有带有介绍的品牌。", gps: "允许 GPS 以自动播放附近品牌介绍。", denied: "无法获取 GPS。请检查浏览器的位置权限。" },
+  }[languageCode] || { enable: "Enable nearby brand audio", disable: "Disable nearby audio", enabled: "On. Looking for brands within 2 km…", found: names => `Reading: ${names.join(", ")}`, none: "No brands with descriptions found within 2 km.", gps: "Allow GPS to play audio for nearby brands.", denied: "Could not get GPS. Check your browser location permission." };
+
+  useEffect(() => {
+    speakNextNearby.current = () => {
+      if (isSpeakingNearby.current) return;
+      const brand = nearbyAudioQueue.current.shift();
+      if (!brand) return;
+      if (!brand.description?.trim()) { speakNextNearby.current?.(); return; }
+      const language = (brand.descriptionLanguageCode || "vi").toLowerCase();
+      const speech = new SpeechSynthesisUtterance(brand.description.trim());
+      speech.lang = language;
+      const voice = window.speechSynthesis.getVoices().find(item => item.lang.toLowerCase().startsWith(language));
+      if (voice) speech.voice = voice;
+      speech.onstart = () => {
+        isSpeakingNearby.current = true;
+        trackAudio({ brandId: Number(brand.id), languageCode: language, eventId: crypto.randomUUID() });
+      };
+      const finish = () => {
+        isSpeakingNearby.current = false;
+        speakNextNearby.current?.();
+      };
+      speech.onend = finish;
+      speech.onerror = finish;
+      isSpeakingNearby.current = true;
+      window.speechSynthesis.cancel();
+      window.speechSynthesis.speak(speech);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!nearbyAudioEnabled) return undefined;
+    if (!navigator.geolocation || !("speechSynthesis" in window)) {
+      setNearbyAudioStatus(proximityText.denied);
+      return undefined;
+    }
+    setNearbyAudioStatus(proximityText.enabled);
+    const watchId = navigator.geolocation.watchPosition(
+      ({ coords }) => setUserPosition({ position: [coords.latitude, coords.longitude], accuracy: coords.accuracy }),
+      () => setNearbyAudioStatus(proximityText.denied),
+      { enableHighAccuracy: true, maximumAge: 15000, timeout: 20000 },
+    );
+    return () => {
+      navigator.geolocation.clearWatch(watchId);
+      window.speechSynthesis.cancel();
+      nearbyAudioQueue.current = [];
+      playedNearbyBrands.current.clear();
+      isSpeakingNearby.current = false;
+    };
+  }, [nearbyAudioEnabled, languageCode]);
+
+  useEffect(() => {
+    if (!nearbyAudioEnabled || !userPosition || !brandCatalog.length) return;
+    const nearestByBrand = new Map();
+    for (const branch of locations) {
+      if (!Number.isFinite(branch.lat) || !Number.isFinite(branch.lng)) continue;
+      const distance = distanceMeters(userPosition.position[0], userPosition.position[1], branch.lat, branch.lng);
+      if (distance > PROXIMITY_RADIUS_METERS) continue;
+      const current = nearestByBrand.get(branch.brandId);
+      if (!current || distance < current.distance) nearestByBrand.set(branch.brandId, { distance });
+    }
+    const brandsById = new Map(brandCatalog.map(brand => [brand.id, brand]));
+    const nearby = [...nearestByBrand.entries()]
+      .map(([id, info]) => ({ brand: brandsById.get(id), distance: info.distance }))
+      .filter(item => item.brand?.description?.trim())
+      .sort((a, b) => a.distance - b.distance);
+    const newlyNearby = nearby.map(item => item.brand).filter(brand => !playedNearbyBrands.current.has(brand.id));
+    if (!newlyNearby.length) {
+      if (!nearby.length) setNearbyAudioStatus(proximityText.none);
+      return;
+    }
+    newlyNearby.forEach(brand => playedNearbyBrands.current.add(brand.id));
+    nearbyAudioQueue.current.push(...newlyNearby);
+    setNearbyAudioStatus(proximityText.found(newlyNearby.map(brand => brand.name)));
+    speakNextNearby.current?.();
+  }, [nearbyAudioEnabled, userPosition, locations, brandCatalog, languageCode]);
+
+  const toggleNearbyAudio = () => {
+    if (!nearbyAudioEnabled) {
+      if (!navigator.geolocation) { setNearbyAudioStatus(proximityText.denied); return; }
+      if (!("speechSynthesis" in window)) { setNearbyAudioStatus(proximityText.denied); return; }
+      setNearbyAudioEnabled(true);
+      setNearbyAudioStatus(proximityText.gps);
+      return;
+    }
+    setNearbyAudioEnabled(false);
+    setNearbyAudioStatus("");
+  };
   const normalizedSearch = searchTerm.trim().toLocaleLowerCase("vi");
   const filteredLocations = locations.filter((item) =>
     `${item.name} ${item.brand} ${item.address}`.toLocaleLowerCase("vi").includes(normalizedSearch),
@@ -127,6 +243,10 @@ export default function StoreMap() {
       <button className="store-map__locate" type="button" onClick={locateMe} disabled={isLocating}>
         {isLocating ? t("map.locating") : t("map.locate")}
       </button>
+      <button className="store-map__nearby-audio" type="button" onClick={toggleNearbyAudio} aria-pressed={nearbyAudioEnabled}>
+        {nearbyAudioEnabled ? proximityText.disable : proximityText.enable}
+      </button>
+      {nearbyAudioStatus && <p className="store-map__nearby-status" role="status" aria-live="polite">{nearbyAudioStatus}</p>}
       <p className="store-map__location-status" role="status" aria-live="polite">
         {t(locationStatus.key, locationStatus.values)}
       </p>

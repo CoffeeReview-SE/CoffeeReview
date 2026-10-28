@@ -47,6 +47,10 @@
 .store-map__locate { margin-left: 10px; padding: 12px 16px; border: 0; border-radius: 9px; background: #6b3d25; color: #fff; font: inherit; font-weight: 600; cursor: pointer; }
 .store-map__locate:hover:not(:disabled) { background: #4f2b1a; }
 .store-map__locate:disabled { cursor: wait; opacity: .65; }
+.store-map__nearby-audio { margin-left: 8px; padding: 11px 15px; border: 1px solid #536c54; border-radius: 9px; background: #fff; color: #354a36; font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; transition: background .18s, color .18s, box-shadow .18s; }
+.store-map__nearby-audio:hover { box-shadow: 0 3px 10px #273b2e20; }
+.store-map__nearby-audio[aria-pressed="true"] { background: #354a36; color: #fff; }
+.store-map__nearby-status { margin: 8px 0; color: #536c54; font-size: 12px; }
 .store-map__location-status { min-height: 18px; margin: 8px 0 0; color: #75675d; font-size: 12px; }
 
 .store-map__layout { display: grid; grid-template-columns: minmax(240px, 330px) minmax(0, 1fr); gap: 18px; margin-top: 18px; }
@@ -84,6 +88,7 @@
   .store-map { padding-top: 30px; }
   .store-map__layout { grid-template-columns: 1fr; }
   .store-map__locate { margin: 10px 0 0; }
+  .store-map__nearby-audio { margin: 10px 0 0 8px; }
   .store-map__results { max-height: 220px; }
   .store-map__canvas { height: 420px; }
 }
