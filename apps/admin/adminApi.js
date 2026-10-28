@@ -5,7 +5,6 @@ export async function adminRequest(path, options = {}) {
     headers: { 'Content-Type': 'application/json', 'X-Admin-Request': '1', ...options.headers },
     credentials: 'same-origin',
   });
-  if (response.status === 401 && !path.startsWith('auth/')) window.dispatchEvent(new Event('admin-session-expired'));
   if (!response.ok) {
     const detail = await response.text().catch(() => '');
     throw new Error(`API ${response.status}${detail ? `: ${detail.slice(0, 160)}` : ''}`);

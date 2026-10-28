@@ -1,6 +1,6 @@
 # Rà soát Admin Dashboard — 28/10/2026
 
-**Cập nhật sau bước 1–2:** đã triển khai backend/tracking/Dashboard và đăng nhập Admin local. Xem `docs/Admin-Dashboard-Local.md` để cấu hình, chạy và kiểm thử; phần bên dưới lưu kết quả rà soát ban đầu. Không deploy Railway.
+**Cập nhật sau bước 1–2:** đã triển khai backend/tracking/Dashboard. Theo yêu cầu mới, đã bỏ đăng nhập Admin để truy cập trực tiếp. Xem `docs/Admin-Dashboard-Local.md` để chạy và kiểm thử; phần bên dưới lưu kết quả rà soát ban đầu. Không deploy Railway.
 
 Đã thực hiện bước 1–2 theo phần yêu cầu bắt đầu trong tài liệu bàn giao. Dùng source đang có tại `C:\test\SGCoffee`, không giải nén. Chưa triển khai các bước 3–8 và chưa deploy Railway.
 

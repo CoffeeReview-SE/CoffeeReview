@@ -1,21 +1,6 @@
 using Microsoft.Extensions.Configuration;
 using Npgsql;
 
-if (args.Length == 1 && args[0] == "--hash-admin-password")
-{
-    Console.Error.Write("Admin password (minimum 16 characters): ");
-    var password = new System.Text.StringBuilder();
-    ConsoleKeyInfo key;
-    while ((key = Console.ReadKey(true)).Key != ConsoleKey.Enter)
-    {
-        if (key.Key == ConsoleKey.Backspace) { if (password.Length > 0) password.Length--; }
-        else if (!char.IsControl(key.KeyChar)) password.Append(key.KeyChar);
-    }
-    Console.Error.WriteLine();
-    if (password.Length < 16) { Console.Error.WriteLine("Password too short"); return 1; }
-    Console.WriteLine(new Microsoft.AspNetCore.Identity.PasswordHasher<string>().HashPassword("admin", password.ToString()));
-    return 0;
-}
 // Inspect database metadata without printing credentials or visitor data.
 var configuration = new ConfigurationBuilder()
     .AddUserSecrets("3e9d78aa-70f9-4b0b-ad63-abe6ee63fbc0")

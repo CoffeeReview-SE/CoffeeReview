@@ -7,7 +7,6 @@ import BrandDetailPage from './user-web/BrandDetailPage.jsx';
 import SuggestionsPage from './user-web/Suggest.jsx';
 
 import AdminDashboard from './admin/AdminDashboard.jsx';
-import AdminAccess from './admin/AdminAccess.jsx';
 import BrandManagement from './admin/Manage_Brand.jsx';
 import BranchManagement from './admin/Branch_manage.jsx';
 import SuggestionsManagement from './admin/Sugguest_manage.jsx';
@@ -143,8 +142,8 @@ export default function App() {
         <Route path="/suggestions" element={<Suggestions recentBrands={recentBrands} />} />
 
         {/* Admin Routes */}
-        <Route path="/admin" element={<AdminAccess><Dashboard /></AdminAccess>} />
-        <Route path="/admin/:section" element={<AdminAccess><Management /></AdminAccess>} />
+        <Route path="/admin" element={<Dashboard />} />
+        <Route path="/admin/:section" element={<Management />} />
 
         {/* Wildcard Route */}
         <Route path="*" element={<Navigate to="/" replace />} />

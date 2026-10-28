@@ -2,14 +2,11 @@ using System.Diagnostics;
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
-using Microsoft.AspNetCore.Identity;
 
-// Run isolated local services with temporary credentials and only read production data.
+// Run isolated local services and only read production data.
 var root = Directory.GetCurrentDirectory();
 var processes = new List<Process>();
 var key = Guid.NewGuid().ToString("N");
-var password = Guid.NewGuid().ToString("N");
-var hash = new PasswordHasher<string>().HashPassword("smoke-admin", password);
 var ports = Enumerable.Range(0, 4).Select(_ => FreePort()).ToArray();
 try
 {
@@ -29,17 +26,11 @@ try
         }
         Check(healthy, "service health");
     }
-    Check((await client.GetAsync("/api/admin/analytics/summary")).StatusCode == HttpStatusCode.Unauthorized, "anonymous admin blocked");
+    Check((await client.GetAsync("/api/admin/analytics/summary")).IsSuccessStatusCode, "direct admin access succeeds");
     Check((await client.GetAsync($"http://localhost:{ports[3]}/api/admin/analytics/summary")).StatusCode == HttpStatusCode.NotFound, "disabled admin summary blocked");
     Check((await client.GetAsync($"http://localhost:{ports[0]}/admin/summary")).StatusCode == HttpStatusCode.Unauthorized, "direct service blocked");
-    Check((await client.PostAsJsonAsync("/api/admin/auth/login", new { username = "smoke-admin", password })).StatusCode == HttpStatusCode.Forbidden, "login CSRF header required");
+    Check((await client.GetAsync("/api/admin/auth/session")).StatusCode == HttpStatusCode.NotFound, "login endpoints removed");
     client.DefaultRequestHeaders.Add("X-Admin-Request", "1");
-    Check((await client.PostAsJsonAsync("/api/admin/auth/login", new { username = "smoke-admin", password = "incorrect" })).StatusCode == HttpStatusCode.Unauthorized, "incorrect password rejected");
-    var login = await client.PostAsJsonAsync("/api/admin/auth/login", new { username = "smoke-admin", password });
-    Check(login.IsSuccessStatusCode, "cookie login succeeds");
-    var cookie = string.Join(";", login.Headers.GetValues("Set-Cookie"));
-    Check(cookie.Contains("httponly", StringComparison.OrdinalIgnoreCase) && cookie.Contains("samesite=strict", StringComparison.OrdinalIgnoreCase)
-        && cookie.Contains("path=/api/admin", StringComparison.OrdinalIgnoreCase), "cookie security flags");
     var response = await client.GetAsync("/api/admin/analytics/summary");
     Check(response.IsSuccessStatusCode, "Supabase dashboard summary succeeds");
     var summary = await response.Content.ReadFromJsonAsync<JsonElement>();
@@ -52,12 +43,7 @@ try
     Check((await client.PostAsJsonAsync("/api/analytics/heartbeat", new { visitorId = Guid.NewGuid(), sessionId = Guid.NewGuid() })).StatusCode == HttpStatusCode.NotFound, "unknown heartbeat rejected");
     Check((await client.GetAsync("/api/catalog/brands/2")).IsSuccessStatusCode, "real brand description endpoint");
     client.DefaultRequestHeaders.Remove("X-Admin-Request");
-    Check((await client.PostAsJsonAsync("/api/admin/auth/logout", new { })).StatusCode == HttpStatusCode.Forbidden, "authenticated writes require CSRF header");
-    client.DefaultRequestHeaders.Add("X-Admin-Request", "1");
-    Check((await client.PostAsJsonAsync("/api/admin/auth/logout", new { })).IsSuccessStatusCode, "logout succeeds");
-    Check((await client.GetAsync("/api/admin/analytics/summary")).StatusCode == HttpStatusCode.Unauthorized, "logout revokes browser cookie");
-    for (var i = 0; i < 3; i++) await client.PostAsJsonAsync("/api/admin/auth/login", new { username = "smoke-admin", password = "incorrect" });
-    Check((await client.PostAsJsonAsync("/api/admin/auth/login", new { username = "smoke-admin", password = "incorrect" })).StatusCode == HttpStatusCode.TooManyRequests, "login rate limit");
+    Check((await client.PostAsJsonAsync("/api/admin/catalog/brands", new { })).StatusCode == HttpStatusCode.Forbidden, "admin writes require same-origin header");
     Console.WriteLine("API smoke checks passed; no tracking or audio test records created.");
     return 0;
 }
@@ -79,8 +65,6 @@ void Start(string dll, string directory, int port, bool? enabled = null)
     if (enabled.HasValue)
     {
         info.Environment["Admin__Enabled"] = enabled.Value.ToString();
-        info.Environment["Admin__Username"] = "smoke-admin";
-        info.Environment["Admin__PasswordHash"] = hash;
         info.Environment["ReverseProxy__Clusters__analytics__Destinations__d1__Address"] = $"http://localhost:{ports[0]}";
         info.Environment["ReverseProxy__Clusters__catalog__Destinations__d1__Address"] = $"http://localhost:{ports[1]}";
     }
