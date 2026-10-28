@@ -64,7 +64,11 @@ export default function StoreMap() {
   const playedNearbyBrands = useRef(new Set());
   const nearbyAudioQueue = useRef([]);
   const isSpeakingNearby = useRef(false);
+  const isPreparingNearby = useRef(false);
   const speakNextNearby = useRef(null);
+  const proximityAudioActive = useRef(nearbyAudioEnabled);
+  const proximityAudioGeneration = useRef(0);
+  proximityAudioActive.current = nearbyAudioEnabled;
   useEffect(() => {
     const controller = new AbortController();
     getUserApi("/api/catalog/branches", { signal: controller.signal })
@@ -88,31 +92,52 @@ export default function StoreMap() {
   }[languageCode] || { enable: "Enable nearby brand audio", disable: "Disable nearby audio", enabled: "On. Looking for brands within 2 km…", found: names => `Reading: ${names.join(", ")}`, none: "No brands with descriptions found within 2 km.", gps: "Allow GPS to play audio for nearby brands.", denied: "Could not get GPS. Check your browser location permission." };
 
   useEffect(() => {
-    speakNextNearby.current = () => {
-      if (isSpeakingNearby.current) return;
+    speakNextNearby.current = async () => {
+      if (isSpeakingNearby.current || isPreparingNearby.current || !proximityAudioActive.current) return;
       const brand = nearbyAudioQueue.current.shift();
       if (!brand) return;
       if (!brand.description?.trim()) { speakNextNearby.current?.(); return; }
-      const language = (brand.descriptionLanguageCode || "vi").toLowerCase();
-      const speech = new SpeechSynthesisUtterance(brand.description.trim());
-      speech.lang = language;
-      const voice = window.speechSynthesis.getVoices().find(item => item.lang.toLowerCase().startsWith(language));
+      const generation = proximityAudioGeneration.current;
+      const sourceLanguage = (brand.descriptionLanguageCode || "vi").toLowerCase();
+      let speechText = brand.description.trim();
+      let voiceLanguage = sourceLanguage;
+      isPreparingNearby.current = true;
+      if (sourceLanguage !== languageCode) {
+        try {
+          const translated = await getUserApi(`/api/localization/brands/${brand.id}/translations/${languageCode}`, { method: "POST" });
+          if (translated.description) {
+            speechText = translated.description;
+            voiceLanguage = languageCode;
+          }
+        } catch {
+          // Keep speaking the stored description if the translation service is unavailable.
+        }
+      }
+      if (generation !== proximityAudioGeneration.current || !proximityAudioActive.current) {
+        isPreparingNearby.current = false;
+        return;
+      }
+      const speech = new SpeechSynthesisUtterance(speechText);
+      speech.lang = voiceLanguage;
+      const voice = window.speechSynthesis.getVoices().find(item => item.lang.toLowerCase().startsWith(voiceLanguage.toLowerCase()));
       if (voice) speech.voice = voice;
       speech.onstart = () => {
         isSpeakingNearby.current = true;
-        trackAudio({ brandId: Number(brand.id), languageCode: language, eventId: crypto.randomUUID() });
+        trackAudio({ brandId: Number(brand.id), languageCode: voiceLanguage, eventId: crypto.randomUUID() });
       };
       const finish = () => {
         isSpeakingNearby.current = false;
+        isPreparingNearby.current = false;
         speakNextNearby.current?.();
       };
       speech.onend = finish;
       speech.onerror = finish;
+      isPreparingNearby.current = false;
       isSpeakingNearby.current = true;
       window.speechSynthesis.cancel();
       window.speechSynthesis.speak(speech);
     };
-  }, []);
+  }, [languageCode]);
 
   useEffect(() => {
     if (!nearbyAudioEnabled) return undefined;
@@ -127,11 +152,13 @@ export default function StoreMap() {
       { enableHighAccuracy: true, maximumAge: 15000, timeout: 20000 },
     );
     return () => {
+      proximityAudioGeneration.current += 1;
       navigator.geolocation.clearWatch(watchId);
       window.speechSynthesis.cancel();
       nearbyAudioQueue.current = [];
       playedNearbyBrands.current.clear();
       isSpeakingNearby.current = false;
+      isPreparingNearby.current = false;
     };
   }, [nearbyAudioEnabled, languageCode]);
 

@@ -93,8 +93,27 @@ const messages = {
 
 const LanguageContext = createContext(null);
 
+function initialLanguageCode() {
+  if (typeof window === "undefined") return "vi";
+  try {
+    const saved = window.localStorage.getItem("saigoncoffee-language");
+    if (messages[saved]) return saved;
+  } catch { /* Storage can be unavailable in private browsing. */ }
+  const browserLanguages = [...(navigator.languages || []), navigator.language].filter(Boolean);
+  for (const preference of browserLanguages) {
+    const code = preference.toLowerCase().split("-")[0];
+    if (messages[code]) return code;
+  }
+  return "vi";
+}
+
 export function LanguageProvider({ children }) {
-  const [languageCode, setLanguageCode] = useState("vi");
+  const [languageCode, setCurrentLanguageCode] = useState(initialLanguageCode);
+  const setLanguageCode = code => {
+    if (!messages[code]) return;
+    setCurrentLanguageCode(code);
+    try { window.localStorage.setItem("saigoncoffee-language", code); } catch { /* Keep the selection for this page session. */ }
+  };
   return <LanguageContext.Provider value={{ languageCode, setLanguageCode }}>{children}</LanguageContext.Provider>;
 }
 
