@@ -7,7 +7,7 @@
     "node": ">=20.19.0"
   },
   "scripts": {
-    "start": "serve -s dist -l tcp://0.0.0.0:${PORT:-8080}",
+    "start": "node scripts/web-server.mjs",
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview "
