@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { MapContainer, Marker, Popup, TileLayer, useMap } from "react-leaflet";
 import "./StoreMap.css";
 
@@ -40,6 +40,10 @@ export default function StoreMap() {
   const [searchTerm, setSearchTerm] = useState("");
   const [mapCenter, setMapCenter] = useState([10.7769, 106.7009]);
   const [mapZoom, setMapZoom] = useState(12);
+  const [userPosition, setUserPosition] = useState(null);
+  const [locationStatus, setLocationStatus] = useState("Đang yêu cầu quyền truy cập vị trí...");
+  const [isLocating, setIsLocating] = useState(false);
+  const requestedLocation = useRef(false);
   const normalizedSearch = searchTerm.trim().toLocaleLowerCase("vi");
   const filteredLocations = locations.filter((item) =>
     `${item.name} ${item.address}`.toLocaleLowerCase("vi").includes(normalizedSearch),
@@ -49,6 +53,44 @@ export default function StoreMap() {
     setMapCenter([item.lat, item.lng]);
     setMapZoom(16);
   };
+
+  const locateMe = () => {
+    if (!navigator.geolocation) {
+      setLocationStatus("Trình duyệt này không hỗ trợ định vị vị trí.");
+      return;
+    }
+
+    setIsLocating(true);
+    setLocationStatus("Đang lấy vị trí hiện tại...");
+    navigator.geolocation.getCurrentPosition(
+      ({ coords }) => {
+        const position = [coords.latitude, coords.longitude];
+        setUserPosition({ position, accuracy: coords.accuracy });
+        setMapCenter(position);
+        setMapZoom(16);
+        setLocationStatus(`Đã xác định vị trí (sai số khoảng ${Math.round(coords.accuracy)} m).`);
+        setIsLocating(false);
+      },
+      (error) => {
+        const message = error.code === error.PERMISSION_DENIED
+          ? "Bạn đã từ chối quyền truy cập vị trí. Hãy cấp quyền trong cài đặt trình duyệt rồi thử lại."
+          : error.code === error.POSITION_UNAVAILABLE
+            ? "Thiết bị chưa cung cấp được vị trí. Hãy bật GPS/Wi-Fi rồi thử lại."
+            : "Đã hết thời gian chờ lấy vị trí. Hãy thử lại ở nơi có tín hiệu tốt hơn.";
+        setLocationStatus(message);
+        setIsLocating(false);
+      },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 30000 },
+    );
+  };
+
+  useEffect(() => {
+    // Tự lấy GPS khi mở trang; ref tránh gọi lại trong React StrictMode.
+    if (!requestedLocation.current) {
+      requestedLocation.current = true;
+      locateMe();
+    }
+  }, []);
 
   return (
     <section className="store-map" id="store-map" aria-labelledby="store-map-title">
@@ -69,6 +111,12 @@ export default function StoreMap() {
         value={searchTerm}
         onChange={(event) => setSearchTerm(event.target.value)}
       />
+      <button className="store-map__locate" type="button" onClick={locateMe} disabled={isLocating}>
+        {isLocating ? "Đang định vị..." : "Vị trí của tôi"}
+      </button>
+      <p className="store-map__location-status" role="status" aria-live="polite">
+        {locationStatus}
+      </p>
 
       <div className="store-map__layout">
         <aside className="store-map__results" aria-label="Địa điểm tìm thấy">
@@ -113,6 +161,15 @@ export default function StoreMap() {
               </Popup>
             </Marker>
           ))}
+          {userPosition && (
+            <Marker position={userPosition.position}>
+              <Popup>
+                <strong>Vị trí hiện tại của bạn</strong>
+                <br />
+                {userPosition.position[0].toFixed(6)}, {userPosition.position[1].toFixed(6)}
+              </Popup>
+            </Marker>
+          )}
         </MapContainer>
       </div>
       <p className="store-map__note">
