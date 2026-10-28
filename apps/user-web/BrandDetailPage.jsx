@@ -28,61 +28,31 @@ import logoTheCoffeeHouse from "../../public/image/logo the coffee house.jpg";
 import logoTrungNguyen from "../../public/image/logo Trung nguyen.png";
 import logoVivaStar from "../../public/image/logo viva.png";
 
+// 3. menu
+import menuHighlands from "../../public/image/menu highland coffee.jpg";
+import menuKatinat from "../../public/image/menu katinat.jpg";
+import menuKoi from "../../public/image/menu koi the.jpg";
+import menuMilano from "../../public/image/menu milano.png";
+import menuPheLa from "../../public/image/menu phe la.jpg";
+import menuPhucLong from "../../public/image/menu phuc long.jpg";
+import menuStarbucks from "../../public/image/menu startbuck.jpg";
+import menuTheCoffeeHouse from "../../public/image/menu the coffee house.jpg";
+import menuTrungNguyen from "../../public/image/menu trung nguyen.jpg";
+
 
 const DATABASE_BRANDS_IMAGES = {
-  // 1. Phúc Long
-  "phuc-long": {
-    cover: coverPhucLong,
-    image: logoPhucLong
-  },
-  // 2. Highlands Coffee
-  "highlands-coffee": {
-    cover: coverHighlands,
-    image: logoHighlands
-  },
-  // 3. Trung Nguyên
-  "trung-nguyen": {
-    cover: coverTrungNguyen,
-    image: logoTrungNguyen
-  },
-  // 4. KATINAT
-  "katinat": {
-    cover: coverKatinat,
-    image: logoKatinat
-  },
-  // 5. KOI Thé
-  "koi-the": {
-    cover: coverKoi,
-    image: logoKoi
-  },
-  // 6. Phê La
-  "phe-la": {
-    cover: coverPheLa,
-    image: logoPheLa
-  },
-  // 7. Milano Coffee
-  "milano-coffee": {
-    cover: coverMilano,
-    image: logoMilano
-  },
-  // 8. Viva Star Coffee
-  "viva-star-coffee": {
-    cover: coverVivaStar,
-    image: logoVivaStar
-  },
-  // 9. The Coffee House
-  "the-coffee-house": {
-    cover: coverTheCoffeeHouse,
-    image: logoTheCoffeeHouse
-  },
-  // 10. Starbucks
-  "starbucks": {
-    cover: coverStarbucks,
-    image: logoStarbucks
-  }
+  "phuc-long": { cover: coverPhucLong, image: logoPhucLong, menu: [menuPhucLong] },
+  "highlands-coffee": { cover: coverHighlands, image: logoHighlands, menu: [menuHighlands] },
+  "trung-nguyen": { cover: coverTrungNguyen, image: logoTrungNguyen, menu: [menuTrungNguyen] },
+  "katinat": { cover: coverKatinat, image: logoKatinat, menu: [menuKatinat] },
+  "koi-the": { cover: coverKoi, image: logoKoi, menu: [menuKoi] },
+  "phe-la": { cover: coverPheLa, image: logoPheLa, menu: [menuPheLa] },
+  "milano-coffee": { cover: coverMilano, image: logoMilano, menu: [menuMilano] },
+  "viva-star-coffee": { cover: coverVivaStar, image: logoVivaStar, menu: [null] },
+  "the-coffee-house": { cover: coverTheCoffeeHouse, image: logoTheCoffeeHouse, menu: [menuTheCoffeeHouse] },
+  "starbucks": { cover: coverStarbucks, image: logoStarbucks, menu: [menuStarbucks] }
 };
 
-/* [PHẦN CHÈN THÊM - ĐỂ MÌNH CHÈN]: Hàm nhận diện và khớp đường dẫn ảnh */
 function getDatabaseBrandImages(brandId, brandName) {
   const idKey = String(brandId || "").toLowerCase().trim();
   if (DATABASE_BRANDS_IMAGES[idKey]) return DATABASE_BRANDS_IMAGES[idKey];
@@ -97,7 +67,6 @@ function getDatabaseBrandImages(brandId, brandName) {
 
   if (DATABASE_BRANDS_IMAGES[nameKey]) return DATABASE_BRANDS_IMAGES[nameKey];
 
-  // Tìm tương đối theo chuỗi tên
   if (nameKey.includes("phuc-long") || nameKey.includes("phuclong")) return DATABASE_BRANDS_IMAGES["phuc-long"];
   if (nameKey.includes("highland")) return DATABASE_BRANDS_IMAGES["highlands-coffee"];
   if (nameKey.includes("trung-nguyen")) return DATABASE_BRANDS_IMAGES["trung-nguyen"];
@@ -153,7 +122,6 @@ function Header({ go, goBrands }) {
 
   const languages = LANGUAGES;
 
-  // Đóng dropdown khi click ra bên ngoài
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -164,7 +132,6 @@ function Header({ go, goBrands }) {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Cấu hình menu: "brands" được đánh đấu active để hiển thị nổi bật và gạch chân giống trang chủ
   const items = [
     ["home", t("nav.home"), () => go("home")],
     ["brands", t("nav.brands"), () => goBrands()],
@@ -188,7 +155,6 @@ function Header({ go, goBrands }) {
       ))}
     </nav>
     <div className="bd-tools">
-      {/* Custom Dropdown Ngôn Ngữ */}
       <div className="bd-lang-dropdown" ref={dropdownRef}>
         <button 
           className="bd-lang-btn" 
@@ -202,7 +168,6 @@ function Header({ go, goBrands }) {
           </span>
         </button>
         
-        {/* [PHẦN CHÈN THÊM - ĐỂ MÌNH CHÈN]: Menu chọn ngôn ngữ */}
         {isOpen && (
           <div className="bd-lang-menu">
             {languages.map((item) => (
@@ -375,6 +340,8 @@ export default function BrandDetailPage({ brandId, brand, onBack, onNavigate, on
   
   const dbBrandImgs = getDatabaseBrandImages(item.id, item.name);
   const resolvedCover = item.cover || dbBrandImgs?.cover;
+  
+  const resolvedMenuImages = item.menuImages?.length ? [item.menuImages[0]] : (dbBrandImgs?.menu || [null]);
 
   const localized = translation?.languageCode === languageCode ? translation : null;
   const currentDescription = localized?.description ?? item.description;
@@ -385,7 +352,7 @@ export default function BrandDetailPage({ brandId, brand, onBack, onNavigate, on
   const displayType = localizedCategory(type, languageCode);
   const branches = Array.isArray(item.branches) ? item.branches : [];
   const count = item.branchCount ?? (typeof item.branches === 'number' ? item.branches : branches.length);
-  const images = item.menuImages?.length ? item.menuImages : [null, null, null];
+  const images = resolvedMenuImages;
   const [view, setView] = useState(null);
   const go = key => onNavigate && onNavigate(key);
   const goBrands = () => (onBack ? onBack() : go("brands"));
@@ -436,16 +403,16 @@ export default function BrandDetailPage({ brandId, brand, onBack, onNavigate, on
           <p className="bd-desc">{currentDescription || (loadError ? dt("noSampleDescription") : dt("loadingBrand"))}</p>
 
           <section className="bd-card">
-            <div className="bd-card-h"><h2>{dt("menu")}</h2><button onClick={() => setView(0)}>{dt("viewAll")} <Icon n="arrow" size={12} /></button></div>
-            <div className="bd-gal">
-              <button className="bd-big" onClick={() => setView(0)} aria-label={dt("zoomMenu", { number: 1 })}><Tile src={images[0]} i={0} alt={dt("menuImage", { number: 1 })} /></button>
-              <div className="bd-side">
-                <div className="bd-pair">
-                  {[1, 2].map(i => <button key={i} onClick={() => setView(i)} aria-label={dt("zoomMenu", { number: i + 1 })}><Tile src={images[i]} i={i} alt={dt("menuImage", { number: i + 1 })} /></button>)}
-                </div>
-                <div className="bd-cap"><span>{item.menuCaption || "Menu 2024"}</span><button onClick={() => setView(0)} aria-label={dt("zoom")}><Icon n="search" size={16} /></button></div>
-              </div>
+            {/* Đã xóa nút xem tất cả / mũi tên ở tiêu đề */}
+            <div className="bd-card-h"><h2>{dt("menu")}</h2></div>
+            
+            {/* Khung hiển thị ảnh menu đơn, click vào để phóng to */}
+            <div className="bd-gal-single">
+              <button className="bd-single-img-btn" onClick={() => setView(0)} aria-label={dt("zoomMenu", { number: 1 })}>
+                <Tile src={images[0]} i={0} alt={dt("menuImage", { number: 1 })} />
+              </button>
             </div>
+
           </section>
         </div>
 
@@ -473,10 +440,6 @@ export default function BrandDetailPage({ brandId, brand, onBack, onNavigate, on
     {view !== null && <div className="bd-lb" role="dialog" aria-modal="true" aria-label={dt("menu")} onClick={() => setView(null)}>
       <div className="bd-lb-in" onClick={e => e.stopPropagation()}><Tile src={images[view]} i={view} alt={dt("menuImage", { number: view + 1 })} /></div>
       <button className="bd-lb-x" onClick={() => setView(null)} aria-label={dt("close")}><Icon n="close" /></button>
-      {images.length > 1 && <>
-        <button className="bd-lb-n l" onClick={e => { e.stopPropagation(); setView((view - 1 + images.length) % images.length); }} aria-label={dt("previous")}><Icon n="left" /></button>
-        <button className="bd-lb-n r" onClick={e => { e.stopPropagation(); setView((view + 1 + images.length) % images.length); }} aria-label={dt("next")}><Icon n="right" /></button>
-      </>}
     </div>}
   </div>;
 }
@@ -495,12 +458,10 @@ const css = `
 .bd-nav{display:flex;flex:1;gap:26px}
 .bd-nav button{padding:21px 0 17px;border:0;border-bottom:2px solid transparent;background:none;color:rgba(255,255,255,.82);font-size:13px;cursor:pointer}
 .bd-nav button:hover{color:#fff}
-/* Đồng bộ kiểu gạch chân và làm nổi bật chữ khi đang ở trang đó (giống trang chủ) */
 .bd-nav button[aria-current=page]{color:#fff;font-weight:600;border-color:#E9A24B}
 
 .bd-tools{display:flex;align-items:center;gap:14px}
 
-/* Custom Dropdown Ngôn Ngữ */
 .bd-lang-dropdown{position:relative}
 .bd-lang-btn{display:flex;align-items:center;gap:6px;padding:6px 10px;border:1px solid rgba(255,255,255,0.2);border-radius:8px;background:rgba(255,255,255,0.08);color:#fff;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.2s ease}
 .bd-lang-btn:hover{background:rgba(255,255,255,0.15);border-color:rgba(255,255,255,0.4)}
@@ -543,17 +504,12 @@ const css = `
 .bd-card h2{margin:0 0 16px;font-size:15px;font-weight:700}
 .bd-card-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
 .bd-card-h h2{margin:0;font-size:13.5px}
-.bd-card-h button{display:flex;align-items:center;gap:4px;padding:0;border:0;background:none;color:var(--accent);font-size:12px;cursor:pointer}
-.bd-gal{display:grid;grid-template-columns:1.05fr 1fr;gap:12px}
-.bd-gal button{padding:0;border:0;background:none;cursor:zoom-in}
-.bd-gal img,.bd-tile{display:block;width:100%;height:100%;object-fit:cover}
-.bd-tile{display:grid;place-items:center;color:rgba(75,40,23,.55)}
-.bd-big{aspect-ratio:1/1.04;overflow:hidden;border-radius:10px}
-.bd-side{display:flex;flex-direction:column;padding:8px;border:1px solid var(--line);border-radius:10px}
-.bd-pair{display:grid;flex:1;grid-template-columns:1fr 1fr;gap:8px}
-.bd-pair button{min-height:120px;overflow:hidden;border-radius:8px}
-.bd-cap{display:flex;align-items:center;justify-content:space-between;padding-top:10px;font-size:12.5px}
-.bd-gal .bd-cap button{display:grid;place-items:center;width:30px;height:30px;border-radius:8px;background:var(--brown-3);color:#fff;cursor:pointer}
+
+/* CSS tinh chỉnh phần ảnh menu khớp khung trắng và phóng lớn */
+.bd-gal-single{display:flex;flex-direction:column;padding:8px;border:1px solid var(--line);border-radius:10px;background:#fff}
+.bd-single-img-btn{padding:0;border:0;background:none;cursor:zoom-in;width:100%;height:460px;overflow:hidden;border-radius:8px;display:block}
+.bd-single-img-btn img{display:block;width:100%;height:100%;object-fit:contain;background:#faf7f3;border-radius:6px}
+.bd-tile{display:grid;place-items:center;color:rgba(75,40,23,.55);width:100%;height:100%}
 
 .bd-right{display:flex;flex-direction:column;gap:18px}
 .bd-info,.bd-br{margin:0;padding:0;list-style:none}
@@ -571,12 +527,11 @@ const css = `
 .bd-branch-map-link:hover{background:var(--brown)}
 .bd-muted{margin:0;color:var(--muted);font-size:13px}
 
-.bd-lb{position:fixed;inset:0;z-index:50;display:grid;place-items:center;padding:24px;background:rgba(30,14,6,.82)}
-.bd-lb-in{width:min(560px,92vw);aspect-ratio:1;overflow:hidden;border-radius:12px;background:#fff}
+.bd-lb{position:fixed;inset:0;z-index:50;display:grid;place-items:center;padding:24px;background:rgba(30,14,6,.88)}
+.bd-lb-in{width:min(750px,92vw);max-height:85vh;overflow:hidden;border-radius:12px;background:#fff;display:flex;align-items:center;justify-content:center;padding:12px}
+.bd-lb-in img{max-width:100%;max-height:80vh;object-fit:contain;border-radius:6px}
 .bd-lb button{position:absolute;display:grid;place-items:center;width:40px;height:40px;border:0;border-radius:50%;background:rgba(255,255,255,.92);color:var(--brown);cursor:pointer}
 .bd-lb-x{top:18px;right:18px}
-.bd-lb-n{top:50%;transform:translateY(-50%)}
-.bd-lb-n.l{left:18px}.bd-lb-n.r{right:18px}
 
 @media (max-width:900px){
   .bd-cols{grid-template-columns:1fr}
@@ -589,5 +544,4 @@ const css = `
   .bd-tools{margin-left:auto}
   .bd-audio{flex-wrap:wrap}
   .bd-track{flex-basis:calc(100% - 70px)}
-  .bd-gal{grid-template-columns:1fr}
 }`;
