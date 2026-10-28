@@ -304,7 +304,7 @@ export default function StoreMap() {
                 </button>
                 {Number.isFinite(item.lat) && Number.isFinite(item.lng) && (
                   <a className="store-map__directions" href={googleDirectionsUrl(item, userPosition)} target="_blank" rel="noopener noreferrer">
-                    Chỉ đường
+                    {t("map.directions")}
                   </a>
                 )}
               </div>
@@ -337,7 +337,7 @@ export default function StoreMap() {
                 {item.phone && <><br />{item.phone}</>}
                 <br />
                 <a className="store-map__directions" href={googleDirectionsUrl(item, userPosition)} target="_blank" rel="noopener noreferrer">
-                  Chỉ đường trên Google Maps
+                  {t("map.directionsGoogle")}
                 </a>
               </Popup>
             </Marker>

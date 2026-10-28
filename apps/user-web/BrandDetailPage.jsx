@@ -213,7 +213,7 @@ function Logo({ item, size }) {
   </span>;
 }
 
-function AudioCard({ audio, brandId, languageCode }) {
+function AudioCard({ audio, brandId, languageCode, preferredLanguage }) {
   const ref = useRef(null);
   const [playing, setPlaying] = useState(false);
   const [loop, setLoop] = useState(false);
@@ -221,7 +221,10 @@ function AudioCard({ audio, brandId, languageCode }) {
   
   const sources = audio && typeof audio === "object" ? Object.entries(audio) : [];
   const [selected, setSelected] = useState('');
-  const sourceKey = sources.some(([code]) => code === selected) ? selected : sources[0]?.[0];
+  useEffect(() => setSelected(''), [preferredLanguage]);
+  const sourceKey = sources.some(([code]) => code === selected)
+    ? selected
+    : sources.find(([code]) => code.toLowerCase().split("-")[0] === preferredLanguage)?.[0] || sources[0]?.[0];
   const src = sources.length ? audio[sourceKey] : typeof audio === "string" ? audio : '';
   const code = sourceKey || languageCode;
   const counted = useRef(false);
@@ -277,7 +280,7 @@ const Tile = ({ src, i, alt }) => src
 export default function BrandDetailPage({ brandId, brand, onBack, onNavigate, onOpenBranch }) {
   const [loaded, setLoaded] = useState(null);
   const [loadError, setLoadError] = useState('');
-  const { languageCode } = useLanguage();
+  const { languageCode, t } = useLanguage();
   const dt = (key, values) => detailText(languageCode, key, values);
   const [translation, setTranslation] = useState(null);
   const [translationStatus, setTranslationStatus] = useState({ languageCode: "", status: "idle" });
@@ -395,7 +398,7 @@ export default function BrandDetailPage({ brandId, brand, onBack, onNavigate, on
           <p className="bd-where"><Icon n="pin" size={15} /> {dt("branchesAt", { count })}</p>
 
           {item.audio && (typeof item.audio === 'string' || Object.values(item.audio).some(Boolean))
-            ? <AudioCard key={item.id} audio={item.audio} brandId={Number(item.id)} languageCode={item.audioLanguageCode || item.descriptionLanguageCode} />
+            ? <AudioCard key={item.id} audio={item.audio} brandId={Number(item.id)} languageCode={item.audioLanguageCode || item.descriptionLanguageCode} preferredLanguage={languageCode} />
             : <DescriptionSpeech key={item.id} brandId={Number(item.id)} description={currentDescription} languageCode={descriptionLanguage} />}
 
           {isTranslating && <p className="bd-translation-status" role="status">{dt("translating")}</p>}
@@ -425,8 +428,8 @@ export default function BrandDetailPage({ brandId, brand, onBack, onNavigate, on
               {branches.map((b, i) => <li key={b.id || b.name || i}>
                 <Logo item={item} size={36} />
                 <div><strong>{b.name}</strong><span>{b.address || dt("noAddress")}</span></div>
-                <a className="bd-branch-map-link" href={branchMapsUrl(b)} target="_blank" rel="noopener noreferrer" aria-label={`Google Maps: ${b.name}`}>
-                  Google Maps
+                <a className="bd-branch-map-link" href={branchMapsUrl(b)} target="_blank" rel="noopener noreferrer" aria-label={`${t("map.directionsGoogle")}: ${b.name}`}>
+                  {t("map.directionsGoogle")}
                 </a>
               </li>)}
             </ul> : <p className="bd-muted">{dt("noFeatured")}</p>}
