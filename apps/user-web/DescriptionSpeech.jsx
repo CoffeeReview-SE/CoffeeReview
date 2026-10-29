@@ -4,8 +4,9 @@ import { useLanguage } from './LanguageContext.jsx';
 import { detailText } from './brandDetailTranslations.js';
 import { getUserApi } from './api.js';
 import { getSpeechVoice, speechLanguageTag } from './speechVoice.js';
+import { getOfflineBrandTranslation } from './offlineBrandTranslations.js';
 
-export default function DescriptionSpeech({ brandId, description, sourceLanguageCode }) {
+export default function DescriptionSpeech({ brandId, brandName, description, sourceLanguageCode }) {
   const { languageCode: uiLanguage } = useLanguage();
   const dt = (key, values) => detailText(uiLanguage, key, values);
   const voiceTargetLanguage = uiLanguage || 'vi';
@@ -40,7 +41,11 @@ export default function DescriptionSpeech({ brandId, description, sourceLanguage
     let speechText = description;
     let voiceLanguage = sourceDescriptionLanguage;
     if (voiceLanguage !== voiceTargetLanguage) {
-      try {
+      const offlineTranslation = getOfflineBrandTranslation(brandName, voiceTargetLanguage);
+      if (offlineTranslation) {
+        speechText = offlineTranslation;
+        voiceLanguage = voiceTargetLanguage;
+      } else try {
         const translated = await getUserApi(`/api/localization/brands/${brandId}/translations/${voiceTargetLanguage}`, { method: 'POST' });
         if (translated.description) {
           speechText = translated.description;

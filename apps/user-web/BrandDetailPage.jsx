@@ -4,6 +4,7 @@ import DescriptionSpeech from "./DescriptionSpeech.jsx";
 import { LANGUAGES, useLanguage } from "./LanguageContext.jsx";
 import { detailText, localizedCategory } from "./brandDetailTranslations.js";
 import { brandDescriptionLanguage } from "./api.js";
+import { getOfflineBrandTranslation } from "./offlineBrandTranslations.js";
 
 // 1. Ảnh Không gian (image coffee shop/)
 import coverHighlands from "../../public/image/High land coffee.jpg";
@@ -281,6 +282,7 @@ export default function BrandDetailPage({ brandId, brand, onBack, onNavigate, on
   const dt = (key, values) => detailText(languageCode, key, values);
   const [translation, setTranslation] = useState(null);
   const [translationStatus, setTranslationStatus] = useState({ languageCode: "", status: "idle" });
+  const [translationError, setTranslationError] = useState("");
   const translationCache = useRef(new Map());
   useEffect(() => {
     const controller = new AbortController();
@@ -301,6 +303,14 @@ export default function BrandDetailPage({ brandId, brand, onBack, onNavigate, on
     let active = true;
     const sourceLanguage = brandDescriptionLanguage(sourceBrand);
 
+    const offlineTranslation = getOfflineBrandTranslation(sourceBrand, languageCode);
+    if (offlineTranslation) {
+      setTranslation({ languageCode, description: offlineTranslation, isTranslated: true });
+      setTranslationError("");
+      setTranslationStatus({ languageCode, status: "idle" });
+      return () => { active = false; };
+    }
+
     if (sourceLanguage === languageCode) {
       setTranslation({ languageCode, description: sourceBrand.description, isTranslated: false });
       setTranslationStatus({ languageCode, status: "idle" });
@@ -316,6 +326,7 @@ export default function BrandDetailPage({ brandId, brand, onBack, onNavigate, on
     }
 
     setTranslationStatus({ languageCode, status: "loading" });
+    setTranslationError("");
     fetch(`/api/localization/brands/${brandId}/translations/${languageCode}`, { method: "POST" })
       .then(async response => {
         const data = await response.json().catch(() => ({}));
@@ -326,11 +337,13 @@ export default function BrandDetailPage({ brandId, brand, onBack, onNavigate, on
         if (!active) return;
         translationCache.current.set(cacheKey, data.description);
         setTranslation({ languageCode, description: data.description, isTranslated: data.isTranslated === true });
+        setTranslationError("");
         setTranslationStatus({ languageCode, status: "idle" });
       })
-      .catch(() => {
+      .catch(error => {
         if (!active) return;
         setTranslation(null);
+        setTranslationError(error?.message || "Translation request failed.");
         setTranslationStatus({ languageCode, status: "error" });
       });
     return () => { active = false; };
@@ -396,10 +409,10 @@ export default function BrandDetailPage({ brandId, brand, onBack, onNavigate, on
 
           {item.audio && (typeof item.audio === 'string' || Object.values(item.audio).some(Boolean))
             ? <AudioCard key={item.id} audio={item.audio} brandId={Number(item.id)} languageCode={item.audioLanguageCode || item.descriptionLanguageCode} preferredLanguage={languageCode} />
-            : <DescriptionSpeech key={item.id} brandId={Number(item.id)} description={currentDescription} sourceLanguageCode={descriptionLanguage} />}
+            : <DescriptionSpeech key={item.id} brandId={Number(item.id)} brandName={item.name} description={currentDescription} sourceLanguageCode={descriptionLanguage} />}
 
           {isTranslating && <p className="bd-translation-status" role="status">{dt("translating")}</p>}
-          {translationFailed && <p className="bd-translation-status" role="status">{dt("translationFailed")}</p>}
+          {translationFailed && <p className="bd-translation-status" role="status">{dt("translationFailed")} <small>({translationError})</small></p>}
           <p className="bd-desc">{currentDescription || (loadError ? dt("noSampleDescription") : dt("loadingBrand"))}</p>
 
           <section className="bd-card">

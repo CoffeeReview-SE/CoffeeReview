@@ -3,6 +3,7 @@ import { trackAudio } from "../analytics/tracking.js";
 import { useLanguage } from "./LanguageContext.jsx";
 import { brandDescriptionLanguage, getUserApi } from "./api.js";
 import { getSpeechVoice, speechLanguageTag } from "./speechVoice.js";
+import { getOfflineBrandTranslation } from "./offlineBrandTranslations.js";
 
 let latestSpeechRequest = 0;
 
@@ -54,7 +55,11 @@ export default function BrandDescriptionAudio({ brand, className, playLabel, sto
     setLoading(true);
 
     if (sourceLanguage !== voiceTargetLanguage) {
-      try {
+      const offlineTranslation = getOfflineBrandTranslation(brand, voiceTargetLanguage);
+      if (offlineTranslation) {
+        text = offlineTranslation;
+        voiceLanguage = voiceTargetLanguage;
+      } else try {
         const translated = await getUserApi(`/api/localization/brands/${brand.id}/translations/${voiceTargetLanguage}`, { method: "POST" });
         if (request !== requestId.current || speechRequest !== latestSpeechRequest) {
           if (request === requestId.current) setLoading(false);

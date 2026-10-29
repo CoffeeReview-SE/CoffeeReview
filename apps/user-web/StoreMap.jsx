@@ -5,6 +5,7 @@ import { useLanguage } from "./LanguageContext.jsx";
 import { brandDescriptionLanguage, getUserApi } from "./api.js";
 import { trackAudio } from "../analytics/tracking.js";
 import { getSpeechVoice, speechLanguageTag } from "./speechVoice.js";
+import { getOfflineBrandTranslation } from "./offlineBrandTranslations.js";
 import "./StoreMap.css";
 
 const currentLocationIcon = divIcon({
@@ -163,7 +164,11 @@ export default function StoreMap({ fullScreen = false }) {
       let voiceLanguage = sourceLanguage;
       isPreparingNearby.current = true;
       if (sourceLanguage !== voiceTargetLanguage) {
-        try {
+        const offlineTranslation = getOfflineBrandTranslation(brand, voiceTargetLanguage);
+        if (offlineTranslation) {
+          speechText = offlineTranslation;
+          voiceLanguage = voiceTargetLanguage;
+        } else try {
           const translated = await getUserApi(`/api/localization/brands/${brand.id}/translations/${voiceTargetLanguage}`, { method: "POST" });
           if (translated.description) {
             speechText = translated.description;
