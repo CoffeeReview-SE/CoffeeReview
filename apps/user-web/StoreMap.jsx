@@ -319,10 +319,10 @@ export default function StoreMap() {
           <div className="store-map__table-wrap">
             <table className="store-map__table store-map__nearby-table">
               <caption>Chi nhánh trong bán kính 2 km · gần đến xa ({locationsByDistance.length})</caption>
-              <thead><tr><th scope="col">#</th><th scope="col">Chi nhánh</th><th scope="col">Khoảng cách</th><th scope="col">Chỉ đường</th></tr></thead>
+              <thead><tr><th scope="col">#</th><th scope="col">Chi nhánh</th><th scope="col">Khoảng cách</th></tr></thead>
               <tbody>
                 {!userPosition ? (
-                  <tr><td colSpan={4} className="store-map__table-empty">Đang chờ vị trí GPS.</td></tr>
+                  <tr><td colSpan={3} className="store-map__table-empty">Đang chờ vị trí GPS.</td></tr>
                 ) : locationsByDistance.length ? locationsByDistance.map(item => (
                   <tr key={item.id} className={item.id === nearestBranchId ? "store-map__nearest-row" : undefined}>
                     <td>{nearbyRankById.get(item.id)}</td>
@@ -330,12 +330,12 @@ export default function StoreMap() {
                       <button className="store-map__table-select" onClick={() => selectLocation(item)} type="button">{item.name}</button>
                       <small>{item.address}</small>
                       {item.id === nearestBranchId && nearbyAudioEnabled && <small className="store-map__audio-note">Tự phát audio</small>}
+                      <a className="store-map__table-directions" href={googleDirectionsUrl(item, userPosition)} target="_blank" rel="noopener noreferrer">{t("map.directions")}</a>
                     </td>
                     <td>{formatDistance(item.distanceFromUser)}</td>
-                    <td><a className="store-map__directions" href={googleDirectionsUrl(item, userPosition)} target="_blank" rel="noopener noreferrer">{t("map.directions")}</a></td>
                   </tr>
                 )) : (
-                  <tr><td colSpan={4} className="store-map__table-empty">Không có chi nhánh phù hợp trong bán kính 2 km.</td></tr>
+                  <tr><td colSpan={3} className="store-map__table-empty">Không có chi nhánh phù hợp trong bán kính 2 km.</td></tr>
                 )}
               </tbody>
             </table>
