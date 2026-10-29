@@ -59,7 +59,6 @@ export default function StoreMap() {
   const [mapCenter, setMapCenter] = useState([10.7769, 106.7009]);
   const [mapZoom, setMapZoom] = useState(12);
   const [userPosition, setUserPosition] = useState(null);
-  const userPositionRef = useRef(null);
   const [locationStatus, setLocationStatus] = useState({ key: "" });
   const [isLocating, setIsLocating] = useState(false);
   const [nearbyAudioEnabled, setNearbyAudioEnabled] = useState(false);
@@ -83,17 +82,6 @@ export default function StoreMap() {
       position: [coords.latitude, coords.longitude],
       accuracy: Number.isFinite(coords.accuracy) && coords.accuracy > 0 ? coords.accuracy : 1000,
     };
-    const current = userPositionRef.current;
-    if (current) {
-      const movement = distanceMeters(current.position[0], current.position[1], next.position[0], next.position[1]);
-      const accuracyImproved = next.accuracy < current.accuracy * 0.8;
-      const largeAccuracyDrop = next.accuracy > Math.max(current.accuracy * 2, current.accuracy + 40);
-      const jitterThreshold = Math.max(20, Math.min(current.accuracy, next.accuracy) * 0.65);
-      if ((largeAccuracyDrop && movement < current.accuracy * 3) || (movement < jitterThreshold && !accuracyImproved)) {
-        return current;
-      }
-    }
-    userPositionRef.current = next;
     setUserPosition(next);
     return next;
   };
@@ -292,6 +280,8 @@ export default function StoreMap() {
 
     setIsLocating(true);
     setLocationStatus({ key: "map.locatingStatus" });
+    setUserPosition(null);
+    autoPlayedNearestBranch.current = false;
     navigator.geolocation.getCurrentPosition(
       ({ coords }) => {
         const current = updateUserPosition(coords);
