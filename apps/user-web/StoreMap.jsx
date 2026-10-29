@@ -211,16 +211,20 @@ export default function StoreMap() {
   const filteredLocations = locations.filter((item) =>
     `${item.name} ${item.brand} ${item.address}`.toLocaleLowerCase("vi").includes(normalizedSearch),
   );
-  const locationsByDistance = userPosition
-    ? filteredLocations
+  const nearbyLocationsByDistance = userPosition
+    ? locations
       .filter(item => Number.isFinite(item.lat) && Number.isFinite(item.lng))
       .map(item => ({ ...item, distanceFromUser: distanceMeters(userPosition.position[0], userPosition.position[1], item.lat, item.lng) }))
       .filter(item => item.distanceFromUser <= PROXIMITY_RADIUS_METERS)
       .sort((a, b) => a.distanceFromUser - b.distanceFromUser)
+    : [];
+  const locationsByDistance = userPosition
+    ? nearbyLocationsByDistance.filter(item => `${item.name} ${item.brand} ${item.address}`.toLocaleLowerCase("vi").includes(normalizedSearch))
     : filteredLocations;
+  const nearbyRankById = new Map(nearbyLocationsByDistance.map((item, index) => [item.id, index + 1]));
+  const nearestBranchId = nearbyLocationsByDistance[0]?.id;
   const mappedLocations = locationsByDistance.filter(item => Number.isFinite(item.lat) && Number.isFinite(item.lng));
   const formatDistance = distance => distance < 1000 ? `${Math.round(distance)} m` : `${(distance / 1000).toFixed(1)} km`;
-
   const selectLocation = (item) => {
     if (item.lat == null || item.lng == null) return;
     setMapCenter([item.lat, item.lng]);
@@ -306,29 +310,36 @@ export default function StoreMap() {
 
       <div className="store-map__layout">
         <aside className="store-map__results" aria-label={t("map.results")}>
-          <p className="store-map__count">{t("map.count", { count: locationsByDistance.length })}</p>
-          {locationsByDistance.length ? (
-            locationsByDistance.map((item, index) => (
-              <div className="store-map__result" key={item.id}>
-                <button className="store-map__select" onClick={() => selectLocation(item)} type="button">
-                <span className="store-map__pin" aria-hidden="true">●</span>
-                <span>
-                  <strong>{item.name}</strong>
-                  <small>{item.address}</small>
-                  {userPosition && <small>{index === 0 ? (nearbyAudioEnabled ? "Gần nhất · tự phát audio" : "Gần nhất") : `Gần thứ ${index + 1} · không tự phát audio`} · {formatDistance(item.distanceFromUser)}</small>}
-                  {item.lat == null || item.lng == null ? <small>Vị trí trên bản đồ chưa được xác minh</small> : null}
-                </span>
-                </button>
-                {Number.isFinite(item.lat) && Number.isFinite(item.lng) && (
-                  <a className="store-map__directions" href={googleDirectionsUrl(item, userPosition)} target="_blank" rel="noopener noreferrer">
-                    {t("map.directions")}
-                  </a>
+          <div className="store-map__table-wrap">
+            <table className="store-map__table store-map__summary-table">
+              <caption>Tổng số chi nhánh đang có</caption>
+              <tbody><tr><th scope="row">Tất cả địa điểm</th><td>{locations.length}</td></tr></tbody>
+            </table>
+          </div>
+          <div className="store-map__table-wrap">
+            <table className="store-map__table store-map__nearby-table">
+              <caption>Chi nhánh trong bán kính 2 km · gần đến xa ({locationsByDistance.length})</caption>
+              <thead><tr><th scope="col">#</th><th scope="col">Chi nhánh</th><th scope="col">Khoảng cách</th><th scope="col">Chỉ đường</th></tr></thead>
+              <tbody>
+                {!userPosition ? (
+                  <tr><td colSpan={4} className="store-map__table-empty">Đang chờ vị trí GPS.</td></tr>
+                ) : locationsByDistance.length ? locationsByDistance.map(item => (
+                  <tr key={item.id} className={item.id === nearestBranchId ? "store-map__nearest-row" : undefined}>
+                    <td>{nearbyRankById.get(item.id)}</td>
+                    <td>
+                      <button className="store-map__table-select" onClick={() => selectLocation(item)} type="button">{item.name}</button>
+                      <small>{item.address}</small>
+                      {item.id === nearestBranchId && nearbyAudioEnabled && <small className="store-map__audio-note">Tự phát audio</small>}
+                    </td>
+                    <td>{formatDistance(item.distanceFromUser)}</td>
+                    <td><a className="store-map__directions" href={googleDirectionsUrl(item, userPosition)} target="_blank" rel="noopener noreferrer">{t("map.directions")}</a></td>
+                  </tr>
+                )) : (
+                  <tr><td colSpan={4} className="store-map__table-empty">Không có chi nhánh phù hợp trong bán kính 2 km.</td></tr>
                 )}
-              </div>
-            ))
-          ) : (
-            <p className="store-map__empty">{t("map.empty")}</p>
-          )}
+              </tbody>
+            </table>
+          </div>
         </aside>
 
         <MapContainer

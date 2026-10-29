@@ -55,7 +55,22 @@
 
 .store-map__layout { display: grid; grid-template-columns: minmax(240px, 330px) minmax(0, 1fr); gap: 18px; margin-top: 18px; }
 .store-map__results { max-height: 520px; overflow-y: auto; padding: 14px; border: 1px solid #eee5dc; border-radius: 12px; background: #fff; }
-.store-map__count { margin: 0 0 10px; color: #75675d; font-size: 12px; }
+.store-map__table-wrap { max-width: 100%; overflow-x: auto; }
+.store-map__table-wrap + .store-map__table-wrap { margin-top: 14px; }
+.store-map__table { width: 100%; border-collapse: collapse; color: #35251d; font-size: 12px; text-align: left; }
+.store-map__table caption { padding: 8px 0; color: #273b2e; font-size: 13px; font-weight: 700; text-align: left; }
+.store-map__summary-table { min-width: 0; }
+.store-map__summary-table td { color: #a15b32; font-size: 18px; font-weight: 700; text-align: right; }
+.store-map__table th,.store-map__table td { padding: 8px 6px; border-top: 1px solid #f0e9e2; vertical-align: top; }
+.store-map__table th { color: #75675d; font-size: 11px; white-space: nowrap; }
+.store-map__nearby-table { min-width: 400px; }
+.store-map__nearby-table td:first-child,.store-map__nearby-table td:nth-child(3) { white-space: nowrap; }
+.store-map__nearby-table td small { display: block; max-width: 180px; margin-top: 3px; color: #75675d; line-height: 1.4; }
+.store-map__nearest-row { background: #fffaf4; }
+.store-map__audio-note { color: #536c54 !important; font-weight: 700; }
+.store-map__table-select { padding: 0; border: 0; background: transparent; color: #273b2e; font: inherit; font-weight: 700; text-align: left; cursor: pointer; }
+.store-map__table-select:hover { color: #a15b32; }
+.store-map__table-empty { color: #75675d; }
 .store-map__result { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 4px; border-top: 1px solid #f0e9e2; }
 .store-map__select { display: flex; flex: 1; min-width: 0; gap: 10px; padding: 2px 4px; border: 0; background: transparent; color: inherit; text-align: left; cursor: pointer; }
 .store-map__select:hover strong { color: #a15b32; }
