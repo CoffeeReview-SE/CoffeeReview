@@ -62,7 +62,7 @@
 .store-map__summary-table { min-width: 0; }
 .store-map__summary-table caption { padding: 4px 0 7px; }
 .store-map__summary-table th,.store-map__summary-table td { padding: 6px 8px; }
-.store-map__summary-table th { background: #fffaf4; }
+.store-map__summary-table th { background: #fff; }
 .store-map__summary-table td { color: #a15b32; font-size: 18px; font-weight: 700; text-align: right; }
 .store-map__table th,.store-map__table td { padding: 10px 8px; border-top: 1px solid #eee5dc; vertical-align: top; }
 .store-map__table th { background: #f8f4ef; color: #75675d; font-size: 11px; font-weight: 700; white-space: nowrap; }
