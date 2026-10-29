@@ -7,6 +7,8 @@ const LANGUAGE_TAGS = {
 
 export function speechLanguageTag(languageCode) {
   const normalized = (languageCode || "vi").toLowerCase();
+  const deviceLocale = typeof navigator === "undefined" ? "" : (navigator.language || "").toLowerCase().replace(/_/g, "-");
+  if (deviceLocale && deviceLocale.split("-")[0] === normalized.split("-")[0]) return deviceLocale;
   return LANGUAGE_TAGS[normalized] || normalized;
 }
 

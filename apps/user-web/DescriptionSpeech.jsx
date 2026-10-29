@@ -2,11 +2,13 @@ import React, { useEffect, useRef, useState } from 'react';
 import { trackAudio } from '../analytics/tracking.js';
 import { useLanguage } from './LanguageContext.jsx';
 import { detailText } from './brandDetailTranslations.js';
+import { getUserApi } from './api.js';
 import { getSpeechVoice, speechLanguageTag } from './speechVoice.js';
 
 export default function DescriptionSpeech({ brandId, description, languageCode }) {
   const { languageCode: uiLanguage } = useLanguage();
   const dt = (key, values) => detailText(uiLanguage, key, values);
+  const voiceTargetLanguage = languageCode || 'vi';
   const [speaking, setSpeaking] = useState(false);
   const [loading, setLoading] = useState(false);
   const requestId = useRef(0);
@@ -34,9 +36,24 @@ export default function DescriptionSpeech({ brandId, description, languageCode }
     const request = ++requestId.current;
     setError('');
     setLoading(true);
+    let speechText = description;
+    let voiceLanguage = languageCode;
+    if (voiceLanguage !== voiceTargetLanguage) {
+      voiceLanguage = voiceTargetLanguage;
+      try {
+        const translated = await getUserApi(`/api/localization/brands/${brandId}/translations/${voiceTargetLanguage}`, { method: 'POST' });
+        if (translated.description) {
+          speechText = translated.description;
+          voiceLanguage = voiceTargetLanguage;
+        }
+      } catch {
+        // Speak the currently displayed description if device-language translation is unavailable.
+      }
+    }
+    if (request !== requestId.current) return;
     let voice;
     try {
-      voice = await getSpeechVoice(languageCode);
+      voice = await getSpeechVoice(voiceLanguage);
     } catch {
       if (request === requestId.current) {
         setLoading(false);
@@ -45,15 +62,15 @@ export default function DescriptionSpeech({ brandId, description, languageCode }
       return;
     }
     if (request !== requestId.current) return;
-    const speech = new SpeechSynthesisUtterance(description);
-    speech.lang = speechLanguageTag(languageCode);
+    const speech = new SpeechSynthesisUtterance(speechText);
+    speech.lang = speechLanguageTag(voiceLanguage);
     if (voice) speech.voice = voice;
     const eventId = crypto.randomUUID();
     let counted = false;
     speech.onstart = () => {
       if (request !== requestId.current || utterance.current !== speech || counted) return;
       counted = true; setLoading(false); setSpeaking(true);
-      trackAudio({ brandId, languageCode, eventId });
+      trackAudio({ brandId, languageCode: voiceLanguage, eventId });
     };
     speech.onend = () => { if (request === requestId.current && utterance.current === speech) { setLoading(false); setSpeaking(false); utterance.current = null; } };
     speech.onerror = event => {
@@ -71,10 +88,10 @@ export default function DescriptionSpeech({ brandId, description, languageCode }
       setError(dt('speechError'));
     }
   };
-  if (!description || !languageCode) return <p>{dt('noAudio')}</p>;
+  if (!description) return <p>{dt('noAudio')}</p>;
   return <div className="bd-audio">
     <button className="bd-play" onClick={read} disabled={!supported} aria-pressed={speaking || loading} aria-label={speaking || loading ? dt('stopReading') : dt('readDescription')}>{speaking ? '■' : loading ? '…' : '▶'}</button>
-    <span>{supported ? dt('readIn', { language: languageCode.toUpperCase() }) : dt('unsupportedSpeech')}</span>
+    <span>{supported ? dt('readIn', { language: voiceTargetLanguage.toUpperCase() }) : dt('unsupportedSpeech')}</span>
     {error && <span role="alert">{error}</span>}
   </div>;
 }

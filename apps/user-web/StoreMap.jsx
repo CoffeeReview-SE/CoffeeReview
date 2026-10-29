@@ -52,6 +52,7 @@ function ChangeView({ center, zoom }) {
 
 export default function StoreMap() {
   const { t, languageCode } = useLanguage();
+  const voiceTargetLanguage = languageCode;
   const [searchTerm, setSearchTerm] = useState("");
   const [locations, setLocations] = useState([]);
   const [brandCatalog, setBrandCatalog] = useState([]);
@@ -121,12 +122,13 @@ export default function StoreMap() {
       let speechText = brand.description.trim();
       let voiceLanguage = sourceLanguage;
       isPreparingNearby.current = true;
-      if (sourceLanguage !== languageCode) {
+      if (sourceLanguage !== voiceTargetLanguage) {
+        voiceLanguage = voiceTargetLanguage;
         try {
-          const translated = await getUserApi(`/api/localization/brands/${brand.id}/translations/${languageCode}`, { method: "POST" });
+          const translated = await getUserApi(`/api/localization/brands/${brand.id}/translations/${voiceTargetLanguage}`, { method: "POST" });
           if (translated.description) {
             speechText = translated.description;
-            voiceLanguage = languageCode;
+            voiceLanguage = voiceTargetLanguage;
           }
         } catch {
           // Keep speaking the stored description if the translation service is unavailable.
@@ -164,7 +166,7 @@ export default function StoreMap() {
         finish();
       }
     };
-  }, [languageCode]);
+  }, [voiceTargetLanguage]);
 
   useEffect(() => {
     if (!nearbyAudioEnabled) return undefined;
@@ -187,7 +189,7 @@ export default function StoreMap() {
       isSpeakingNearby.current = false;
       isPreparingNearby.current = false;
     };
-  }, [nearbyAudioEnabled, languageCode]);
+  }, [nearbyAudioEnabled]);
 
   useEffect(() => {
     if (!nearbyAudioEnabled || !userPosition || !brandCatalog.length) return;

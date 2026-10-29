@@ -7,7 +7,7 @@ import { getSpeechVoice, speechLanguageTag } from "./speechVoice.js";
 let latestSpeechRequest = 0;
 
 export default function BrandDescriptionAudio({ brand, className, playLabel, stopLabel, renderIcon }) {
-  const { languageCode } = useLanguage();
+  const { languageCode: voiceTargetLanguage } = useLanguage();
   const [speaking, setSpeaking] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -53,15 +53,16 @@ export default function BrandDescriptionAudio({ brand, className, playLabel, sto
     setError("");
     setLoading(true);
 
-    if (sourceLanguage !== languageCode) {
+    if (sourceLanguage !== voiceTargetLanguage) {
+      voiceLanguage = voiceTargetLanguage;
       try {
-        const translated = await getUserApi(`/api/localization/brands/${brand.id}/translations/${languageCode}`, { method: "POST" });
+        const translated = await getUserApi(`/api/localization/brands/${brand.id}/translations/${voiceTargetLanguage}`, { method: "POST" });
         if (request !== requestId.current || speechRequest !== latestSpeechRequest) {
           if (request === requestId.current) setLoading(false);
           return;
         }
         text = translated.description || description;
-        if (translated.description) voiceLanguage = languageCode;
+        if (translated.description) voiceLanguage = voiceTargetLanguage;
       } catch {
         // Use the stored description in its original language if translation is unavailable.
       }

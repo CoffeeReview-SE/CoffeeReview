@@ -220,11 +220,7 @@ function AudioCard({ audio, brandId, languageCode, preferredLanguage }) {
   const [t, setT] = useState({ cur: 0, dur: 0 });
   
   const sources = audio && typeof audio === "object" ? Object.entries(audio) : [];
-  const [selected, setSelected] = useState('');
-  useEffect(() => setSelected(''), [preferredLanguage]);
-  const sourceKey = sources.some(([code]) => code === selected)
-    ? selected
-    : sources.find(([code]) => code.toLowerCase().split("-")[0] === preferredLanguage)?.[0] || sources[0]?.[0];
+  const sourceKey = sources.find(([code]) => code.toLowerCase().split("-")[0] === preferredLanguage)?.[0] || sources[0]?.[0];
   const src = sources.length ? audio[sourceKey] : typeof audio === "string" ? audio : '';
   const code = sourceKey || languageCode;
   const counted = useRef(false);
@@ -266,7 +262,6 @@ function AudioCard({ audio, brandId, languageCode, preferredLanguage }) {
       <input className="bd-range" type="range" min="0" max={t.dur || 1} step="0.1" value={t.cur} disabled={!src} onChange={seek} aria-label="Tua audio" style={{ "--p": `${pct}%` }} />
     </div>
     <div className="bd-audio-r">
-      {sources.length > 1 && <select aria-label="Ngôn ngữ audio" value={sourceKey} onChange={e => setSelected(e.target.value)}>{sources.map(([language]) => <option key={language} value={language}>{language.toUpperCase()}</option>)}</select>}
       {!src && <span>Chưa có audio</span>}
       <button onClick={() => setLoop(v => !v)} aria-pressed={loop} aria-label="Lặp lại" className={loop ? "on" : ""}><Icon n="repeat" size={16} /></button>
     </div>
