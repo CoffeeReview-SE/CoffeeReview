@@ -110,32 +110,10 @@ static async Task<IResult> TranslateBrandAsync(long brandId, string languageCode
     if (string.Equals(sourceLanguage, languageCode, StringComparison.OrdinalIgnoreCase))
         return Results.Ok(new { brandId, brandName, languageCode, description = source, isTranslated = false });
 
-    // Protect only this brand's name. Replacing every brand in the text can
-    // turn ordinary descriptions into mostly opaque tokens for the translator.
-    var sourceNamesToProtect = new List<(string Term, string RestoreAs)> { (brandName, brandName) };
-    if (brandName.Contains("KOI", StringComparison.OrdinalIgnoreCase))
-    {
-        sourceNamesToProtect.Add(("KOI The", brandName));
-        sourceNamesToProtect.Add(("KOI Tea", brandName));
-    }
-    if (brandName.Contains("Starbucks", StringComparison.OrdinalIgnoreCase))
-        sourceNamesToProtect.Add(("Starbuck", brandName));
-
-    var protectedNames = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-    var sourceForTranslation = source;
-    foreach (var (term, restoreAs) in sourceNamesToProtect.OrderByDescending(value => value.Term.Length))
-    {
-        var token = $"ZXQBRAND{protectedNames.Count}QXZ";
-        var replaced = Regex.Replace(sourceForTranslation, Regex.Escape(term), token, RegexOptions.IgnoreCase);
-        if (replaced == sourceForTranslation) continue;
-        protectedNames[token] = restoreAs;
-        sourceForTranslation = replaced;
-    }
-
     string translated;
     try
     {
-        translated = await translator.TranslateAsync(sourceForTranslation, sourceLanguage ?? "auto", languageCode, ct);
+        translated = await translator.TranslateAsync(source, sourceLanguage ?? "auto", languageCode, ct);
     }
     catch (HttpRequestException ex)
     {
@@ -156,8 +134,10 @@ static async Task<IResult> TranslateBrandAsync(long brandId, string languageCode
     if (string.IsNullOrWhiteSpace(translated))
         return Results.Problem("The translation endpoint returned empty text.", statusCode: StatusCodes.Status502BadGateway);
 
-    foreach (var (token, name) in protectedNames)
-        translated = Regex.Replace(translated, Regex.Escape(token), _ => name, RegexOptions.IgnoreCase);
+    if (brandName.Contains("KOI", StringComparison.OrdinalIgnoreCase))
+        translated = Regex.Replace(translated, @"\bKOI\s+\w+\b", _ => brandName, RegexOptions.IgnoreCase);
+    if (brandName.Contains("Starbucks", StringComparison.OrdinalIgnoreCase))
+        translated = Regex.Replace(translated, @"\bStarbucks?\b", _ => brandName, RegexOptions.IgnoreCase);
 
     return Results.Ok(new { brandId, brandName, languageCode, description = translated, isTranslated = true });
 }
