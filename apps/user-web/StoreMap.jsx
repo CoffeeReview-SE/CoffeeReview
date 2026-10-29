@@ -3,6 +3,7 @@ import { divIcon } from "leaflet";
 import { MapContainer, Marker, Popup, TileLayer, Tooltip, useMap } from "react-leaflet";
 import { useLanguage } from "./LanguageContext.jsx";
 import { getUserApi } from "./api.js";
+import { trackAudio } from "../analytics/tracking.js";
 import "./StoreMap.css";
 
 const currentLocationIcon = divIcon({
@@ -36,6 +37,29 @@ function distanceMeters(aLat, aLng, bLat, bLng) {
   const dLng = radians(bLng - aLng);
   const a = Math.sin(dLat / 2) ** 2 + Math.cos(radians(aLat)) * Math.cos(radians(bLat)) * Math.sin(dLng / 2) ** 2;
   return 6371000 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+// Order stops by repeatedly choosing the closest unvisited branch. Distances
+// are straight-line estimates; the voice queue does not request road routes.
+function orderByShortestVisit(userPosition, stops) {
+  const remaining = [...stops];
+  const ordered = [];
+  let position = userPosition;
+  while (remaining.length) {
+    let nearestIndex = 0;
+    let nearestDistance = Infinity;
+    remaining.forEach((stop, index) => {
+      const distance = distanceMeters(position[0], position[1], stop.branch.lat, stop.branch.lng);
+      if (distance < nearestDistance) {
+        nearestDistance = distance;
+        nearestIndex = index;
+      }
+    });
+    const [next] = remaining.splice(nearestIndex, 1);
+    ordered.push(next);
+    position = [next.branch.lat, next.branch.lng];
+  }
+  return ordered;
 }
 
 function ChangeView({ center, zoom }) {
@@ -170,14 +194,14 @@ export default function StoreMap() {
       const distance = distanceMeters(userPosition.position[0], userPosition.position[1], branch.lat, branch.lng);
       if (distance > PROXIMITY_RADIUS_METERS) continue;
       const current = nearestByBrand.get(branch.brandId);
-      if (!current || distance < current.distance) nearestByBrand.set(branch.brandId, { distance });
+      if (!current || distance < current.distance) nearestByBrand.set(branch.brandId, { distance, branch });
     }
     const brandsById = new Map(brandCatalog.map(brand => [brand.id, brand]));
     const nearby = [...nearestByBrand.entries()]
-      .map(([id, info]) => ({ brand: brandsById.get(id), distance: info.distance }))
-      .filter(item => item.brand?.description?.trim())
-      .sort((a, b) => a.distance - b.distance);
-    const newlyNearby = nearby.map(item => item.brand).filter(brand => !playedNearbyBrands.current.has(brand.id));
+      .map(([id, info]) => ({ brand: brandsById.get(id), distance: info.distance, branch: info.branch }))
+      .filter(item => item.brand?.description?.trim());
+    const visitOrder = orderByShortestVisit(userPosition.position, nearby);
+    const newlyNearby = visitOrder.map(item => item.brand).filter(brand => !playedNearbyBrands.current.has(brand.id));
     if (!newlyNearby.length) {
       if (!nearby.length) setNearbyAudioStatus(proximityText.none);
       return;
