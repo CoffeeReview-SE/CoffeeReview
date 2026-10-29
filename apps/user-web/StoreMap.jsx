@@ -313,9 +313,12 @@ export default function StoreMap() {
         value={searchTerm}
         onChange={(event) => setSearchTerm(event.target.value)}
       />
-      <button className="store-map__locate" type="button" onClick={locateAndEnableNearbyAudio} disabled={isLocating} aria-label={t("map.locate")}>
-        {isLocating ? t("map.locating") : t("map.locate")}
-      </button>
+      <div className="store-map__action-row">
+        <button className="store-map__locate" type="button" onClick={locateAndEnableNearbyAudio} disabled={isLocating} aria-label={t("map.locate")}>
+          {isLocating ? t("map.locating") : t("map.locate")}
+        </button>
+        {nearbyAudioEnabled && <button className="store-map__nearby-audio" type="button" onClick={toggleNearbyAudio} aria-pressed="true">{proximityText.disable}</button>}
+      </div>
       <form className="store-map__radius-form" onSubmit={applyRadius}>
         <label htmlFor="store-map-radius">{t("map.radiusLabel")}</label>
         <input
@@ -330,7 +333,6 @@ export default function StoreMap() {
         <button type="submit">{t("map.applyRadius")}</button>
       </form>
       {radiusStatus && <p id="store-map-radius-status" className="store-map__radius-status" role="status" aria-live="polite">{t(radiusStatus.key, radiusStatus.values)}</p>}
-      {nearbyAudioEnabled && <button className="store-map__nearby-audio" type="button" onClick={toggleNearbyAudio} aria-pressed="true">{proximityText.disable}</button>}
       {nearbyAudioStatus && <p className="store-map__nearby-status" role="status" aria-live="polite">{nearbyAudioStatus}</p>}
       {locationStatus.key && <p className="store-map__location-status" role="status" aria-live="polite">
         {t(locationStatus.key, locationStatus.values)}
