@@ -63,7 +63,7 @@ export default function StoreMap() {
   const [nearbyAudioEnabled, setNearbyAudioEnabled] = useState(false);
   const [nearbyAudioStatus, setNearbyAudioStatus] = useState("");
   const requestedLocation = useRef(false);
-  const playedNearbyBrands = useRef(new Set());
+  const autoPlayedNearestBranch = useRef(false);
   const nearbyAudioQueue = useRef([]);
   const isSpeakingNearby = useRef(false);
   const isPreparingNearby = useRef(false);
@@ -166,7 +166,7 @@ export default function StoreMap() {
       navigator.geolocation.clearWatch(watchId);
       window.speechSynthesis.cancel();
       nearbyAudioQueue.current = [];
-      playedNearbyBrands.current.clear();
+      autoPlayedNearestBranch.current = false;
       isSpeakingNearby.current = false;
       isPreparingNearby.current = false;
     };
@@ -174,27 +174,25 @@ export default function StoreMap() {
 
   useEffect(() => {
     if (!nearbyAudioEnabled || !userPosition || !brandCatalog.length) return;
-    const nearestByBrand = new Map();
-    for (const branch of locations) {
-      if (!Number.isFinite(branch.lat) || !Number.isFinite(branch.lng)) continue;
-      const distance = distanceMeters(userPosition.position[0], userPosition.position[1], branch.lat, branch.lng);
-      if (distance > PROXIMITY_RADIUS_METERS) continue;
-      const current = nearestByBrand.get(branch.brandId);
-      if (!current || distance < current.distance) nearestByBrand.set(branch.brandId, { distance, branch });
-    }
-    const brandsById = new Map(brandCatalog.map(brand => [brand.id, brand]));
-    const nearby = [...nearestByBrand.entries()]
-      .map(([id, info]) => ({ brand: brandsById.get(id), distance: info.distance, branch: info.branch }))
-      .filter(item => item.brand?.description?.trim());
-    const nearestFirst = nearby.sort((a, b) => a.distance - b.distance);
-    const newlyNearby = nearestFirst.map(item => item.brand).filter(brand => !playedNearbyBrands.current.has(brand.id));
-    if (!newlyNearby.length) {
-      if (!nearby.length) setNearbyAudioStatus(proximityText.none);
+    if (autoPlayedNearestBranch.current) return;
+    const nearest = locations
+      .filter(branch => Number.isFinite(branch.lat) && Number.isFinite(branch.lng))
+      .map(branch => ({ branch, distance: distanceMeters(userPosition.position[0], userPosition.position[1], branch.lat, branch.lng) }))
+      .filter(item => item.distance <= PROXIMITY_RADIUS_METERS)
+      .sort((a, b) => a.distance - b.distance)[0];
+    if (!nearest) {
+      setNearbyAudioStatus(proximityText.none);
       return;
     }
-    newlyNearby.forEach(brand => playedNearbyBrands.current.add(brand.id));
-    nearbyAudioQueue.current.push(...newlyNearby);
-    setNearbyAudioStatus(proximityText.found(newlyNearby.map(brand => brand.name)));
+    const brandsById = new Map(brandCatalog.map(brand => [brand.id, brand]));
+    const brand = brandsById.get(nearest.branch.brandId);
+    if (!brand?.description?.trim()) {
+      setNearbyAudioStatus(proximityText.none);
+      return;
+    }
+    autoPlayedNearestBranch.current = true;
+    nearbyAudioQueue.current = [brand];
+    setNearbyAudioStatus(proximityText.found([nearest.branch.name || brand.name]));
     speakNextNearby.current?.();
   }, [nearbyAudioEnabled, userPosition, locations, brandCatalog, languageCode]);
 
@@ -213,7 +211,15 @@ export default function StoreMap() {
   const filteredLocations = locations.filter((item) =>
     `${item.name} ${item.brand} ${item.address}`.toLocaleLowerCase("vi").includes(normalizedSearch),
   );
-  const mappedLocations = filteredLocations.filter(item => Number.isFinite(item.lat) && Number.isFinite(item.lng));
+  const locationsByDistance = userPosition
+    ? filteredLocations
+      .filter(item => Number.isFinite(item.lat) && Number.isFinite(item.lng))
+      .map(item => ({ ...item, distanceFromUser: distanceMeters(userPosition.position[0], userPosition.position[1], item.lat, item.lng) }))
+      .filter(item => item.distanceFromUser <= PROXIMITY_RADIUS_METERS)
+      .sort((a, b) => a.distanceFromUser - b.distanceFromUser)
+    : filteredLocations;
+  const mappedLocations = locationsByDistance.filter(item => Number.isFinite(item.lat) && Number.isFinite(item.lng));
+  const formatDistance = distance => distance < 1000 ? `${Math.round(distance)} m` : `${(distance / 1000).toFixed(1)} km`;
 
   const selectLocation = (item) => {
     if (item.lat == null || item.lng == null) return;
@@ -300,15 +306,16 @@ export default function StoreMap() {
 
       <div className="store-map__layout">
         <aside className="store-map__results" aria-label={t("map.results")}>
-          <p className="store-map__count">{t("map.count", { count: filteredLocations.length })}</p>
-          {filteredLocations.length ? (
-            filteredLocations.map((item) => (
+          <p className="store-map__count">{t("map.count", { count: locationsByDistance.length })}</p>
+          {locationsByDistance.length ? (
+            locationsByDistance.map((item, index) => (
               <div className="store-map__result" key={item.id}>
                 <button className="store-map__select" onClick={() => selectLocation(item)} type="button">
                 <span className="store-map__pin" aria-hidden="true">●</span>
                 <span>
                   <strong>{item.name}</strong>
                   <small>{item.address}</small>
+                  {userPosition && <small>{index === 0 ? (nearbyAudioEnabled ? "Gần nhất · tự phát audio" : "Gần nhất") : `Gần thứ ${index + 1} · không tự phát audio`} · {formatDistance(item.distanceFromUser)}</small>}
                   {item.lat == null || item.lng == null ? <small>Vị trí trên bản đồ chưa được xác minh</small> : null}
                 </span>
                 </button>
