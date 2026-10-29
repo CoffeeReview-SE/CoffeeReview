@@ -69,6 +69,7 @@ export default function StoreMap() {
   const [radiusErrorOpen, setRadiusErrorOpen] = useState(false);
   const proximityRadiusMeters = proximityRadiusKm * 1000;
   const autoPlayedNearestBranch = useRef(false);
+  const gpsAcquisition = useRef({ active: false, best: null, timer: null });
   const nearbyAudioQueue = useRef([]);
   const isSpeakingNearby = useRef(false);
   const isPreparingNearby = useRef(false);
@@ -77,14 +78,40 @@ export default function StoreMap() {
   const proximityAudioGeneration = useRef(0);
   proximityAudioActive.current = nearbyAudioEnabled;
 
+  const finishGpsAcquisition = () => {
+    const acquisition = gpsAcquisition.current;
+    if (!acquisition.active) return;
+    acquisition.active = false;
+    if (acquisition.timer) window.clearTimeout(acquisition.timer);
+    acquisition.timer = null;
+    const best = acquisition.best;
+    if (!best) return;
+    setUserPosition(best);
+    setMapCenter(best.position);
+    setMapZoom(16);
+    setLocationStatus({ key: "map.located", values: { accuracy: Math.round(best.accuracy) } });
+    setIsLocating(false);
+  };
+
   const updateUserPosition = coords => {
     const next = {
       position: [coords.latitude, coords.longitude],
       accuracy: Number.isFinite(coords.accuracy) && coords.accuracy > 0 ? coords.accuracy : 1000,
     };
+    const acquisition = gpsAcquisition.current;
+    if (acquisition.active) {
+      if (!acquisition.best || next.accuracy < acquisition.best.accuracy) acquisition.best = next;
+      setLocationStatus({ key: "map.waitingForBetterFix", values: { accuracy: Math.round(acquisition.best.accuracy) } });
+      if (!acquisition.timer) acquisition.timer = window.setTimeout(finishGpsAcquisition, 5000);
+      return acquisition.best;
+    }
     setUserPosition(next);
     return next;
   };
+
+  useEffect(() => () => {
+    if (gpsAcquisition.current.timer) window.clearTimeout(gpsAcquisition.current.timer);
+  }, []);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -281,16 +308,14 @@ export default function StoreMap() {
     setIsLocating(true);
     setLocationStatus({ key: "map.locatingStatus" });
     setUserPosition(null);
+    if (gpsAcquisition.current.timer) window.clearTimeout(gpsAcquisition.current.timer);
+    gpsAcquisition.current = { active: true, best: null, timer: null };
     autoPlayedNearestBranch.current = false;
     navigator.geolocation.getCurrentPosition(
-      ({ coords }) => {
-        const current = updateUserPosition(coords);
-        setMapCenter(current.position);
-        setMapZoom(16);
-        setLocationStatus({ key: "map.located", values: { accuracy: Math.round(current.accuracy) } });
-        setIsLocating(false);
-      },
+      ({ coords }) => updateUserPosition(coords),
       (error) => {
+        if (gpsAcquisition.current.best) return;
+        gpsAcquisition.current.active = false;
         const key = error.code === error.PERMISSION_DENIED
           ? "map.denied"
           : error.code === error.POSITION_UNAVAILABLE

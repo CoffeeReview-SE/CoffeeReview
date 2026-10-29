@@ -158,7 +158,15 @@ export function useLanguage() {
   if (!context) throw new Error("useLanguage must be used inside LanguageProvider");
   const dictionary = messages[context.languageCode] || messages.vi;
   const t = (key, values = {}) => {
-    let value = dictionary[key] ?? messages.vi[key] ?? key;
+    const gpsWaitingMessages = {
+      vi: "\u0110\u00e3 c\u00f3 v\u1ecb tr\u00ed (sai s\u1ed1 kho\u1ea3ng {accuracy} m). \u0110ang ch\u1edd th\u00eam 5 gi\u00e2y \u0111\u1ec3 c\u1ea3i thi\u1ec7n n\u1ebfu c\u00f3.",
+      en: "Location found (accuracy about {accuracy} m). Waiting 5 seconds for a better fix if available.",
+      ja: "\u4f4d\u7f6e\u3092\u53d6\u5f97\u3057\u307e\u3057\u305f\uff08\u7cbe\u5ea6\u7d04 {accuracy} m\uff09\u3002\u7cbe\u5ea6\u5411\u4e0a\u306e\u305f\u3081 5 \u79d2\u9593\u5f85\u6a5f\u3057\u307e\u3059\u3002",
+      zh: "\u5df2\u83b7\u53d6\u4f4d\u7f6e\uff08\u7cbe\u5ea6\u7ea6 {accuracy} \u7c73\uff09\u3002\u6b63\u5728\u7b49\u5f855\u79d2\u4ee5\u5c1d\u8bd5\u63d0\u9ad8\u7cbe\u5ea6\u3002",
+    };
+    let value = key === "map.waitingForBetterFix"
+      ? gpsWaitingMessages[context.languageCode] || gpsWaitingMessages.en
+      : dictionary[key] ?? messages.vi[key] ?? key;
     for (const [name, replacement] of Object.entries(values)) value = value.replaceAll(`{${name}}`, String(replacement));
     return value;
   };
