@@ -52,6 +52,12 @@
 .store-map__radius-form input { width: 78px; padding: 10px 8px; border: 1px solid #ded4c9; border-radius: 8px; font: inherit; }
 .store-map__radius-form button { padding: 10px 12px; border: 1px solid #d8c8b7; border-radius: 8px; background: #fffaf4; color: #694126; font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; }
 .store-map__radius-status { min-height: 0; margin: 4px 0 0; color: #536c54; font-size: 12px; }
+.store-map__modal-backdrop { position: fixed; z-index: 3000; inset: 0; display: grid; place-items: center; padding: 20px; background: #1f1712a6; }
+.store-map__modal { width: min(100%, 420px); padding: 26px; border: 1px solid #eee5dc; border-radius: 14px; background: #fff; box-shadow: 0 18px 55px #1f171255; text-align: center; }
+.store-map__modal h2 { margin: 0; color: #273b2e; font-size: 20px; }
+.store-map__modal p { margin: 12px 0 20px; color: #59483b; line-height: 1.5; }
+.store-map__modal button { min-width: 100px; padding: 10px 18px; border: 0; border-radius: 8px; background: #6b3d25; color: #fff; font: inherit; font-weight: 700; cursor: pointer; }
+.store-map__modal button:hover { background: #4f2b1a; }
 .store-map__nearby-audio { margin-left: 8px; padding: 11px 15px; border: 1px solid #536c54; border-radius: 9px; background: #fff; color: #354a36; font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; transition: background .18s, color .18s, box-shadow .18s; }
 .store-map__nearby-audio:hover { box-shadow: 0 3px 10px #273b2e20; }
 .store-map__nearby-audio[aria-pressed="true"] { background: #354a36; color: #fff; }

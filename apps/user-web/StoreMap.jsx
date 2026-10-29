@@ -66,6 +66,7 @@ export default function StoreMap() {
   const [radiusInput, setRadiusInput] = useState(String(DEFAULT_PROXIMITY_RADIUS_KM));
   const [proximityRadiusKm, setProximityRadiusKm] = useState(DEFAULT_PROXIMITY_RADIUS_KM);
   const [radiusStatus, setRadiusStatus] = useState(null);
+  const [radiusErrorOpen, setRadiusErrorOpen] = useState(false);
   const proximityRadiusMeters = proximityRadiusKm * 1000;
   const autoPlayedNearestBranch = useRef(false);
   const nearbyAudioQueue = useRef([]);
@@ -103,11 +104,13 @@ export default function StoreMap() {
     if (!Number.isFinite(requestedRadius) || requestedRadius <= 0) {
       setRadiusInput(String(DEFAULT_PROXIMITY_RADIUS_KM));
       setProximityRadiusKm(DEFAULT_PROXIMITY_RADIUS_KM);
-      setRadiusStatus({ key: "map.invalidRadius", values: { radius: DEFAULT_PROXIMITY_RADIUS_KM } });
+      setRadiusStatus(null);
+      setRadiusErrorOpen(true);
       return;
     }
     setProximityRadiusKm(requestedRadius);
     setRadiusInput(String(requestedRadius));
+    setRadiusErrorOpen(false);
     setRadiusStatus({ key: "map.appliedRadius", values: { radius: requestedRadius } });
   };
 
@@ -407,6 +410,13 @@ export default function StoreMap() {
           )}
         </MapContainer>
       </div>
+      {radiusErrorOpen && <div className="store-map__modal-backdrop" role="presentation">
+        <section className="store-map__modal" role="alertdialog" aria-modal="true" aria-labelledby="store-map-radius-error-title" aria-describedby="store-map-radius-error-message">
+          <h2 id="store-map-radius-error-title">{t("map.radiusErrorTitle")}</h2>
+          <p id="store-map-radius-error-message">{t("map.invalidRadius", { radius: DEFAULT_PROXIMITY_RADIUS_KM })}</p>
+          <button type="button" autoFocus onClick={() => setRadiusErrorOpen(false)}>{t("map.dismiss")}</button>
+        </section>
+      </div>}
     </section>
   );
 }
