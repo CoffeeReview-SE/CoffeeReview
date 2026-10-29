@@ -60,6 +60,9 @@
 .store-map__table { width: 100%; border-collapse: separate; border-spacing: 0; color: #35251d; font-size: 12px; text-align: left; }
 .store-map__table caption { padding: 10px 0; color: #273b2e; font-size: 13px; font-weight: 700; text-align: left; }
 .store-map__summary-table { min-width: 0; }
+.store-map__summary-table caption { padding: 4px 0 7px; }
+.store-map__summary-table th,.store-map__summary-table td { padding: 6px 8px; }
+.store-map__summary-table th { background: #fffaf4; }
 .store-map__summary-table td { color: #a15b32; font-size: 18px; font-weight: 700; text-align: right; }
 .store-map__table th,.store-map__table td { padding: 10px 8px; border-top: 1px solid #eee5dc; vertical-align: top; }
 .store-map__table th { background: #f8f4ef; color: #75675d; font-size: 11px; font-weight: 700; white-space: nowrap; }
@@ -70,8 +73,8 @@
 .store-map__nearby-table th:nth-child(3),.store-map__nearby-table td:nth-child(3) { width: 82px; white-space: nowrap; }
 .store-map__nearby-table td:first-child,.store-map__nearby-table td:nth-child(3) { white-space: nowrap; }
 .store-map__nearby-table td small { display: block; margin-top: 4px; color: #75675d; line-height: 1.45; overflow-wrap: anywhere; }
-.store-map__nearest-row { background: #fffaf4; }
-.store-map__nearest-row td { border-top-color: #e6cbb7; }
+.store-map__nearest-row { background: #fff; }
+.store-map__nearest-row td:first-child { box-shadow: inset 3px 0 #8a4f2d; }
 .store-map__audio-note { color: #536c54 !important; font-weight: 700; }
 .store-map__table-select { padding: 0; border: 0; background: transparent; color: #273b2e; font: inherit; font-weight: 700; text-align: left; cursor: pointer; }
 .store-map__table-select:hover { color: #a15b32; }
