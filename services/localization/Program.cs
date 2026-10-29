@@ -48,6 +48,7 @@ app.MapGet("/brands/{brandId:long}", async (long brandId, NpgsqlDataSource db, C
     await using var reader = await cmd.ExecuteReaderAsync(ct);
     if (!await reader.ReadAsync(ct)) return Results.NotFound();
 
+    var brandName = reader.GetString(1);
     var sourceLanguage = reader.IsDBNull(3) ? null : reader.GetString(3);
     if (brandName.Contains("KOI", StringComparison.OrdinalIgnoreCase) ||
         brandName.Contains("Starbucks", StringComparison.OrdinalIgnoreCase))
@@ -55,7 +56,7 @@ app.MapGet("/brands/{brandId:long}", async (long brandId, NpgsqlDataSource db, C
     return Results.Ok(new
     {
         id = reader.GetInt64(0),
-        name = reader.GetString(1),
+        name = brandName,
         description = reader.GetString(2),
         descriptionLanguageCode = sourceLanguage,
         isTranslated = false

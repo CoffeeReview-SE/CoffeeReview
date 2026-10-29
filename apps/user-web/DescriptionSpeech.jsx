@@ -5,10 +5,10 @@ import { detailText } from './brandDetailTranslations.js';
 import { getUserApi } from './api.js';
 import { getSpeechVoice, speechLanguageTag } from './speechVoice.js';
 
-export default function DescriptionSpeech({ brandId, description, languageCode, sourceLanguageCode }) {
+export default function DescriptionSpeech({ brandId, description, sourceLanguageCode }) {
   const { languageCode: uiLanguage } = useLanguage();
   const dt = (key, values) => detailText(uiLanguage, key, values);
-  const voiceTargetLanguage = languageCode || uiLanguage || 'vi';
+  const voiceTargetLanguage = uiLanguage || 'vi';
   const sourceDescriptionLanguage = (sourceLanguageCode || 'vi').toLowerCase();
   const [speaking, setSpeaking] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -19,12 +19,12 @@ export default function DescriptionSpeech({ brandId, description, languageCode, 
   useEffect(() => () => {
     requestId.current += 1;
     if (utterance.current) { utterance.current.onstart = null; window.speechSynthesis?.cancel(); utterance.current = null; }
-  }, [description, brandId, languageCode, sourceDescriptionLanguage, uiLanguage]);
+  }, [description, brandId, sourceDescriptionLanguage, uiLanguage]);
   useEffect(() => {
     setLoading(false);
     setSpeaking(false);
     setError('');
-  }, [description, brandId, languageCode, sourceDescriptionLanguage, uiLanguage]);
+  }, [description, brandId, sourceDescriptionLanguage, uiLanguage]);
   const read = async () => {
     if (speaking || loading) {
       requestId.current += 1;

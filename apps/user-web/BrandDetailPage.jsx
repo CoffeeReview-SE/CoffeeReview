@@ -396,7 +396,7 @@ export default function BrandDetailPage({ brandId, brand, onBack, onNavigate, on
 
           {item.audio && (typeof item.audio === 'string' || Object.values(item.audio).some(Boolean))
             ? <AudioCard key={item.id} audio={item.audio} brandId={Number(item.id)} languageCode={item.audioLanguageCode || item.descriptionLanguageCode} preferredLanguage={languageCode} />
-            : <DescriptionSpeech key={item.id} brandId={Number(item.id)} description={currentDescription} languageCode={languageCode} sourceLanguageCode={descriptionLanguage} />}
+            : <DescriptionSpeech key={item.id} brandId={Number(item.id)} description={currentDescription} sourceLanguageCode={descriptionLanguage} />}
 
           {isTranslating && <p className="bd-translation-status" role="status">{dt("translating")}</p>}
           {translationFailed && <p className="bd-translation-status" role="status">{dt("translationFailed")}</p>}
