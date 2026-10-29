@@ -54,7 +54,6 @@ export default function BrandDescriptionAudio({ brand, className, playLabel, sto
     setLoading(true);
 
     if (sourceLanguage !== voiceTargetLanguage) {
-      voiceLanguage = voiceTargetLanguage;
       try {
         const translated = await getUserApi(`/api/localization/brands/${brand.id}/translations/${voiceTargetLanguage}`, { method: "POST" });
         if (request !== requestId.current || speechRequest !== latestSpeechRequest) {

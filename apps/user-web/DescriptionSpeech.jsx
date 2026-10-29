@@ -39,7 +39,6 @@ export default function DescriptionSpeech({ brandId, description, languageCode }
     let speechText = description;
     let voiceLanguage = languageCode;
     if (voiceLanguage !== voiceTargetLanguage) {
-      voiceLanguage = voiceTargetLanguage;
       try {
         const translated = await getUserApi(`/api/localization/brands/${brandId}/translations/${voiceTargetLanguage}`, { method: 'POST' });
         if (translated.description) {

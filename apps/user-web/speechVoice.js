@@ -15,9 +15,11 @@ export function speechLanguageTag(languageCode) {
 function matchingVoice(voices, languageCode) {
   const requested = speechLanguageTag(languageCode).toLowerCase();
   const base = requested.split("-")[0];
-  return voices.find(voice => voice.lang.toLowerCase() === requested)
-    || voices.find(voice => voice.lang.toLowerCase().startsWith(`${base}-`))
-    || voices.find(voice => voice.lang.toLowerCase() === base);
+  const languageVoices = voices.filter(voice => voice.lang.toLowerCase() === requested)
+    .concat(voices.filter(voice => voice.lang.toLowerCase().startsWith(`${base}-`) && voice.lang.toLowerCase() !== requested))
+    .concat(voices.filter(voice => voice.lang.toLowerCase() === base));
+  const femaleVoiceName = /female|woman|zira|aria|jenny|samantha|victoria|karen|moira|tessa|susan|allison|ava|kyoko|nanami|ting.?ting|huihui|yaoyao|xiaoxiao|xiaoyi|hoai.?my|linh|mai|google us english/i;
+  return languageVoices.find(voice => femaleVoiceName.test(voice.name)) || languageVoices[0];
 }
 
 // Some browsers populate their voice list asynchronously after page load.

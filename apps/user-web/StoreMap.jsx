@@ -163,7 +163,6 @@ export default function StoreMap({ fullScreen = false }) {
       let voiceLanguage = sourceLanguage;
       isPreparingNearby.current = true;
       if (sourceLanguage !== voiceTargetLanguage) {
-        voiceLanguage = voiceTargetLanguage;
         try {
           const translated = await getUserApi(`/api/localization/brands/${brand.id}/translations/${voiceTargetLanguage}`, { method: "POST" });
           if (translated.description) {

@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Text.Json;
 using Npgsql;
 
@@ -109,10 +110,42 @@ static async Task<IResult> TranslateBrandAsync(long brandId, string languageCode
     if (string.Equals(sourceLanguage, languageCode, StringComparison.OrdinalIgnoreCase))
         return Results.Ok(new { brandId, brandName, languageCode, description = source, isTranslated = false });
 
+    var brandNames = new List<string> { brandName };
+    await using (var cmd = db.CreateCommand("SELECT brand_name FROM public.brand WHERE is_active AND brand_name IS NOT NULL"))
+    await using (var reader = await cmd.ExecuteReaderAsync(ct))
+    {
+        while (await reader.ReadAsync(ct))
+        {
+            var name = reader.GetString(0).Trim();
+            if (name.Length > 0 && !brandNames.Contains(name, StringComparer.OrdinalIgnoreCase)) brandNames.Add(name);
+        }
+    }
+
+    var sourceNamesToProtect = brandNames.Select(name => (Term: name, RestoreAs: name)).ToList();
+    var koiName = brandNames.FirstOrDefault(name => name.Contains("KOI", StringComparison.OrdinalIgnoreCase) && name.Contains("Th", StringComparison.OrdinalIgnoreCase));
+    if (koiName is not null)
+    {
+        sourceNamesToProtect.Add(("KOI The", koiName));
+        sourceNamesToProtect.Add(("KOI Tea", koiName));
+    }
+    var starbucksName = brandNames.FirstOrDefault(name => name.Contains("Starbucks", StringComparison.OrdinalIgnoreCase));
+    if (starbucksName is not null) sourceNamesToProtect.Add(("Starbuck", starbucksName));
+
+    var protectedNames = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+    var sourceForTranslation = source;
+    foreach (var (term, restoreAs) in sourceNamesToProtect.OrderByDescending(value => value.Term.Length))
+    {
+        var token = $"SCBRANDTOKEN{protectedNames.Count}TOKEN";
+        var replaced = Regex.Replace(sourceForTranslation, Regex.Escape(term), token, RegexOptions.IgnoreCase);
+        if (replaced == sourceForTranslation) continue;
+        protectedNames[token] = restoreAs;
+        sourceForTranslation = replaced;
+    }
+
     string translated;
     try
     {
-        translated = await translator.TranslateAsync(source, sourceLanguage ?? "auto", languageCode, ct);
+        translated = await translator.TranslateAsync(sourceForTranslation, sourceLanguage ?? "auto", languageCode, ct);
     }
     catch (HttpRequestException)
     {
@@ -129,6 +162,9 @@ static async Task<IResult> TranslateBrandAsync(long brandId, string languageCode
 
     if (string.IsNullOrWhiteSpace(translated))
         return Results.Problem("The translation endpoint returned empty text.", statusCode: StatusCodes.Status502BadGateway);
+
+    foreach (var (token, name) in protectedNames)
+        translated = Regex.Replace(translated, Regex.Escape(token), _ => name, RegexOptions.IgnoreCase);
 
     return Results.Ok(new { brandId, brandName, languageCode, description = translated, isTranslated = true });
 }
