@@ -39,29 +39,6 @@ function distanceMeters(aLat, aLng, bLat, bLng) {
   return 6371000 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
-// Order stops by repeatedly choosing the closest unvisited branch. Distances
-// are straight-line estimates; the voice queue does not request road routes.
-function orderByShortestVisit(userPosition, stops) {
-  const remaining = [...stops];
-  const ordered = [];
-  let position = userPosition;
-  while (remaining.length) {
-    let nearestIndex = 0;
-    let nearestDistance = Infinity;
-    remaining.forEach((stop, index) => {
-      const distance = distanceMeters(position[0], position[1], stop.branch.lat, stop.branch.lng);
-      if (distance < nearestDistance) {
-        nearestDistance = distance;
-        nearestIndex = index;
-      }
-    });
-    const [next] = remaining.splice(nearestIndex, 1);
-    ordered.push(next);
-    position = [next.branch.lat, next.branch.lng];
-  }
-  return ordered;
-}
-
 function ChangeView({ center, zoom }) {
   const map = useMap();
 
@@ -200,8 +177,8 @@ export default function StoreMap() {
     const nearby = [...nearestByBrand.entries()]
       .map(([id, info]) => ({ brand: brandsById.get(id), distance: info.distance, branch: info.branch }))
       .filter(item => item.brand?.description?.trim());
-    const visitOrder = orderByShortestVisit(userPosition.position, nearby);
-    const newlyNearby = visitOrder.map(item => item.brand).filter(brand => !playedNearbyBrands.current.has(brand.id));
+    const nearestFirst = nearby.sort((a, b) => a.distance - b.distance);
+    const newlyNearby = nearestFirst.map(item => item.brand).filter(brand => !playedNearbyBrands.current.has(brand.id));
     if (!newlyNearby.length) {
       if (!nearby.length) setNearbyAudioStatus(proximityText.none);
       return;
