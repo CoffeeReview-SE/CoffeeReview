@@ -146,7 +146,7 @@ export default function AdminDashboard({ onNavigate }) {
       } catch (err) {
         if (!controller.signal.aborted) setError(`Không tải được thống kê: ${err.message}`);
       } finally {
-        if (!controller.signal.aborted) timer = setTimeout(load, 10000);
+        if (!controller.signal.aborted) timer = setTimeout(load, 30000);
       }
     };
     load();
