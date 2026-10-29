@@ -59,6 +59,7 @@ export default function StoreMap() {
   const [mapCenter, setMapCenter] = useState([10.7769, 106.7009]);
   const [mapZoom, setMapZoom] = useState(12);
   const [userPosition, setUserPosition] = useState(null);
+  const userPositionRef = useRef(null);
   const [locationStatus, setLocationStatus] = useState({ key: "" });
   const [isLocating, setIsLocating] = useState(false);
   const [nearbyAudioEnabled, setNearbyAudioEnabled] = useState(false);
@@ -76,6 +77,27 @@ export default function StoreMap() {
   const proximityAudioActive = useRef(nearbyAudioEnabled);
   const proximityAudioGeneration = useRef(0);
   proximityAudioActive.current = nearbyAudioEnabled;
+
+  const updateUserPosition = coords => {
+    const next = {
+      position: [coords.latitude, coords.longitude],
+      accuracy: Number.isFinite(coords.accuracy) && coords.accuracy > 0 ? coords.accuracy : 1000,
+    };
+    const current = userPositionRef.current;
+    if (current) {
+      const movement = distanceMeters(current.position[0], current.position[1], next.position[0], next.position[1]);
+      const accuracyImproved = next.accuracy < current.accuracy * 0.8;
+      const largeAccuracyDrop = next.accuracy > Math.max(current.accuracy * 2, current.accuracy + 40);
+      const jitterThreshold = Math.max(20, Math.min(current.accuracy, next.accuracy) * 0.65);
+      if ((largeAccuracyDrop && movement < current.accuracy * 3) || (movement < jitterThreshold && !accuracyImproved)) {
+        return current;
+      }
+    }
+    userPositionRef.current = next;
+    setUserPosition(next);
+    return next;
+  };
+
   useEffect(() => {
     const controller = new AbortController();
     getUserApi("/api/catalog/branches", { signal: controller.signal })
@@ -179,9 +201,9 @@ export default function StoreMap() {
     }
     setNearbyAudioStatus(proximityText.enabled.replace("2 km", `${proximityRadiusKm} km`));
     const watchId = navigator.geolocation.watchPosition(
-      ({ coords }) => setUserPosition({ position: [coords.latitude, coords.longitude], accuracy: coords.accuracy }),
+      ({ coords }) => updateUserPosition(coords),
       () => setNearbyAudioStatus(proximityText.denied),
-      { enableHighAccuracy: true, maximumAge: 15000, timeout: 20000 },
+      { enableHighAccuracy: true, maximumAge: 0, timeout: 25000 },
     );
     return () => {
       proximityAudioGeneration.current += 1;
@@ -193,6 +215,15 @@ export default function StoreMap() {
       isPreparingNearby.current = false;
     };
   }, [nearbyAudioEnabled]);
+
+  useEffect(() => {
+    proximityAudioGeneration.current += 1;
+    window.speechSynthesis?.cancel();
+    nearbyAudioQueue.current = [];
+    isSpeakingNearby.current = false;
+    isPreparingNearby.current = false;
+    autoPlayedNearestBranch.current = false;
+  }, [languageCode]);
 
   useEffect(() => {
     if (!nearbyAudioEnabled || !userPosition || !brandCatalog.length) return;
@@ -263,11 +294,10 @@ export default function StoreMap() {
     setLocationStatus({ key: "map.locatingStatus" });
     navigator.geolocation.getCurrentPosition(
       ({ coords }) => {
-        const position = [coords.latitude, coords.longitude];
-        setUserPosition({ position, accuracy: coords.accuracy });
-        setMapCenter(position);
+        const current = updateUserPosition(coords);
+        setMapCenter(current.position);
         setMapZoom(16);
-        setLocationStatus({ key: "map.located", values: { accuracy: Math.round(coords.accuracy) } });
+        setLocationStatus({ key: "map.located", values: { accuracy: Math.round(current.accuracy) } });
         setIsLocating(false);
       },
       (error) => {
@@ -279,7 +309,7 @@ export default function StoreMap() {
         setLocationStatus({ key });
         setIsLocating(false);
       },
-      { enableHighAccuracy: true, timeout: 15000, maximumAge: 30000 },
+      { enableHighAccuracy: true, timeout: 25000, maximumAge: 0 },
     );
   };
 

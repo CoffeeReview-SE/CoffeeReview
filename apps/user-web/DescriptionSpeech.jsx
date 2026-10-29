@@ -18,12 +18,12 @@ export default function DescriptionSpeech({ brandId, description, languageCode }
   useEffect(() => () => {
     requestId.current += 1;
     if (utterance.current) { utterance.current.onstart = null; window.speechSynthesis?.cancel(); utterance.current = null; }
-  }, [description, brandId, languageCode]);
+  }, [description, brandId, languageCode, uiLanguage]);
   useEffect(() => {
     setLoading(false);
     setSpeaking(false);
     setError('');
-  }, [description, brandId, languageCode]);
+  }, [description, brandId, languageCode, uiLanguage]);
   const read = async () => {
     if (speaking || loading) {
       requestId.current += 1;

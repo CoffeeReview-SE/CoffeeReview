@@ -228,8 +228,9 @@ function AudioCard({ audio, brandId, languageCode, preferredLanguage }) {
   const playEvent = useRef(null);
 
   useEffect(() => {
+    ref.current?.pause();
     setPlaying(false); setT({ cur: 0, dur: 0 }); counted.current = false; requested.current = false;
-  }, [src, brandId, code]);
+  }, [src, brandId, code, preferredLanguage]);
   const started = () => {
     setPlaying(true);
     if (!requested.current || counted.current || !code) return;

@@ -24,13 +24,13 @@ export default function BrandDescriptionAudio({ brand, className, playLabel, sto
       window.speechSynthesis?.cancel();
       utterance.current = null;
     }
-  }, [brand.id, description]);
+  }, [brand.id, description, voiceTargetLanguage]);
 
   useEffect(() => {
     setLoading(false);
     setSpeaking(false);
     setError("");
-  }, [brand.id, description]);
+  }, [brand.id, description, voiceTargetLanguage]);
 
   const toggleSpeech = async event => {
     event.stopPropagation();
