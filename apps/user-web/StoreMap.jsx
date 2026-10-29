@@ -65,7 +65,7 @@ export default function StoreMap() {
   const [nearbyAudioStatus, setNearbyAudioStatus] = useState("");
   const [radiusInput, setRadiusInput] = useState(String(DEFAULT_PROXIMITY_RADIUS_KM));
   const [proximityRadiusKm, setProximityRadiusKm] = useState(DEFAULT_PROXIMITY_RADIUS_KM);
-  const [radiusStatus, setRadiusStatus] = useState("");
+  const [radiusStatus, setRadiusStatus] = useState(null);
   const proximityRadiusMeters = proximityRadiusKm * 1000;
   const autoPlayedNearestBranch = useRef(false);
   const nearbyAudioQueue = useRef([]);
@@ -103,12 +103,12 @@ export default function StoreMap() {
     if (!Number.isFinite(requestedRadius) || requestedRadius <= 0) {
       setRadiusInput(String(DEFAULT_PROXIMITY_RADIUS_KM));
       setProximityRadiusKm(DEFAULT_PROXIMITY_RADIUS_KM);
-      setRadiusStatus("Bán kính không hợp lệ. Hệ thống đã đặt lại mặc định 2 km.");
+      setRadiusStatus({ key: "map.invalidRadius", values: { radius: DEFAULT_PROXIMITY_RADIUS_KM } });
       return;
     }
     setProximityRadiusKm(requestedRadius);
     setRadiusInput(String(requestedRadius));
-    setRadiusStatus(`Đã áp dụng bán kính ${requestedRadius} km.`);
+    setRadiusStatus({ key: "map.appliedRadius", values: { radius: requestedRadius } });
   };
 
   useEffect(() => {
@@ -314,7 +314,7 @@ export default function StoreMap() {
         {isLocating ? t("map.locating") : t("map.locate")}
       </button>
       <form className="store-map__radius-form" onSubmit={applyRadius}>
-        <label htmlFor="store-map-radius">Bán kính tìm kiếm</label>
+        <label htmlFor="store-map-radius">{t("map.radiusLabel")}</label>
         <input
           id="store-map-radius"
           type="number"
@@ -324,9 +324,9 @@ export default function StoreMap() {
           aria-describedby="store-map-radius-status"
         />
         <span>km</span>
-        <button type="submit">Áp dụng</button>
+        <button type="submit">{t("map.applyRadius")}</button>
       </form>
-      <p id="store-map-radius-status" className="store-map__radius-status" role="status" aria-live="polite">{radiusStatus}</p>
+      {radiusStatus && <p id="store-map-radius-status" className="store-map__radius-status" role="status" aria-live="polite">{t(radiusStatus.key, radiusStatus.values)}</p>}
       {nearbyAudioEnabled && <button className="store-map__nearby-audio" type="button" onClick={toggleNearbyAudio} aria-pressed="true">{proximityText.disable}</button>}
       {nearbyAudioStatus && <p className="store-map__nearby-status" role="status" aria-live="polite">{nearbyAudioStatus}</p>}
       {locationStatus.key && <p className="store-map__location-status" role="status" aria-live="polite">
@@ -337,14 +337,14 @@ export default function StoreMap() {
         <aside className="store-map__results" aria-label={t("map.results")}>
           <div className="store-map__table-wrap">
             <table className="store-map__table store-map__summary-table">
-              <caption>Tổng số chi nhánh đang có</caption>
-              <tbody><tr><th scope="row">Tất cả địa điểm</th><td>{locations.length}</td></tr></tbody>
+              <caption>{t("map.totalBranches")}</caption>
+              <tbody><tr><th scope="row">{t("map.allLocations")}</th><td>{locations.length}</td></tr></tbody>
             </table>
           </div>
           <div className="store-map__table-wrap">
             <table className="store-map__table store-map__nearby-table">
-              <caption>{userPosition ? `Chi nhánh trong bán kính ${proximityRadiusKm} km · gần đến xa (${locationsByDistance.length})` : `Tất cả chi nhánh (${locationsByDistance.length})`}</caption>
-              <thead><tr><th scope="col">#</th><th scope="col">Chi nhánh</th><th scope="col">Khoảng cách</th></tr></thead>
+              <caption>{userPosition ? t("map.nearbyBranches", { radius: proximityRadiusKm, count: locationsByDistance.length }) : t("map.allBranches", { count: locationsByDistance.length })}</caption>
+              <thead><tr><th scope="col">#</th><th scope="col">{t("map.branch")}</th><th scope="col">{t("map.distance")}</th></tr></thead>
               <tbody>
                 {locationsByDistance.length ? locationsByDistance.map((item, index) => (
                   <tr key={item.id} className={userPosition && item.id === nearestBranchId ? "store-map__nearest-row" : undefined}>
@@ -352,13 +352,13 @@ export default function StoreMap() {
                     <td>
                       <button className="store-map__table-select" onClick={() => selectLocation(item)} type="button">{item.name}</button>
                       <small>{item.address}</small>
-                      {userPosition && item.id === nearestBranchId && nearbyAudioEnabled && <small className="store-map__audio-note">Tự phát audio</small>}
+                      {userPosition && item.id === nearestBranchId && nearbyAudioEnabled && <small className="store-map__audio-note">{t("map.autoPlayAudio")}</small>}
                       <a className="store-map__table-directions" href={googleDirectionsUrl(item, userPosition)} target="_blank" rel="noopener noreferrer">{t("map.directions")}</a>
                     </td>
                     <td>{userPosition ? formatDistance(item.distanceFromUser) : "—"}</td>
                   </tr>
                 )) : (
-                  <tr><td colSpan={3} className="store-map__table-empty">{userPosition ? "Không có chi nhánh phù hợp trong bán kính 2 km." : t("map.empty")}</td></tr>
+                  <tr><td colSpan={3} className="store-map__table-empty">{userPosition ? t("map.noBranchesWithinRadius", { radius: proximityRadiusKm }) : t("map.empty")}</td></tr>
                 )}
               </tbody>
             </table>
