@@ -5,10 +5,11 @@ import { detailText } from './brandDetailTranslations.js';
 import { getUserApi } from './api.js';
 import { getSpeechVoice, speechLanguageTag } from './speechVoice.js';
 
-export default function DescriptionSpeech({ brandId, description, languageCode }) {
+export default function DescriptionSpeech({ brandId, description, languageCode, sourceLanguageCode }) {
   const { languageCode: uiLanguage } = useLanguage();
   const dt = (key, values) => detailText(uiLanguage, key, values);
-  const voiceTargetLanguage = languageCode || 'vi';
+  const voiceTargetLanguage = languageCode || uiLanguage || 'vi';
+  const sourceDescriptionLanguage = (sourceLanguageCode || 'vi').toLowerCase();
   const [speaking, setSpeaking] = useState(false);
   const [loading, setLoading] = useState(false);
   const requestId = useRef(0);
@@ -18,12 +19,12 @@ export default function DescriptionSpeech({ brandId, description, languageCode }
   useEffect(() => () => {
     requestId.current += 1;
     if (utterance.current) { utterance.current.onstart = null; window.speechSynthesis?.cancel(); utterance.current = null; }
-  }, [description, brandId, languageCode, uiLanguage]);
+  }, [description, brandId, languageCode, sourceDescriptionLanguage, uiLanguage]);
   useEffect(() => {
     setLoading(false);
     setSpeaking(false);
     setError('');
-  }, [description, brandId, languageCode, uiLanguage]);
+  }, [description, brandId, languageCode, sourceDescriptionLanguage, uiLanguage]);
   const read = async () => {
     if (speaking || loading) {
       requestId.current += 1;
@@ -37,7 +38,7 @@ export default function DescriptionSpeech({ brandId, description, languageCode }
     setError('');
     setLoading(true);
     let speechText = description;
-    let voiceLanguage = languageCode;
+    let voiceLanguage = sourceDescriptionLanguage;
     if (voiceLanguage !== voiceTargetLanguage) {
       try {
         const translated = await getUserApi(`/api/localization/brands/${brandId}/translations/${voiceTargetLanguage}`, { method: 'POST' });

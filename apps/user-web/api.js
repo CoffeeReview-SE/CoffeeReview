@@ -10,12 +10,21 @@ export async function getUserApi(path, options = {}) {
   return payload;
 }
 
+// KOI Thé and Starbucks descriptions in the current catalog have been entered in Vietnamese.
+// Prefer that known source language while older API/database rows may still carry "en".
+export function brandDescriptionLanguage(brand) {
+  const name = `${brand?.name || ""} ${brand?.brand || ""}`.toLocaleLowerCase();
+  if (name.includes("koi") || name.includes("starbucks")) return "vi";
+  return (brand?.descriptionLanguageCode || "vi").toLowerCase();
+}
+
 export function toBrandCard(brand) {
   const name = brand.name || "";
   const initials = name.trim().split(/\s+/).slice(0, 3).map(word => word[0]).join("").toUpperCase();
   const colorIndex = [...name].reduce((sum, char) => sum + char.charCodeAt(0), 0) % BRAND_COLORS.length;
   return {
     ...brand,
+    descriptionLanguageCode: brandDescriptionLanguage(brand),
     type: brand.type || "",
     branchCount: Number(brand.branchCount ?? brand.branches ?? 0),
     branches: Number(brand.branchCount ?? brand.branches ?? 0),

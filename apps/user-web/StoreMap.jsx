@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { divIcon } from "leaflet";
 import { MapContainer, Marker, Popup, TileLayer, Tooltip, useMap } from "react-leaflet";
 import { useLanguage } from "./LanguageContext.jsx";
-import { getUserApi } from "./api.js";
+import { brandDescriptionLanguage, getUserApi } from "./api.js";
 import { trackAudio } from "../analytics/tracking.js";
 import { getSpeechVoice, speechLanguageTag } from "./speechVoice.js";
 import "./StoreMap.css";
@@ -158,7 +158,7 @@ export default function StoreMap({ fullScreen = false }) {
       if (!brand) return;
       if (!brand.description?.trim()) { speakNextNearby.current?.(); return; }
       const generation = proximityAudioGeneration.current;
-      const sourceLanguage = (brand.descriptionLanguageCode || "vi").toLowerCase();
+      const sourceLanguage = brandDescriptionLanguage(brand);
       let speechText = brand.description.trim();
       let voiceLanguage = sourceLanguage;
       isPreparingNearby.current = true;

@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { trackAudio } from "../analytics/tracking.js";
 import { useLanguage } from "./LanguageContext.jsx";
-import { getUserApi } from "./api.js";
+import { brandDescriptionLanguage, getUserApi } from "./api.js";
 import { getSpeechVoice, speechLanguageTag } from "./speechVoice.js";
 
 let latestSpeechRequest = 0;
@@ -15,7 +15,7 @@ export default function BrandDescriptionAudio({ brand, className, playLabel, sto
   const requestId = useRef(0);
   const supported = typeof window !== "undefined" && "speechSynthesis" in window;
   const description = brand.description?.trim() || "";
-  const sourceLanguage = (brand.descriptionLanguageCode || "vi").toLowerCase();
+  const sourceLanguage = brandDescriptionLanguage(brand);
 
   useEffect(() => () => {
     requestId.current += 1;

@@ -3,6 +3,7 @@ import { trackAudio } from "../analytics/tracking.js";
 import DescriptionSpeech from "./DescriptionSpeech.jsx";
 import { LANGUAGES, useLanguage } from "./LanguageContext.jsx";
 import { detailText, localizedCategory } from "./brandDetailTranslations.js";
+import { brandDescriptionLanguage } from "./api.js";
 
 // 1. Ảnh Không gian (image coffee shop/)
 import coverHighlands from "../../public/image/High land coffee.jpg";
@@ -298,7 +299,7 @@ export default function BrandDetailPage({ brandId, brand, onBack, onNavigate, on
   useEffect(() => {
     if (!sourceBrand?.description || !brandId) return;
     let active = true;
-    const sourceLanguage = (sourceBrand.descriptionLanguageCode || "vi").toLowerCase();
+    const sourceLanguage = brandDescriptionLanguage(sourceBrand);
 
     if (sourceLanguage === languageCode) {
       setTranslation({ languageCode, description: sourceBrand.description, isTranslated: false });
@@ -344,7 +345,7 @@ export default function BrandDetailPage({ brandId, brand, onBack, onNavigate, on
 
   const localized = translation?.languageCode === languageCode ? translation : null;
   const currentDescription = localized?.description ?? item.description;
-  const descriptionLanguage = localized?.isTranslated ? languageCode : (item.descriptionLanguageCode || "vi");
+  const descriptionLanguage = localized?.isTranslated ? languageCode : brandDescriptionLanguage(item);
   const isTranslating = translationStatus.languageCode === languageCode && translationStatus.status === "loading";
   const translationFailed = translationStatus.languageCode === languageCode && translationStatus.status === "error";
   const type = item.type || item.category || "";
@@ -395,7 +396,7 @@ export default function BrandDetailPage({ brandId, brand, onBack, onNavigate, on
 
           {item.audio && (typeof item.audio === 'string' || Object.values(item.audio).some(Boolean))
             ? <AudioCard key={item.id} audio={item.audio} brandId={Number(item.id)} languageCode={item.audioLanguageCode || item.descriptionLanguageCode} preferredLanguage={languageCode} />
-            : <DescriptionSpeech key={item.id} brandId={Number(item.id)} description={currentDescription} languageCode={descriptionLanguage} />}
+            : <DescriptionSpeech key={item.id} brandId={Number(item.id)} description={currentDescription} languageCode={languageCode} sourceLanguageCode={descriptionLanguage} />}
 
           {isTranslating && <p className="bd-translation-status" role="status">{dt("translating")}</p>}
           {translationFailed && <p className="bd-translation-status" role="status">{dt("translationFailed")}</p>}
