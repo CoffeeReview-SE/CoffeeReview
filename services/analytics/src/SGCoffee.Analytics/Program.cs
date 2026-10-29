@@ -149,7 +149,7 @@ static async Task<Dashboard> ReadDashboard(NpgsqlDataSource db)
     await using var tx = await conn.BeginTransactionAsync(IsolationLevel.RepeatableRead);
     await using var cmd = new NpgsqlCommand("""
         SELECT COUNT(DISTINCT visitor_id), COUNT(*),
-          COUNT(*) FILTER (WHERE ended_at IS NULL AND last_activity_at >= NOW() - INTERVAL '30 seconds'),
+          COUNT(*) FILTER (WHERE ended_at IS NULL AND last_activity_at >= NOW() - INTERVAL '45 seconds'),
           (SELECT COUNT(*) FROM public.page_view pv JOIN public.visit_session vs USING(session_id) WHERE NOT vs.is_admin_session),
           (SELECT COUNT(*) FROM public.audio_play a LEFT JOIN public.visit_session vs USING(session_id)
              WHERE COALESCE(vs.is_admin_session, false) = false), NOW()
