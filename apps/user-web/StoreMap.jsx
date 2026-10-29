@@ -31,7 +31,7 @@ function googleDirectionsUrl(item, userPosition) {
   return `https://www.google.com/maps/dir/?${params.toString()}`;
 }
 
-const PROXIMITY_RADIUS_METERS = 2000;
+const DEFAULT_PROXIMITY_RADIUS_KM = 2;
 function distanceMeters(aLat, aLng, bLat, bLng) {
   const radians = degrees => degrees * Math.PI / 180;
   const dLat = radians(bLat - aLat);
@@ -62,6 +62,10 @@ export default function StoreMap() {
   const [isLocating, setIsLocating] = useState(false);
   const [nearbyAudioEnabled, setNearbyAudioEnabled] = useState(false);
   const [nearbyAudioStatus, setNearbyAudioStatus] = useState("");
+  const [radiusInput, setRadiusInput] = useState(String(DEFAULT_PROXIMITY_RADIUS_KM));
+  const [proximityRadiusKm, setProximityRadiusKm] = useState(DEFAULT_PROXIMITY_RADIUS_KM);
+  const [radiusStatus, setRadiusStatus] = useState("");
+  const proximityRadiusMeters = proximityRadiusKm * 1000;
   const autoPlayedNearestBranch = useRef(false);
   const nearbyAudioQueue = useRef([]);
   const isSpeakingNearby = useRef(false);
@@ -91,6 +95,20 @@ export default function StoreMap() {
     ja: { enable: "GPSで近くの音声を自動再生", disable: "近くの音声を無効にする", enabled: "有効です。半径2 km以内のブランドを検索中…", found: names => `再生中: ${names.join(", ")}`, none: "半径2 km以内に説明のあるブランドがありません。", gps: "近くのブランド音声を再生するにはGPSを許可してください。", denied: "GPSを取得できません。ブラウザーの位置情報権限を確認してください。" },
     zh: { enable: "使用 GPS 自动播放附近品牌语音", disable: "关闭附近语音", enabled: "已开启，正在查找 2 公里内的品牌…", found: names => `正在朗读：${names.join("、")}`, none: "2 公里内没有带有介绍的品牌。", gps: "允许 GPS 以自动播放附近品牌介绍。", denied: "无法获取 GPS。请检查浏览器的位置权限。" },
   }[languageCode] || { enable: "Use GPS & auto-play nearby audio", disable: "Disable nearby audio", enabled: "On. Looking for brands within 2 km…", found: names => `Reading: ${names.join(", ")}`, none: "No brands with descriptions found within 2 km.", gps: "Allow GPS to play audio for nearby brands.", denied: "Could not get GPS. Check your browser location permission." };
+
+  const applyRadius = event => {
+    event.preventDefault();
+    const requestedRadius = Number(radiusInput);
+    if (!Number.isFinite(requestedRadius) || requestedRadius <= 0) {
+      setRadiusInput(String(DEFAULT_PROXIMITY_RADIUS_KM));
+      setProximityRadiusKm(DEFAULT_PROXIMITY_RADIUS_KM);
+      setRadiusStatus("Bán kính không hợp lệ. Hệ thống đã đặt lại mặc định 2 km.");
+      return;
+    }
+    setProximityRadiusKm(requestedRadius);
+    setRadiusInput(String(requestedRadius));
+    setRadiusStatus(`Đã áp dụng bán kính ${requestedRadius} km.`);
+  };
 
   useEffect(() => {
     speakNextNearby.current = async () => {
@@ -154,7 +172,7 @@ export default function StoreMap() {
       setNearbyAudioStatus(proximityText.denied);
       return undefined;
     }
-    setNearbyAudioStatus(proximityText.enabled);
+    setNearbyAudioStatus(proximityText.enabled.replace("2 km", `${proximityRadiusKm} km`));
     const watchId = navigator.geolocation.watchPosition(
       ({ coords }) => setUserPosition({ position: [coords.latitude, coords.longitude], accuracy: coords.accuracy }),
       () => setNearbyAudioStatus(proximityText.denied),
@@ -177,23 +195,23 @@ export default function StoreMap() {
     const nearest = locations
       .filter(branch => Number.isFinite(branch.lat) && Number.isFinite(branch.lng))
       .map(branch => ({ branch, distance: distanceMeters(userPosition.position[0], userPosition.position[1], branch.lat, branch.lng) }))
-      .filter(item => item.distance <= PROXIMITY_RADIUS_METERS)
+      .filter(item => item.distance <= proximityRadiusMeters)
       .sort((a, b) => a.distance - b.distance)[0];
     if (!nearest) {
-      setNearbyAudioStatus(proximityText.none);
+      setNearbyAudioStatus(proximityText.none.replace("2 km", `${proximityRadiusKm} km`));
       return;
     }
     const brandsById = new Map(brandCatalog.map(brand => [brand.id, brand]));
     const brand = brandsById.get(nearest.branch.brandId);
     if (!brand?.description?.trim()) {
-      setNearbyAudioStatus(proximityText.none);
+      setNearbyAudioStatus(proximityText.none.replace("2 km", `${proximityRadiusKm} km`));
       return;
     }
     autoPlayedNearestBranch.current = true;
     nearbyAudioQueue.current = [brand];
     setNearbyAudioStatus(proximityText.found([nearest.branch.name || brand.name]));
     speakNextNearby.current?.();
-  }, [nearbyAudioEnabled, userPosition, locations, brandCatalog, languageCode]);
+  }, [nearbyAudioEnabled, userPosition, locations, brandCatalog, languageCode, proximityRadiusMeters, proximityRadiusKm]);
 
   const toggleNearbyAudio = () => {
     if (!nearbyAudioEnabled) {
@@ -214,7 +232,7 @@ export default function StoreMap() {
     ? locations
       .filter(item => Number.isFinite(item.lat) && Number.isFinite(item.lng))
       .map(item => ({ ...item, distanceFromUser: distanceMeters(userPosition.position[0], userPosition.position[1], item.lat, item.lng) }))
-      .filter(item => item.distanceFromUser <= PROXIMITY_RADIUS_METERS)
+      .filter(item => item.distanceFromUser <= proximityRadiusMeters)
       .sort((a, b) => a.distanceFromUser - b.distanceFromUser)
     : [];
   const locationsByDistance = userPosition
@@ -293,6 +311,20 @@ export default function StoreMap() {
       <button className="store-map__locate" type="button" onClick={locateAndEnableNearbyAudio} disabled={isLocating} aria-label={t("map.locate")}>
         {isLocating ? t("map.locating") : t("map.locate")}
       </button>
+      <form className="store-map__radius-form" onSubmit={applyRadius}>
+        <label htmlFor="store-map-radius">Bán kính tìm kiếm</label>
+        <input
+          id="store-map-radius"
+          type="number"
+          step="any"
+          value={radiusInput}
+          onChange={event => setRadiusInput(event.target.value)}
+          aria-describedby="store-map-radius-status"
+        />
+        <span>km</span>
+        <button type="submit">Áp dụng</button>
+      </form>
+      <p id="store-map-radius-status" className="store-map__radius-status" role="status" aria-live="polite">{radiusStatus}</p>
       {nearbyAudioEnabled && <button className="store-map__nearby-audio" type="button" onClick={toggleNearbyAudio} aria-pressed="true">{proximityText.disable}</button>}
       {nearbyAudioStatus && <p className="store-map__nearby-status" role="status" aria-live="polite">{nearbyAudioStatus}</p>}
       {locationStatus.key && <p className="store-map__location-status" role="status" aria-live="polite">
@@ -309,24 +341,22 @@ export default function StoreMap() {
           </div>
           <div className="store-map__table-wrap">
             <table className="store-map__table store-map__nearby-table">
-              <caption>Chi nhánh trong bán kính 2 km · gần đến xa ({locationsByDistance.length})</caption>
+              <caption>{userPosition ? `Chi nhánh trong bán kính ${proximityRadiusKm} km · gần đến xa (${locationsByDistance.length})` : `Tất cả chi nhánh (${locationsByDistance.length})`}</caption>
               <thead><tr><th scope="col">#</th><th scope="col">Chi nhánh</th><th scope="col">Khoảng cách</th></tr></thead>
               <tbody>
-                {!userPosition ? (
-                  <tr><td colSpan={3} className="store-map__table-empty">Đang chờ vị trí GPS.</td></tr>
-                ) : locationsByDistance.length ? locationsByDistance.map(item => (
-                  <tr key={item.id} className={item.id === nearestBranchId ? "store-map__nearest-row" : undefined}>
-                    <td>{nearbyRankById.get(item.id)}</td>
+                {locationsByDistance.length ? locationsByDistance.map((item, index) => (
+                  <tr key={item.id} className={userPosition && item.id === nearestBranchId ? "store-map__nearest-row" : undefined}>
+                    <td>{userPosition ? nearbyRankById.get(item.id) : index + 1}</td>
                     <td>
                       <button className="store-map__table-select" onClick={() => selectLocation(item)} type="button">{item.name}</button>
                       <small>{item.address}</small>
-                      {item.id === nearestBranchId && nearbyAudioEnabled && <small className="store-map__audio-note">Tự phát audio</small>}
+                      {userPosition && item.id === nearestBranchId && nearbyAudioEnabled && <small className="store-map__audio-note">Tự phát audio</small>}
                       <a className="store-map__table-directions" href={googleDirectionsUrl(item, userPosition)} target="_blank" rel="noopener noreferrer">{t("map.directions")}</a>
                     </td>
-                    <td>{formatDistance(item.distanceFromUser)}</td>
+                    <td>{userPosition ? formatDistance(item.distanceFromUser) : "—"}</td>
                   </tr>
                 )) : (
-                  <tr><td colSpan={3} className="store-map__table-empty">Không có chi nhánh phù hợp trong bán kính 2 km.</td></tr>
+                  <tr><td colSpan={3} className="store-map__table-empty">{userPosition ? "Không có chi nhánh phù hợp trong bán kính 2 km." : t("map.empty")}</td></tr>
                 )}
               </tbody>
             </table>
