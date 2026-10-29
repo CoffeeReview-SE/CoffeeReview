@@ -58,11 +58,10 @@ export default function StoreMap() {
   const [mapCenter, setMapCenter] = useState([10.7769, 106.7009]);
   const [mapZoom, setMapZoom] = useState(12);
   const [userPosition, setUserPosition] = useState(null);
-  const [locationStatus, setLocationStatus] = useState({ key: "map.requesting" });
+  const [locationStatus, setLocationStatus] = useState({ key: "" });
   const [isLocating, setIsLocating] = useState(false);
   const [nearbyAudioEnabled, setNearbyAudioEnabled] = useState(false);
   const [nearbyAudioStatus, setNearbyAudioStatus] = useState("");
-  const requestedLocation = useRef(false);
   const autoPlayedNearestBranch = useRef(false);
   const nearbyAudioQueue = useRef([]);
   const isSpeakingNearby = useRef(false);
@@ -273,14 +272,6 @@ export default function StoreMap() {
     locateMe();
   };
 
-  useEffect(() => {
-    // Tự lấy GPS khi mở trang; ref tránh gọi lại trong React StrictMode.
-    if (!requestedLocation.current) {
-      requestedLocation.current = true;
-      locateMe();
-    }
-  }, []);
-
   return (
     <section className="store-map" id="store-map" aria-labelledby="store-map-title">
       <div className="store-map__intro">
@@ -304,9 +295,9 @@ export default function StoreMap() {
       </button>
       {nearbyAudioEnabled && <button className="store-map__nearby-audio" type="button" onClick={toggleNearbyAudio} aria-pressed="true">{proximityText.disable}</button>}
       {nearbyAudioStatus && <p className="store-map__nearby-status" role="status" aria-live="polite">{nearbyAudioStatus}</p>}
-      <p className="store-map__location-status" role="status" aria-live="polite">
+      {locationStatus.key && <p className="store-map__location-status" role="status" aria-live="polite">
         {t(locationStatus.key, locationStatus.values)}
-      </p>
+      </p>}
 
       <div className="store-map__layout">
         <aside className="store-map__results" aria-label={t("map.results")}>
