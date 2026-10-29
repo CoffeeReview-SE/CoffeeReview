@@ -18,7 +18,7 @@ export default function MapPage() {
           Về trang chủ
         </button>
       </header>
-      <StoreMap />
+      <StoreMap fullScreen />
     </div>
   );
 }

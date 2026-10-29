@@ -50,7 +50,7 @@ function ChangeView({ center, zoom }) {
   return null;
 }
 
-export default function StoreMap() {
+export default function StoreMap({ fullScreen = false }) {
   const { t, languageCode } = useLanguage();
   const voiceTargetLanguage = languageCode;
   const [searchTerm, setSearchTerm] = useState("");
@@ -286,9 +286,21 @@ export default function StoreMap() {
       .filter(item => item.distanceFromUser <= proximityRadiusMeters)
       .sort((a, b) => a.distanceFromUser - b.distanceFromUser)
     : [];
-  const locationsByDistance = userPosition
-    ? nearbyLocationsByDistance.filter(item => `${item.name} ${item.brand} ${item.address}`.toLocaleLowerCase("vi").includes(normalizedSearch))
-    : filteredLocations;
+  const locationsByDistance = fullScreen
+    ? userPosition
+      ? locations
+        .map(item => ({
+          ...item,
+          distanceFromUser: Number.isFinite(item.lat) && Number.isFinite(item.lng)
+            ? distanceMeters(userPosition.position[0], userPosition.position[1], item.lat, item.lng)
+            : null,
+        }))
+        .filter(item => `${item.name} ${item.brand} ${item.address}`.toLocaleLowerCase("vi").includes(normalizedSearch))
+        .sort((a, b) => (a.distanceFromUser ?? Infinity) - (b.distanceFromUser ?? Infinity))
+      : filteredLocations
+    : userPosition
+      ? nearbyLocationsByDistance.filter(item => `${item.name} ${item.brand} ${item.address}`.toLocaleLowerCase("vi").includes(normalizedSearch))
+      : filteredLocations;
   const nearbyRankById = new Map(nearbyLocationsByDistance.map((item, index) => [item.id, index + 1]));
   const nearestBranchId = nearbyLocationsByDistance[0]?.id;
   const mappedLocations = locationsByDistance.filter(item => Number.isFinite(item.lat) && Number.isFinite(item.lng));
@@ -341,7 +353,7 @@ export default function StoreMap() {
   };
 
   return (
-    <section className="store-map" id="store-map" aria-labelledby="store-map-title">
+    <section className={`store-map${fullScreen ? " store-map--full-screen" : ""}`} id="store-map" aria-labelledby="store-map-title">
       <div className="store-map__intro">
         <p className="store-map__eyebrow">{t("map.eyebrow")}</p>
         <h1 id="store-map-title">{t("map.title")}</h1>
@@ -398,14 +410,14 @@ export default function StoreMap() {
               <tbody>
                 {locationsByDistance.length ? locationsByDistance.map((item, index) => (
                   <tr key={item.id} className={userPosition && item.id === nearestBranchId ? "store-map__nearest-row" : undefined}>
-                    <td>{userPosition ? nearbyRankById.get(item.id) : index + 1}</td>
+                    <td>{userPosition && !fullScreen ? nearbyRankById.get(item.id) : index + 1}</td>
                     <td>
                       <button className="store-map__table-select" onClick={() => selectLocation(item)} type="button">{item.name}</button>
                       <small>{item.address}</small>
                       {userPosition && item.id === nearestBranchId && nearbyAudioEnabled && <small className="store-map__audio-note">{t("map.autoPlayAudio")}</small>}
                       <a className="store-map__table-directions" href={googleDirectionsUrl(item, userPosition)} target="_blank" rel="noopener noreferrer">{t("map.directions")}</a>
                     </td>
-                    <td>{userPosition ? formatDistance(item.distanceFromUser) : "—"}</td>
+                    <td>{userPosition && Number.isFinite(item.distanceFromUser) ? formatDistance(item.distanceFromUser) : "—"}</td>
                   </tr>
                 )) : (
                   <tr><td colSpan={3} className="store-map__table-empty">{userPosition ? t("map.noBranchesWithinRadius", { radius: proximityRadiusKm }) : t("map.empty")}</td></tr>
@@ -426,23 +438,28 @@ export default function StoreMap() {
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
-          {mappedLocations.map((item) => (
-            <Marker key={item.id} position={[item.lat, item.lng]} icon={coffeeMarkerIcon(item.brandId)} riseOnHover>
+          {mappedLocations.map((item) => {
+            const brandInfo = brandCatalog.find(brand => String(brand.id) === String(item.brandId));
+            return <Marker key={item.id} position={[item.lat, item.lng]} icon={coffeeMarkerIcon(item.brandId)} riseOnHover>
               <Tooltip direction="top" sticky className="coffee-map-tooltip">
                 {item.brand || item.name}
               </Tooltip>
               <Popup>
                 <strong>{item.brand || item.name}</strong>
-                <br />
-                {item.address}
-                {item.phone && <><br />{item.phone}</>}
-                <br />
+                <div className="store-map__popup-details">
+                  <strong>{item.name}</strong>
+                  <span>{item.address}</span>
+                  {item.phone && <a href={`tel:${item.phone}`}>{item.phone}</a>}
+                  {item.lat != null && item.lng != null && <span>{item.lat.toFixed(6)}, {item.lng.toFixed(6)}</span>}
+                  {brandInfo?.description && <span>{brandInfo.description}</span>}
+                  {brandInfo?.website && <a href={brandInfo.website} target="_blank" rel="noopener noreferrer">{brandInfo.website}</a>}
+                </div>
                 <a className="store-map__directions" href={googleDirectionsUrl(item, userPosition)} target="_blank" rel="noopener noreferrer">
                   {t("map.directionsGoogle")}
                 </a>
               </Popup>
-            </Marker>
-          ))}
+            </Marker>;
+          })}
           {userPosition && (
             <Marker position={userPosition.position} icon={currentLocationIcon} zIndexOffset={1000}>
               <Tooltip permanent direction="top" offset={[0, -12]}>
