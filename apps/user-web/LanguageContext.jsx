@@ -131,15 +131,15 @@ const LanguageContext = createContext(null);
 
 function initialLanguageCode() {
   if (typeof window === "undefined") return "vi";
+  try {
+    const saved = window.localStorage.getItem("saigoncoffee-language");
+    if (messages[saved]) return saved;
+  } catch { /* Storage can be unavailable in private browsing. */ }
   const browserLanguages = [...(navigator.languages || []), navigator.language].filter(Boolean);
   for (const preference of browserLanguages) {
     const code = preference.toLowerCase().split("-")[0];
     if (messages[code]) return code;
   }
-  try {
-    const saved = window.localStorage.getItem("saigoncoffee-language");
-    if (messages[saved]) return saved;
-  } catch { /* Storage can be unavailable in private browsing. */ }
   return "vi";
 }
 

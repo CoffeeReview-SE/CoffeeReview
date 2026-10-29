@@ -110,32 +110,22 @@ static async Task<IResult> TranslateBrandAsync(long brandId, string languageCode
     if (string.Equals(sourceLanguage, languageCode, StringComparison.OrdinalIgnoreCase))
         return Results.Ok(new { brandId, brandName, languageCode, description = source, isTranslated = false });
 
-    var brandNames = new List<string> { brandName };
-    await using (var cmd = db.CreateCommand("SELECT brand_name FROM public.brand WHERE is_active AND brand_name IS NOT NULL"))
-    await using (var reader = await cmd.ExecuteReaderAsync(ct))
+    // Protect only this brand's name. Replacing every brand in the text can
+    // turn ordinary descriptions into mostly opaque tokens for the translator.
+    var sourceNamesToProtect = new List<(string Term, string RestoreAs)> { (brandName, brandName) };
+    if (brandName.Contains("KOI", StringComparison.OrdinalIgnoreCase))
     {
-        while (await reader.ReadAsync(ct))
-        {
-            var name = reader.GetString(0).Trim();
-            if (name.Length > 0 && !brandNames.Contains(name, StringComparer.OrdinalIgnoreCase)) brandNames.Add(name);
-        }
+        sourceNamesToProtect.Add(("KOI The", brandName));
+        sourceNamesToProtect.Add(("KOI Tea", brandName));
     }
-
-    var sourceNamesToProtect = brandNames.Select(name => (Term: name, RestoreAs: name)).ToList();
-    var koiName = brandNames.FirstOrDefault(name => name.Contains("KOI", StringComparison.OrdinalIgnoreCase) && name.Contains("Th", StringComparison.OrdinalIgnoreCase));
-    if (koiName is not null)
-    {
-        sourceNamesToProtect.Add(("KOI The", koiName));
-        sourceNamesToProtect.Add(("KOI Tea", koiName));
-    }
-    var starbucksName = brandNames.FirstOrDefault(name => name.Contains("Starbucks", StringComparison.OrdinalIgnoreCase));
-    if (starbucksName is not null) sourceNamesToProtect.Add(("Starbuck", starbucksName));
+    if (brandName.Contains("Starbucks", StringComparison.OrdinalIgnoreCase))
+        sourceNamesToProtect.Add(("Starbuck", brandName));
 
     var protectedNames = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
     var sourceForTranslation = source;
     foreach (var (term, restoreAs) in sourceNamesToProtect.OrderByDescending(value => value.Term.Length))
     {
-        var token = $"SCBRANDTOKEN{protectedNames.Count}TOKEN";
+        var token = $"ZXQBRAND{protectedNames.Count}QXZ";
         var replaced = Regex.Replace(sourceForTranslation, Regex.Escape(term), token, RegexOptions.IgnoreCase);
         if (replaced == sourceForTranslation) continue;
         protectedNames[token] = restoreAs;
