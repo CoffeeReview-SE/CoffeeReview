@@ -61,17 +61,17 @@ app.MapGet("/brands/{brandId:long}", async (long brandId, NpgsqlDataSource db, C
 
 // User language selection translates on demand without persisting the translation.
 app.MapPost("/brands/{brandId:long}/translations/{languageCode}", async (
-    long brandId, string languageCode, NpgsqlDataSource db, ITranslationProvider translator, CancellationToken ct) =>
-    await TranslateBrandAsync(brandId, languageCode, db, translator, ct));
+    long brandId, string languageCode, NpgsqlDataSource db, ITranslationProvider translator, ILogger<Program> logger, CancellationToken ct) =>
+    await TranslateBrandAsync(brandId, languageCode, db, translator, logger, ct));
 
 // Admin can also explicitly generate or refresh a brand translation.
 app.MapPost("/admin/brands/{brandId:long}/translations/{languageCode}", async (
-    long brandId, string languageCode, NpgsqlDataSource db, ITranslationProvider translator, CancellationToken ct) =>
-    await TranslateBrandAsync(brandId, languageCode, db, translator, ct));
+    long brandId, string languageCode, NpgsqlDataSource db, ITranslationProvider translator, ILogger<Program> logger, CancellationToken ct) =>
+    await TranslateBrandAsync(brandId, languageCode, db, translator, logger, ct));
 
 app.Run();
 
-static async Task<IResult> TranslateBrandAsync(long brandId, string languageCode, NpgsqlDataSource db, ITranslationProvider translator, CancellationToken ct)
+static async Task<IResult> TranslateBrandAsync(long brandId, string languageCode, NpgsqlDataSource db, ITranslationProvider translator, ILogger logger, CancellationToken ct)
 {
     languageCode = languageCode.Trim().ToLowerInvariant();
     if (languageCode.Length is < 2 or > 10)
@@ -137,16 +137,19 @@ static async Task<IResult> TranslateBrandAsync(long brandId, string languageCode
     {
         translated = await translator.TranslateAsync(sourceForTranslation, sourceLanguage ?? "auto", languageCode, ct);
     }
-    catch (HttpRequestException)
+    catch (HttpRequestException ex)
     {
+        logger.LogWarning(ex, "Translation provider failed for brand {BrandId} and language {LanguageCode}", brandId, languageCode);
         return Results.Problem("The unofficial translation endpoint is unavailable.", statusCode: StatusCodes.Status502BadGateway);
     }
-    catch (JsonException)
+    catch (JsonException ex)
     {
+        logger.LogWarning(ex, "Translation provider returned an invalid response for brand {BrandId} and language {LanguageCode}", brandId, languageCode);
         return Results.Problem("The translation endpoint returned an unexpected response.", statusCode: StatusCodes.Status502BadGateway);
     }
-    catch (OperationCanceledException) when (!ct.IsCancellationRequested)
+    catch (OperationCanceledException ex) when (!ct.IsCancellationRequested)
     {
+        logger.LogWarning(ex, "Translation provider timed out for brand {BrandId} and language {LanguageCode}", brandId, languageCode);
         return Results.Problem("The translation request timed out.", statusCode: StatusCodes.Status504GatewayTimeout);
     }
 
@@ -166,29 +169,62 @@ public interface ITranslationProvider
 
 public sealed class UnofficialGoogleTranslateProvider(HttpClient client) : ITranslationProvider
 {
-    private const string Endpoint = "https://translate.googleapis.com/translate_a/single";
+    private static readonly string[] Endpoints =
+    [
+        "https://translate.googleapis.com/translate_a/single",
+        "https://translate.google.com/translate_a/single"
+    ];
 
     public async Task<string> TranslateAsync(string text, string sourceLanguage, string targetLanguage, CancellationToken cancellationToken)
     {
         var source = GoogleLanguageCode(sourceLanguage);
         var target = GoogleLanguageCode(targetLanguage);
-        var url = $"{Endpoint}?client=gtx&sl={Uri.EscapeDataString(source)}&tl={Uri.EscapeDataString(target)}&dt=t&q={Uri.EscapeDataString(text)}";
-        using var response = await client.GetAsync(url, cancellationToken);
-        response.EnsureSuccessStatusCode();
-        await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
-        using var document = await JsonDocument.ParseAsync(stream, cancellationToken: cancellationToken);
-
-        if (document.RootElement.ValueKind != JsonValueKind.Array || document.RootElement.GetArrayLength() == 0 ||
-            document.RootElement[0].ValueKind != JsonValueKind.Array)
-            throw new JsonException("Unexpected translation response shape.");
-
-        var segments = new List<string>();
-        foreach (var segment in document.RootElement[0].EnumerateArray())
+        Exception? lastError = null;
+        for (var attempt = 0; attempt < 4; attempt++)
         {
-            if (segment.ValueKind == JsonValueKind.Array && segment.GetArrayLength() > 0 && segment[0].ValueKind == JsonValueKind.String)
-                segments.Add(segment[0].GetString() ?? "");
+            cancellationToken.ThrowIfCancellationRequested();
+            var endpoint = Endpoints[attempt % Endpoints.Length];
+            var url = $"{endpoint}?client=gtx&sl={Uri.EscapeDataString(source)}&tl={Uri.EscapeDataString(target)}&dt=t&q={Uri.EscapeDataString(text)}";
+            try
+            {
+                using var response = await client.GetAsync(url, cancellationToken);
+                if (response.IsSuccessStatusCode)
+                {
+                    await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
+                    using var document = await JsonDocument.ParseAsync(stream, cancellationToken: cancellationToken);
+
+                    if (document.RootElement.ValueKind != JsonValueKind.Array || document.RootElement.GetArrayLength() == 0 ||
+                        document.RootElement[0].ValueKind != JsonValueKind.Array)
+                        throw new JsonException("Unexpected translation response shape.");
+
+                    var segments = new List<string>();
+                    foreach (var segment in document.RootElement[0].EnumerateArray())
+                    {
+                        if (segment.ValueKind == JsonValueKind.Array && segment.GetArrayLength() > 0 && segment[0].ValueKind == JsonValueKind.String)
+                            segments.Add(segment[0].GetString() ?? "");
+                    }
+                    var translation = string.Concat(segments);
+                    if (!string.IsNullOrWhiteSpace(translation)) return translation;
+                    lastError = new InvalidOperationException("The translation provider returned empty text.");
+                }
+                else
+                {
+                    lastError = new HttpRequestException($"Translation provider returned HTTP {(int)response.StatusCode}.", null, response.StatusCode);
+                    if ((int)response.StatusCode < 500 && response.StatusCode != System.Net.HttpStatusCode.TooManyRequests) break;
+                }
+            }
+            catch (HttpRequestException ex)
+            {
+                lastError = ex;
+            }
+            catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+            {
+                lastError = new TimeoutException("Translation provider request timed out.");
+            }
+
+            if (attempt < 3) await Task.Delay(TimeSpan.FromMilliseconds(300 * (attempt + 1)), cancellationToken);
         }
-        return string.Concat(segments);
+        throw new HttpRequestException("All translation provider attempts failed.", lastError);
     }
 
     private static string GoogleLanguageCode(string code) => code.Equals("zh", StringComparison.OrdinalIgnoreCase) ? "zh-CN" : code;
