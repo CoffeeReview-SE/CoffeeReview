@@ -149,8 +149,8 @@ INSERT INTO brand (brand_name, description, description_language_code, descripti
 ),
 (
  'KOI Thé',
- 'Happiness is to share special moments with friends. A celebration, a date or just a relaxing break in the day, there is always a reason to get together around a cup of KOI tea. KOI brings joy to the world. Freshly brewed tea and flavorful ingredients, prepared with passion are the key to KOI’s authentic taste and the reason why people come back again and again.',
- 'en',
+ 'Hạnh phúc là được sẻ chia những khoảnh khắc đặc biệt cùng bạn bè. Dù là dịp lễ, một buổi hẹn hò hay chỉ là phút thư giãn trong ngày, luôn có lý do để mọi người quây quần bên ly trà KOI. KOI mang niềm vui đến khắp thế giới. Trà được pha mới cùng những nguyên liệu đậm đà hương vị, chuẩn bị bằng tất cả đam mê, tạo nên hương vị đích thực của KOI và khiến mọi người quay lại hết lần này đến lần khác.',
+ 'vi',
  'https://koithe.com/en/home.php',
  'https://koithe.com/'
 ),
@@ -184,8 +184,8 @@ INSERT INTO brand (brand_name, description, description_language_code, descripti
 ),
 (
  'Starbucks',
- 'It happens millions of times each week – a customer receives a drink from a Starbucks barista – but each interaction is unique. We make sure everything we do honors that connection – from our commitment to the highest quality coffee in the world, to the way we engage with our customers and communities to do business responsibly.',
- 'en',
+ 'Mỗi tuần, điều này diễn ra hàng triệu lần: một khách hàng nhận thức uống từ nhân viên pha chế Starbucks, nhưng mỗi lần tương tác đều mang nét riêng. Chúng tôi trân trọng sự kết nối ấy trong mọi việc mình làm — từ cam kết mang đến cà phê chất lượng cao nhất thế giới đến cách chúng tôi gắn kết với khách hàng và cộng đồng để kinh doanh có trách nhiệm.',
+ 'vi',
  'https://en.starbucks.vn/about-us/',
  'https://www.starbucks.vn/'
 )

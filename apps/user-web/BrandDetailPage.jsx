@@ -298,7 +298,7 @@ export default function BrandDetailPage({ brandId, brand, onBack, onNavigate, on
   useEffect(() => {
     if (!sourceBrand?.description || !brandId) return;
     let active = true;
-    const sourceLanguage = sourceBrand.descriptionLanguageCode?.toLowerCase();
+    const sourceLanguage = (sourceBrand.descriptionLanguageCode || "vi").toLowerCase();
 
     if (sourceLanguage === languageCode) {
       setTranslation({ languageCode, description: sourceBrand.description, isTranslated: false });
@@ -344,7 +344,7 @@ export default function BrandDetailPage({ brandId, brand, onBack, onNavigate, on
 
   const localized = translation?.languageCode === languageCode ? translation : null;
   const currentDescription = localized?.description ?? item.description;
-  const descriptionLanguage = localized?.isTranslated ? languageCode : item.descriptionLanguageCode;
+  const descriptionLanguage = localized?.isTranslated ? languageCode : (item.descriptionLanguageCode || "vi");
   const isTranslating = translationStatus.languageCode === languageCode && translationStatus.status === "loading";
   const translationFailed = translationStatus.languageCode === languageCode && translationStatus.status === "error";
   const type = item.type || item.category || "";
