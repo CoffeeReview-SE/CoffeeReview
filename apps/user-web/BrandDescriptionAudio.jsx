@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { trackAudio } from "../analytics/tracking.js";
 import { useLanguage } from "./LanguageContext.jsx";
 import { getUserApi } from "./api.js";
+import { getSpeechVoice, speechLanguageTag } from "./speechVoice.js";
 
 let latestSpeechRequest = 0;
 
@@ -23,6 +24,12 @@ export default function BrandDescriptionAudio({ brand, className, playLabel, sto
       window.speechSynthesis?.cancel();
       utterance.current = null;
     }
+  }, [brand.id, description]);
+
+  useEffect(() => {
+    setLoading(false);
+    setSpeaking(false);
+    setError("");
   }, [brand.id, description]);
 
   const toggleSpeech = async event => {
@@ -64,9 +71,13 @@ export default function BrandDescriptionAudio({ brand, className, playLabel, sto
       if (request === requestId.current) setLoading(false);
       return;
     }
+    const voice = await getSpeechVoice(voiceLanguage);
+    if (request !== requestId.current || speechRequest !== latestSpeechRequest) {
+      if (request === requestId.current) setLoading(false);
+      return;
+    }
     const speech = new SpeechSynthesisUtterance(text);
-    speech.lang = voiceLanguage;
-    const voice = window.speechSynthesis.getVoices().find(item => item.lang.toLowerCase().startsWith(voiceLanguage.toLowerCase()));
+    speech.lang = speechLanguageTag(voiceLanguage);
     if (voice) speech.voice = voice;
     speech.onstart = () => {
       if (request !== requestId.current) return;
@@ -89,7 +100,14 @@ export default function BrandDescriptionAudio({ brand, className, playLabel, sto
     };
     window.speechSynthesis.cancel();
     utterance.current = speech;
-    window.speechSynthesis.speak(speech);
+    try {
+      window.speechSynthesis.speak(speech);
+    } catch {
+      utterance.current = null;
+      setLoading(false);
+      setSpeaking(false);
+      setError("Không phát được giọng đọc trên thiết bị này.");
+    }
   };
 
   const label = loading ? "Đang chuẩn bị giọng đọc" : speaking ? stopLabel : playLabel;

@@ -4,6 +4,7 @@ import { MapContainer, Marker, Popup, TileLayer, Tooltip, useMap } from "react-l
 import { useLanguage } from "./LanguageContext.jsx";
 import { getUserApi } from "./api.js";
 import { trackAudio } from "../analytics/tracking.js";
+import { getSpeechVoice, speechLanguageTag } from "./speechVoice.js";
 import "./StoreMap.css";
 
 const currentLocationIcon = divIcon({
@@ -118,9 +119,13 @@ export default function StoreMap() {
         isPreparingNearby.current = false;
         return;
       }
+      const voice = await getSpeechVoice(voiceLanguage);
+      if (generation !== proximityAudioGeneration.current || !proximityAudioActive.current) {
+        isPreparingNearby.current = false;
+        return;
+      }
       const speech = new SpeechSynthesisUtterance(speechText);
-      speech.lang = voiceLanguage;
-      const voice = window.speechSynthesis.getVoices().find(item => item.lang.toLowerCase().startsWith(voiceLanguage.toLowerCase()));
+      speech.lang = speechLanguageTag(voiceLanguage);
       if (voice) speech.voice = voice;
       speech.onstart = () => {
         isSpeakingNearby.current = true;
@@ -136,7 +141,11 @@ export default function StoreMap() {
       isPreparingNearby.current = false;
       isSpeakingNearby.current = true;
       window.speechSynthesis.cancel();
-      window.speechSynthesis.speak(speech);
+      try {
+        window.speechSynthesis.speak(speech);
+      } catch {
+        finish();
+      }
     };
   }, [languageCode]);
 
