@@ -193,7 +193,7 @@ export default function AdminDashboard({ onNavigate }) {
             Làm mới
           </button>
         </header>
-        <p>Toàn bộ thời gian · Tự cập nhật sau mỗi 30 giây · Giờ Việt Nam</p>
+        <p>Toàn bộ thời gian · Tự cập nhật sau mỗi 5 giây · Giờ Việt Nam</p>
         {error && (
           <p role="alert" style={{ color: '#B42318' }}>
             {error}
