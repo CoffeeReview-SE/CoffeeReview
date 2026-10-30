@@ -445,8 +445,8 @@ export default function StoreMap({ fullScreen = false }) {
         onChange={(event) => setSearchTerm(event.target.value)}
       />
       <div className="store-map__action-row">
-        {!fullScreen && <button className="store-map__locate" type="button" onClick={locateAndEnableNearbyAudio} disabled={isLocating} aria-label={t("map.listenNearest")}>
-          {isLocating ? t("map.locating") : t("map.listenNearest")}
+        {!fullScreen && <button className="store-map__locate" type="button" onClick={locateAndEnableNearbyAudio} disabled={isLocating} aria-label={t("map.locate")}>
+          {isLocating ? t("map.locating") : t("map.locate")}
         </button>}
         {nearbyAudioEnabled && <button className="store-map__nearby-audio" type="button" onClick={toggleNearbyAudio} aria-pressed="true">{proximityText.disable}</button>}
       </div>
@@ -509,7 +509,7 @@ export default function StoreMap({ fullScreen = false }) {
           scrollWheelZoom
         >
           <ChangeView center={mapCenter} zoom={mapZoom} />
-          <MapControls onLocate={fullScreen ? locateAndEnableNearbyAudio : locateMe} t={t} />
+          <MapControls onLocate={locateAndEnableNearbyAudio} t={t} />
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
