@@ -211,6 +211,8 @@
 .store-map--full-screen .store-map__location-status,
 .store-map--full-screen .store-map__nearby-status,
 .store-map--full-screen .store-map__radius-status { position: absolute; z-index: 1001; top: 119px; left: 18px; max-width: 340px; margin: 0; padding: 5px 8px; border-radius: 6px; background: #ffffffed; }
+.store-map--full-screen .store-map__radius-status { top: 145px; }
+.store-map--full-screen .store-map__nearby-status { top: 171px; }
 .store-map--full-screen .store-map__layout { position: absolute; z-index: 1; inset: 0; display: block; margin: 0; }
 .store-map--full-screen .store-map__results { position: absolute; z-index: 1000; top: 166px; bottom: 14px; left: 14px; width: min(360px, calc(100vw - 28px)); max-height: none; padding: 12px; box-shadow: 0 5px 22px #24150c2b; }
 .store-map--full-screen .store-map__canvas { position: absolute; inset: 0; width: 100%; height: 100%; border-radius: 0; box-shadow: none; }
@@ -250,6 +252,8 @@
   .store-map--full-screen .store-map__location-status,
   .store-map--full-screen .store-map__nearby-status,
   .store-map--full-screen .store-map__radius-status { top: 178px; left: 14px; max-width: calc(100vw - 28px); }
+  .store-map--full-screen .store-map__radius-status { top: 204px; }
+  .store-map--full-screen .store-map__nearby-status { top: 230px; }
   .store-map--full-screen .store-map__results { top: auto; right: 10px; bottom: 10px; left: 10px; width: auto; height: min(38dvh, 300px); padding: 10px; }
   .store-map--full-screen .store-map__summary-table { display: none; }
 }

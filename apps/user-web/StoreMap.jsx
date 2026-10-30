@@ -130,7 +130,7 @@ export default function StoreMap({ fullScreen = false }) {
     if (enableAudioAfterGps.current) {
       enableAudioAfterGps.current = false;
       setNearbyAudioEnabled(true);
-      setNearbyAudioStatus(proximityText.enabled.replace("2 km", `${proximityRadiusKm} km`));
+      setNearbyAudioStatus(fullScreen ? "" : proximityText.enabled.replace("2 km", `${proximityRadiusKm} km`));
     }
   };
 
@@ -267,7 +267,7 @@ export default function StoreMap({ fullScreen = false }) {
       setNearbyAudioStatus(proximityText.denied);
       return undefined;
     }
-    setNearbyAudioStatus(proximityText.enabled.replace("2 km", `${proximityRadiusKm} km`));
+    if (!fullScreen) setNearbyAudioStatus(proximityText.enabled.replace("2 km", `${proximityRadiusKm} km`));
     const watchId = navigator.geolocation.watchPosition(
       ({ coords }) => updateUserPosition(coords),
       () => setNearbyAudioStatus(proximityText.denied),
@@ -283,7 +283,7 @@ export default function StoreMap({ fullScreen = false }) {
       isSpeakingNearby.current = false;
       isPreparingNearby.current = false;
     };
-  }, [nearbyAudioEnabled]);
+  }, [nearbyAudioEnabled, fullScreen]);
 
   useEffect(() => {
     proximityAudioGeneration.current += 1;
@@ -322,6 +322,14 @@ export default function StoreMap({ fullScreen = false }) {
     setNearbyAudioStatus(proximityText.found([nearest.branch.name || brand.name]));
     speakNextNearby.current?.();
   }, [fullScreen, nearbyAudioEnabled, userPosition, locations, brandCatalog, languageCode, proximityRadiusMeters, proximityRadiusKm]);
+
+  const nearestAudioBranch = fullScreen && userPosition
+    ? locations
+      .filter(branch => Number.isFinite(branch.lat) && Number.isFinite(branch.lng))
+      .map(branch => ({ branch, distance: distanceMeters(userPosition.position[0], userPosition.position[1], branch.lat, branch.lng) }))
+      .filter(item => item.distance <= WALKING_AUDIO_RADIUS_METERS)
+      .sort((a, b) => a.distance - b.distance)[0]?.branch
+    : null;
 
   const toggleNearbyAudio = () => {
     if (!nearbyAudioEnabled) {
@@ -414,7 +422,7 @@ export default function StoreMap({ fullScreen = false }) {
       setNearbyAudioEnabled(false);
       window.speechSynthesis.cancel();
     }
-    setNearbyAudioStatus(proximityText.gps);
+    setNearbyAudioStatus(fullScreen ? "" : proximityText.gps);
     locateMe();
   };
 
@@ -437,9 +445,9 @@ export default function StoreMap({ fullScreen = false }) {
         onChange={(event) => setSearchTerm(event.target.value)}
       />
       <div className="store-map__action-row">
-        <button className="store-map__locate" type="button" onClick={locateAndEnableNearbyAudio} disabled={isLocating} aria-label={t("map.listenNearest")}>
+        {!fullScreen && <button className="store-map__locate" type="button" onClick={locateAndEnableNearbyAudio} disabled={isLocating} aria-label={t("map.listenNearest")}>
           {isLocating ? t("map.locating") : t("map.listenNearest")}
-        </button>
+        </button>}
         {nearbyAudioEnabled && <button className="store-map__nearby-audio" type="button" onClick={toggleNearbyAudio} aria-pressed="true">{proximityText.disable}</button>}
       </div>
       <form className="store-map__radius-form" onSubmit={applyRadius}>
@@ -480,7 +488,7 @@ export default function StoreMap({ fullScreen = false }) {
                     <td>
                       <button className="store-map__table-select" onClick={() => selectLocation(item)} type="button">{item.name}</button>
                       <small>{item.address}</small>
-                      {userPosition && item.id === nearestBranchId && nearbyAudioEnabled && <small className="store-map__audio-note">{t("map.autoPlayAudio")}</small>}
+                      {userPosition && nearbyAudioEnabled && (fullScreen ? String(item.id) === String(nearestAudioBranch?.id) : item.id === nearestBranchId) && <small className="store-map__audio-note">{t("map.autoPlayAudio")}</small>}
                       <a className="store-map__table-directions" href={googleDirectionsUrl(item, userPosition)} target="_blank" rel="noopener noreferrer">{t("map.directions")}</a>
                     </td>
                     <td>{userPosition && Number.isFinite(item.distanceFromUser) ? formatDistance(item.distanceFromUser) : "—"}</td>
@@ -501,7 +509,7 @@ export default function StoreMap({ fullScreen = false }) {
           scrollWheelZoom
         >
           <ChangeView center={mapCenter} zoom={mapZoom} />
-          <MapControls onLocate={locateMe} t={t} />
+          <MapControls onLocate={fullScreen ? locateAndEnableNearbyAudio : locateMe} t={t} />
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
