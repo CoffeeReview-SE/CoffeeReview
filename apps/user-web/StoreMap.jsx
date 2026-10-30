@@ -331,21 +331,9 @@ export default function StoreMap({ fullScreen = false }) {
       .filter(item => item.distanceFromUser <= proximityRadiusMeters)
       .sort((a, b) => a.distanceFromUser - b.distanceFromUser)
     : [];
-  const locationsByDistance = fullScreen
-    ? userPosition
-      ? locations
-        .map(item => ({
-          ...item,
-          distanceFromUser: Number.isFinite(item.lat) && Number.isFinite(item.lng)
-            ? distanceMeters(userPosition.position[0], userPosition.position[1], item.lat, item.lng)
-            : null,
-        }))
-        .filter(item => `${item.name} ${item.brand} ${item.address}`.toLocaleLowerCase("vi").includes(normalizedSearch))
-        .sort((a, b) => (a.distanceFromUser ?? Infinity) - (b.distanceFromUser ?? Infinity))
-      : filteredLocations
-    : userPosition
-      ? nearbyLocationsByDistance.filter(item => `${item.name} ${item.brand} ${item.address}`.toLocaleLowerCase("vi").includes(normalizedSearch))
-      : filteredLocations;
+  const locationsByDistance = userPosition
+    ? nearbyLocationsByDistance.filter(item => `${item.name} ${item.brand} ${item.address}`.toLocaleLowerCase("vi").includes(normalizedSearch))
+    : filteredLocations;
   const nearbyRankById = new Map(nearbyLocationsByDistance.map((item, index) => [item.id, index + 1]));
   const nearestBranchId = nearbyLocationsByDistance[0]?.id;
   const mappedLocations = locationsByDistance.filter(item => Number.isFinite(item.lat) && Number.isFinite(item.lng));
@@ -429,8 +417,8 @@ export default function StoreMap({ fullScreen = false }) {
         onChange={(event) => setSearchTerm(event.target.value)}
       />
       <div className="store-map__action-row">
-        <button className="store-map__locate" type="button" onClick={locateAndEnableNearbyAudio} disabled={isLocating} aria-label={t("map.locate")}>
-          {isLocating ? t("map.locating") : t("map.locate")}
+        <button className="store-map__locate" type="button" onClick={locateAndEnableNearbyAudio} disabled={isLocating} aria-label={t("map.listenNearest")}>
+          {isLocating ? t("map.locating") : t("map.listenNearest")}
         </button>
         {nearbyAudioEnabled && <button className="store-map__nearby-audio" type="button" onClick={toggleNearbyAudio} aria-pressed="true">{proximityText.disable}</button>}
       </div>
