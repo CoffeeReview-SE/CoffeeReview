@@ -42,14 +42,17 @@ export default function MapPage() {
             </button>
           ))}
         </nav>
-        <div className="store-map-page__language" ref={languageMenuRef}>
-          <button type="button" className="store-map-page__language-button" aria-expanded={languageMenuOpen} onClick={() => setLanguageMenuOpen(open => !open)}>
-            {languageCode.toUpperCase()} <span aria-hidden="true">⌄</span>
+        <div className="hp-lang-dropdown" ref={languageMenuRef}>
+          <button type="button" className="hp-lang-btn" aria-label="Chọn ngôn ngữ" aria-haspopup="true" aria-expanded={languageMenuOpen} onClick={() => setLanguageMenuOpen(open => !open)}>
+            {languageCode.toUpperCase()}
+            <span className={`hp-chevron-icon ${languageMenuOpen ? "open" : ""}`} aria-hidden="true">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6" /></svg>
+            </span>
           </button>
           {languageMenuOpen && (
-            <div className="store-map-page__language-menu">
+            <div className="hp-lang-menu">
               {LANGUAGES.map(language => (
-                <button key={language.code} type="button" aria-current={language.code === languageCode ? "true" : undefined} onClick={() => {
+                <button key={language.code} type="button" className={`hp-lang-item ${language.code === languageCode ? "active" : ""}`} aria-current={language.code === languageCode ? "true" : undefined} onClick={() => {
                   setLanguageCode(language.code);
                   setLanguageMenuOpen(false);
                 }}>

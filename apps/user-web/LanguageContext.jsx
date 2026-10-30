@@ -21,6 +21,7 @@ const messages = {
     "map.description": "Dữ liệu địa điểm mẫu để bạn trải nghiệm giao diện bản đồ và tìm kiếm.",
     "map.searchLabel": "Tìm theo tên quán hoặc địa chỉ", "map.searchPlaceholder": "Ví dụ: Quận 1, Highlands...",
     "map.locate": "Vị trí của tôi", "map.locating": "Đang định vị...",
+    "map.controls": "Điều khiển bản đồ", "map.zoomControls": "Thu phóng bản đồ", "map.zoomIn": "Phóng to", "map.zoomOut": "Thu nhỏ",
     "map.requesting": "Đang yêu cầu quyền truy cập vị trí...", "map.unsupported": "Trình duyệt này không hỗ trợ định vị vị trí.",
     "map.locatingStatus": "Đang lấy vị trí hiện tại...", "map.located": "Đã xác định vị trí (sai số khoảng {accuracy} m).",
     "map.denied": "Bạn đã từ chối quyền truy cập vị trí. Hãy cấp quyền trong cài đặt trình duyệt rồi thử lại.",
@@ -52,6 +53,7 @@ const messages = {
     "map.description": "Sample locations let you explore the map and search interface.",
     "map.searchLabel": "Search by café name or address", "map.searchPlaceholder": "For example: District 1, Highlands...",
     "map.locate": "My location", "map.locating": "Locating...", "map.requesting": "Requesting location access...",
+    "map.controls": "Map controls", "map.zoomControls": "Map zoom", "map.zoomIn": "Zoom in", "map.zoomOut": "Zoom out",
     "map.unsupported": "This browser does not support geolocation.", "map.locatingStatus": "Getting your current location...",
     "map.located": "Location found (accuracy about {accuracy} m).", "map.denied": "Location access was denied. Allow it in your browser settings and try again.",
     "map.unavailable": "Your device could not provide a location. Turn on GPS or Wi-Fi and try again.",
@@ -82,6 +84,7 @@ const messages = {
     "map.description": "サンプルの場所データで地図と検索機能をお試しいただけます。",
     "map.searchLabel": "店名または住所で検索", "map.searchPlaceholder": "例：1区、Highlands...",
     "map.locate": "現在地", "map.locating": "位置を特定中...", "map.requesting": "位置情報へのアクセスを確認中...",
+    "map.controls": "地図の操作", "map.zoomControls": "地図のズーム", "map.zoomIn": "拡大", "map.zoomOut": "縮小",
     "map.unsupported": "このブラウザーは位置情報に対応していません。", "map.locatingStatus": "現在地を取得中...",
     "map.located": "位置を確認しました（誤差約 {accuracy} m）。", "map.denied": "位置情報へのアクセスが拒否されました。ブラウザーの設定で許可して再試行してください。",
     "map.unavailable": "位置情報を取得できません。GPSまたはWi-Fiを有効にして再試行してください。", "map.timeout": "位置情報の取得がタイムアウトしました。電波の良い場所で再試行してください。",
@@ -110,6 +113,7 @@ const messages = {
     "map.description": "使用示例地点体验地图界面和搜索功能。",
     "map.searchLabel": "按店名或地址搜索", "map.searchPlaceholder": "例如：第一郡、Highlands...",
     "map.locate": "我的位置", "map.locating": "正在定位...", "map.requesting": "正在请求位置权限...",
+    "map.controls": "地图控件", "map.zoomControls": "地图缩放", "map.zoomIn": "放大", "map.zoomOut": "缩小",
     "map.unsupported": "此浏览器不支持定位功能。", "map.locatingStatus": "正在获取当前位置...",
     "map.located": "已定位（误差约{accuracy}米）。", "map.denied": "您拒绝了位置访问权限。请在浏览器设置中允许后重试。",
     "map.unavailable": "设备暂时无法提供位置。请开启GPS或Wi-Fi后重试。", "map.timeout": "定位超时，请在信号较好的地方重试。",
@@ -159,10 +163,10 @@ export function useLanguage() {
   const dictionary = messages[context.languageCode] || messages.vi;
   const t = (key, values = {}) => {
     const gpsWaitingMessages = {
-      vi: "\u0110\u00e3 c\u00f3 v\u1ecb tr\u00ed (sai s\u1ed1 kho\u1ea3ng {accuracy} m). \u0110ang ch\u1edd th\u00eam 5 gi\u00e2y \u0111\u1ec3 c\u1ea3i thi\u1ec7n n\u1ebfu c\u00f3.",
-      en: "Location found (accuracy about {accuracy} m). Waiting 5 seconds for a better fix if available.",
-      ja: "\u4f4d\u7f6e\u3092\u53d6\u5f97\u3057\u307e\u3057\u305f\uff08\u7cbe\u5ea6\u7d04 {accuracy} m\uff09\u3002\u7cbe\u5ea6\u5411\u4e0a\u306e\u305f\u3081 5 \u79d2\u9593\u5f85\u6a5f\u3057\u307e\u3059\u3002",
-      zh: "\u5df2\u83b7\u53d6\u4f4d\u7f6e\uff08\u7cbe\u5ea6\u7ea6 {accuracy} \u7c73\uff09\u3002\u6b63\u5728\u7b49\u5f855\u79d2\u4ee5\u5c1d\u8bd5\u63d0\u9ad8\u7cbe\u5ea6\u3002",
+      vi: "\u0110\u00e3 c\u00f3 v\u1ecb tr\u00ed (sai s\u1ed1 kho\u1ea3ng {accuracy} m). \u0110ang ch\u1edd th\u00eam 3 gi\u00e2y \u0111\u1ec3 c\u1ea3i thi\u1ec7n n\u1ebfu c\u00f3.",
+      en: "Location found (accuracy about {accuracy} m). Waiting 3 seconds for a better fix if available.",
+      ja: "\u4f4d\u7f6e\u3092\u53d6\u5f97\u3057\u307e\u3057\u305f\uff08\u7cbe\u5ea6\u7d04 {accuracy} m\uff09\u3002\u7cbe\u5ea6\u5411\u4e0a\u306e\u305f\u3081 3 \u79d2\u9593\u5f85\u6a5f\u3057\u307e\u3059\u3002",
+      zh: "\u5df2\u83b7\u53d6\u4f4d\u7f6e\uff08\u7cbe\u5ea6\u7ea6 {accuracy} \u7c73\uff09\u3002\u6b63\u5728\u7b49\u5f853\u79d2\u4ee5\u5c1d\u8bd5\u63d0\u9ad8\u7cbe\u5ea6\u3002",
     };
     let value = key === "map.waitingForBetterFix"
       ? gpsWaitingMessages[context.languageCode] || gpsWaitingMessages.en

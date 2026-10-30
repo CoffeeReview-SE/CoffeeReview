@@ -33,6 +33,20 @@ function googleDirectionsUrl(item, userPosition) {
 }
 
 const DEFAULT_PROXIMITY_RADIUS_KM = 2;
+const SAVED_LOCATION_KEY = "sgcoffee.lastGpsPosition";
+function readSavedPosition() {
+  try {
+    const saved = JSON.parse(window.sessionStorage.getItem(SAVED_LOCATION_KEY) || "null");
+    if (Array.isArray(saved?.position) && saved.position.length === 2 && saved.position.every(Number.isFinite)) return saved;
+  } catch { /* Ignore unavailable or invalid session storage. */ }
+  return null;
+}
+
+function savePosition(position) {
+  try { window.sessionStorage.setItem(SAVED_LOCATION_KEY, JSON.stringify(position)); }
+  catch { /* The map can still use the current location for this page. */ }
+}
+
 function distanceMeters(aLat, aLng, bLat, bLng) {
   const radians = degrees => degrees * Math.PI / 180;
   const dLat = radians(bLat - aLat);
@@ -51,15 +65,30 @@ function ChangeView({ center, zoom }) {
   return null;
 }
 
+function MapControls({ onLocate, t }) {
+  const map = useMap();
+  return (
+    <div className="store-map__map-controls" aria-label={t("map.controls")}>
+      <button className="store-map__map-locate" type="button" title={t("map.locate")} aria-label={t("map.locate")} onClick={onLocate}>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7" /><circle cx="12" cy="12" r="2" /><path d="M12 2v3m0 14v3M2 12h3m14 0h3" /></svg>
+      </button>
+      <div className="store-map__map-zoom" aria-label={t("map.zoomControls")}>
+        <button type="button" title={t("map.zoomIn")} aria-label={t("map.zoomIn")} onClick={() => map.zoomIn()}>+</button>
+        <button type="button" title={t("map.zoomOut")} aria-label={t("map.zoomOut")} onClick={() => map.zoomOut()}>−</button>
+      </div>
+    </div>
+  );
+}
+
 export default function StoreMap({ fullScreen = false }) {
   const { t, languageCode } = useLanguage();
   const voiceTargetLanguage = languageCode;
   const [searchTerm, setSearchTerm] = useState("");
   const [locations, setLocations] = useState([]);
   const [brandCatalog, setBrandCatalog] = useState([]);
-  const [mapCenter, setMapCenter] = useState([10.7769, 106.7009]);
-  const [mapZoom, setMapZoom] = useState(12);
-  const [userPosition, setUserPosition] = useState(null);
+  const [userPosition, setUserPosition] = useState(() => readSavedPosition());
+  const [mapCenter, setMapCenter] = useState(() => readSavedPosition()?.position || [10.7769, 106.7009]);
+  const [mapZoom, setMapZoom] = useState(() => readSavedPosition() ? 16 : 12);
   const [locationStatus, setLocationStatus] = useState({ key: "" });
   const [isLocating, setIsLocating] = useState(false);
   const [nearbyAudioEnabled, setNearbyAudioEnabled] = useState(false);
@@ -70,7 +99,7 @@ export default function StoreMap({ fullScreen = false }) {
   const [radiusErrorOpen, setRadiusErrorOpen] = useState(false);
   const proximityRadiusMeters = proximityRadiusKm * 1000;
   const autoPlayedNearestBranch = useRef(false);
-  const gpsAcquisition = useRef({ active: false, best: null, timer: null });
+  const gpsAcquisition = useRef({ active: false, best: null, timer: null, watchId: null });
   const nearbyAudioQueue = useRef([]);
   const isSpeakingNearby = useRef(false);
   const isPreparingNearby = useRef(false);
@@ -84,10 +113,13 @@ export default function StoreMap({ fullScreen = false }) {
     if (!acquisition.active) return;
     acquisition.active = false;
     if (acquisition.timer) window.clearTimeout(acquisition.timer);
+    if (acquisition.watchId != null) navigator.geolocation?.clearWatch(acquisition.watchId);
     acquisition.timer = null;
+    acquisition.watchId = null;
     const best = acquisition.best;
     if (!best) return;
     setUserPosition(best);
+    savePosition(best);
     setMapCenter(best.position);
     setMapZoom(16);
     setLocationStatus({ key: "map.located", values: { accuracy: Math.round(best.accuracy) } });
@@ -101,17 +133,26 @@ export default function StoreMap({ fullScreen = false }) {
     };
     const acquisition = gpsAcquisition.current;
     if (acquisition.active) {
-      if (!acquisition.best || next.accuracy < acquisition.best.accuracy) acquisition.best = next;
+      if (!acquisition.best || next.accuracy < acquisition.best.accuracy) {
+        acquisition.best = next;
+        setUserPosition(next);
+        savePosition(next);
+        setMapCenter(next.position);
+        setMapZoom(16);
+      }
       setLocationStatus({ key: "map.waitingForBetterFix", values: { accuracy: Math.round(acquisition.best.accuracy) } });
-      if (!acquisition.timer) acquisition.timer = window.setTimeout(finishGpsAcquisition, 5000);
+      if (!acquisition.timer) acquisition.timer = window.setTimeout(finishGpsAcquisition, 3000);
       return acquisition.best;
     }
     setUserPosition(next);
+    savePosition(next);
     return next;
   };
 
   useEffect(() => () => {
-    if (gpsAcquisition.current.timer) window.clearTimeout(gpsAcquisition.current.timer);
+    const acquisition = gpsAcquisition.current;
+    if (acquisition.timer) window.clearTimeout(acquisition.timer);
+    if (acquisition.watchId != null) navigator.geolocation?.clearWatch(acquisition.watchId);
   }, []);
 
   useEffect(() => {
@@ -325,22 +366,35 @@ export default function StoreMap({ fullScreen = false }) {
     setLocationStatus({ key: "map.locatingStatus" });
     setUserPosition(null);
     if (gpsAcquisition.current.timer) window.clearTimeout(gpsAcquisition.current.timer);
-    gpsAcquisition.current = { active: true, best: null, timer: null };
+    if (gpsAcquisition.current.watchId != null) navigator.geolocation.clearWatch(gpsAcquisition.current.watchId);
+    gpsAcquisition.current = { active: true, best: null, timer: null, watchId: null };
     autoPlayedNearestBranch.current = false;
+    const handleLocationError = error => {
+      if (gpsAcquisition.current.best) {
+        finishGpsAcquisition();
+        return;
+      }
+      if (!gpsAcquisition.current.active) return;
+      gpsAcquisition.current.active = false;
+      if (gpsAcquisition.current.watchId != null) navigator.geolocation.clearWatch(gpsAcquisition.current.watchId);
+      gpsAcquisition.current.watchId = null;
+      const key = error.code === error.PERMISSION_DENIED
+        ? "map.denied"
+        : error.code === error.POSITION_UNAVAILABLE
+          ? "map.unavailable"
+          : "map.timeout";
+      setLocationStatus({ key });
+      setIsLocating(false);
+    };
+    gpsAcquisition.current.watchId = navigator.geolocation.watchPosition(
+      ({ coords }) => updateUserPosition(coords),
+      handleLocationError,
+      { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 },
+    );
     navigator.geolocation.getCurrentPosition(
       ({ coords }) => updateUserPosition(coords),
-      (error) => {
-        if (gpsAcquisition.current.best) return;
-        gpsAcquisition.current.active = false;
-        const key = error.code === error.PERMISSION_DENIED
-          ? "map.denied"
-          : error.code === error.POSITION_UNAVAILABLE
-            ? "map.unavailable"
-            : "map.timeout";
-        setLocationStatus({ key });
-        setIsLocating(false);
-      },
-      { enableHighAccuracy: true, timeout: 25000, maximumAge: 0 },
+      handleLocationError,
+      { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 },
     );
   };
 
@@ -435,9 +489,11 @@ export default function StoreMap({ fullScreen = false }) {
           className="store-map__canvas"
           center={mapCenter}
           zoom={mapZoom}
+          zoomControl={false}
           scrollWheelZoom
         >
           <ChangeView center={mapCenter} zoom={mapZoom} />
+          <MapControls onLocate={locateMe} t={t} />
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
