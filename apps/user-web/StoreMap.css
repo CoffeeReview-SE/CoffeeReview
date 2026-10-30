@@ -229,30 +229,32 @@
 .store-map__popup-details span,
 .store-map__popup-details a { font-size: 12px; line-height: 1.4; }
 .store-map__toast {
-  position: fixed;
-  z-index: 3000;
-  top: 220px;
-  right: 20px;
+  position: absolute;
+  z-index: 1100;
+  top: 14px;
+  right: 64px;
   display: flex;
   align-items: center;
   gap: 12px;
-  width: min(430px, calc(100vw - 32px));
-  padding: 14px 16px;
+  width: min(430px, calc(100vw - 100px));
+  padding: 11px 14px;
+  border: 1px solid #ead9c8;
+  border-left: 4px solid #e9a24b;
   border-radius: 12px;
-  background: #10b981;
-  color: #fff;
-  box-shadow: 0 8px 24px #14251d35;
+  background: #fffaf5;
+  color: #3a2012;
+  box-shadow: 0 5px 18px #24150c2b;
   font-size: 14px;
   font-weight: 600;
   line-height: 1.45;
   animation: store-map-toast-in .22s ease-out;
 }
-.store-map__toast-icon { display: grid; flex: 0 0 30px; place-items: center; width: 30px; height: 30px; border-radius: 50%; background: #ffffff35; font-size: 18px; }
-.store-map__toast button { flex: 0 0 auto; margin-left: auto; padding: 0 2px; border: 0; background: transparent; color: #fff; font-size: 24px; line-height: 1; cursor: pointer; }
+.store-map__toast-icon { display: grid; flex: 0 0 30px; place-items: center; width: 30px; height: 30px; border-radius: 50%; background: #6b3a22; color: #fff; font-size: 18px; }
+.store-map__toast button { flex: 0 0 auto; margin-left: auto; padding: 0 2px; border: 0; background: transparent; color: #6b3a22; font-size: 24px; line-height: 1; cursor: pointer; }
 @keyframes store-map-toast-in { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
 
 @media (max-width: 760px) {
-  .store-map__toast { top: 260px; right: 12px; width: min(430px, calc(100vw - 24px)); padding: 12px; font-size: 13px; }
+  .store-map__toast { top: 14px; right: 64px; width: min(300px, calc(100vw - 100px)); padding: 10px; font-size: 12px; }
   .store-map-page__bar { gap: 12px; flex-wrap: wrap; min-height: 58px; padding: 8px 5vw 0; }
   .store-map-page__nav { order: 3; flex-basis: 100%; gap: 20px; overflow-x: auto; }
   .store-map-page__nav button { padding: 10px 0; }
