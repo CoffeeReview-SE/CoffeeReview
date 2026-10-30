@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { divIcon } from "leaflet";
 import { MapContainer, Marker, Popup, TileLayer, Tooltip, useMap } from "react-leaflet";
 import { useLanguage } from "./LanguageContext.jsx";
@@ -91,6 +91,7 @@ export default function StoreMap({ fullScreen = false }) {
   const [mapCenter, setMapCenter] = useState(() => readSavedPosition()?.position || [10.7769, 106.7009]);
   const [mapZoom, setMapZoom] = useState(() => readSavedPosition() ? 16 : 12);
   const [locationStatus, setLocationStatus] = useState({ key: "" });
+  const [mapToast, setMapToast] = useState(null);
   const [isLocating, setIsLocating] = useState(false);
   const [nearbyAudioEnabled, setNearbyAudioEnabled] = useState(false);
   const [nearbyAudioStatus, setNearbyAudioStatus] = useState("");
@@ -109,7 +110,18 @@ export default function StoreMap({ fullScreen = false }) {
   const proximityAudioActive = useRef(nearbyAudioEnabled);
   const proximityAudioGeneration = useRef(0);
   const enableAudioAfterGps = useRef(false);
+  const mapToastTimer = useRef(null);
   proximityAudioActive.current = nearbyAudioEnabled;
+
+  const showMapToast = useCallback(message => {
+    if (!fullScreen) return;
+    setMapToast({ id: Date.now(), message });
+    if (mapToastTimer.current) window.clearTimeout(mapToastTimer.current);
+    mapToastTimer.current = window.setTimeout(() => {
+      setMapToast(null);
+      mapToastTimer.current = null;
+    }, 6000);
+  }, [fullScreen]);
 
   const finishGpsAcquisition = () => {
     const acquisition = gpsAcquisition.current;
@@ -126,6 +138,7 @@ export default function StoreMap({ fullScreen = false }) {
     setMapCenter(best.position);
     setMapZoom(16);
     setLocationStatus({ key: "map.located", values: { accuracy: Math.round(best.accuracy) } });
+    showMapToast(t("map.located", { accuracy: Math.round(best.accuracy) }));
     setIsLocating(false);
     if (enableAudioAfterGps.current) {
       enableAudioAfterGps.current = false;
@@ -141,6 +154,7 @@ export default function StoreMap({ fullScreen = false }) {
     };
     const acquisition = gpsAcquisition.current;
     if (acquisition.active) {
+      const isFirstFix = !acquisition.best;
       if (!acquisition.best || next.accuracy < acquisition.best.accuracy) {
         acquisition.best = next;
         setUserPosition(next);
@@ -149,6 +163,7 @@ export default function StoreMap({ fullScreen = false }) {
         setMapZoom(16);
       }
       setLocationStatus({ key: "map.waitingForBetterFix", values: { accuracy: Math.round(acquisition.best.accuracy) } });
+      if (isFirstFix) showMapToast(t("map.waitingForBetterFix", { accuracy: Math.round(acquisition.best.accuracy) }));
       if (!acquisition.timer) acquisition.timer = window.setTimeout(finishGpsAcquisition, 3000);
       return acquisition.best;
     }
@@ -161,6 +176,7 @@ export default function StoreMap({ fullScreen = false }) {
     const acquisition = gpsAcquisition.current;
     if (acquisition.timer) window.clearTimeout(acquisition.timer);
     if (acquisition.watchId != null) navigator.geolocation?.clearWatch(acquisition.watchId);
+    if (mapToastTimer.current) window.clearTimeout(mapToastTimer.current);
   }, []);
 
   useEffect(() => {
@@ -270,7 +286,10 @@ export default function StoreMap({ fullScreen = false }) {
     if (!fullScreen) setNearbyAudioStatus(proximityText.enabled.replace("2 km", `${proximityRadiusKm} km`));
     const watchId = navigator.geolocation.watchPosition(
       ({ coords }) => updateUserPosition(coords),
-      () => setNearbyAudioStatus(proximityText.denied),
+      () => {
+        setNearbyAudioStatus(proximityText.denied);
+        showMapToast(proximityText.denied);
+      },
       { enableHighAccuracy: true, maximumAge: 0, timeout: 25000 },
     );
     return () => {
@@ -283,7 +302,7 @@ export default function StoreMap({ fullScreen = false }) {
       isSpeakingNearby.current = false;
       isPreparingNearby.current = false;
     };
-  }, [nearbyAudioEnabled, fullScreen]);
+  }, [nearbyAudioEnabled, fullScreen, showMapToast]);
 
   useEffect(() => {
     proximityAudioGeneration.current += 1;
@@ -319,9 +338,11 @@ export default function StoreMap({ fullScreen = false }) {
     if (fullScreen) playedNearbyBranchIds.current.add(branchKey);
     else autoPlayedNearestBranch.current = true;
     nearbyAudioQueue.current = [brand];
-    setNearbyAudioStatus(proximityText.found([nearest.branch.name || brand.name]));
+    const playingMessage = proximityText.found([nearest.branch.name || brand.name]);
+    if (fullScreen) showMapToast(playingMessage);
+    else setNearbyAudioStatus(playingMessage);
     speakNextNearby.current?.();
-  }, [fullScreen, nearbyAudioEnabled, userPosition, locations, brandCatalog, languageCode, proximityRadiusMeters, proximityRadiusKm]);
+  }, [fullScreen, nearbyAudioEnabled, userPosition, locations, brandCatalog, languageCode, proximityRadiusMeters, proximityRadiusKm, showMapToast]);
 
   const nearestAudioBranch = fullScreen && userPosition
     ? locations
@@ -369,6 +390,7 @@ export default function StoreMap({ fullScreen = false }) {
   const locateMe = () => {
     if (!navigator.geolocation) {
       setLocationStatus({ key: "map.unsupported" });
+      showMapToast(t("map.unsupported"));
       return;
     }
 
@@ -398,6 +420,7 @@ export default function StoreMap({ fullScreen = false }) {
           ? "map.unavailable"
           : "map.timeout";
       setLocationStatus({ key });
+      showMapToast(t(key));
       setIsLocating(false);
     };
     gpsAcquisition.current.watchId = navigator.geolocation.watchPosition(
@@ -415,6 +438,7 @@ export default function StoreMap({ fullScreen = false }) {
   const locateAndEnableNearbyAudio = () => {
     if (!navigator.geolocation || !("speechSynthesis" in window)) {
       setNearbyAudioStatus(proximityText.denied);
+      showMapToast(proximityText.denied);
       return;
     }
     enableAudioAfterGps.current = true;
@@ -464,10 +488,19 @@ export default function StoreMap({ fullScreen = false }) {
         <button type="submit">{t("map.applyRadius")}</button>
       </form>
       {radiusStatus && <p id="store-map-radius-status" className="store-map__radius-status" role="status" aria-live="polite">{t(radiusStatus.key, radiusStatus.values)}</p>}
-      {nearbyAudioStatus && <p className="store-map__nearby-status" role="status" aria-live="polite">{nearbyAudioStatus}</p>}
-      {locationStatus.key && <p className="store-map__location-status" role="status" aria-live="polite">
+      {nearbyAudioStatus && !fullScreen && <p className="store-map__nearby-status" role="status" aria-live="polite">{nearbyAudioStatus}</p>}
+      {locationStatus.key && !fullScreen && <p className="store-map__location-status" role="status" aria-live="polite">
         {t(locationStatus.key, locationStatus.values)}
       </p>}
+      {fullScreen && mapToast && <div key={mapToast.id} className="store-map__toast" role="status" aria-live="polite">
+        <span className="store-map__toast-icon" aria-hidden="true">✓</span>
+        <span>{mapToast.message}</span>
+        <button type="button" aria-label={t("map.dismiss")} onClick={() => {
+          if (mapToastTimer.current) window.clearTimeout(mapToastTimer.current);
+          mapToastTimer.current = null;
+          setMapToast(null);
+        }}>×</button>
+      </div>}
 
       <div className="store-map__layout">
         <aside className="store-map__results" aria-label={t("map.results")}>
