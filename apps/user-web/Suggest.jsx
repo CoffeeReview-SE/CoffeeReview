@@ -185,7 +185,7 @@ function BrandBadge({ item }) {
   return <Logo item={item} size={48} />;
 }
 
-export default function SuggestionsPage({ recentBrands = [], onSelectBrand, onNavigate }) {
+export default function SuggestionsPage({ recentBrands = [], onNavigate }) {
   const { languageCode } = useLanguage();
   const st = (key, values) => screenText(languageCode, key, values);
   const [catalogBrands, setCatalogBrands] = useState([]);
@@ -216,9 +216,6 @@ export default function SuggestionsPage({ recentBrands = [], onSelectBrand, onNa
       ...prev,
       brandName: brand.name
     }));
-    if (onSelectBrand) {
-      onSelectBrand(brand);
-    }
   };
 
   const handleChange = (e) => {
