@@ -16,16 +16,16 @@ import logoTrungNguyen from "../../public/image/logo Trung nguyen.png";
 import logoVivaStar from "../../public/image/logo viva.png";
 
 const DATABASE_BRANDS_IMAGES = {
-  "phuc-long": { cover: coverPhucLong, image: logoPhucLong, menu: [menuPhucLong] },
-  "highlands-coffee": { cover: coverHighlands, image: logoHighlands, menu: [menuHighlands] },
-  "trung-nguyen": { cover: coverTrungNguyen, image: logoTrungNguyen, menu: [menuTrungNguyen] },
-  "katinat": { cover: coverKatinat, image: logoKatinat, menu: [menuKatinat] },
-  "koi-the": { cover: coverKoi, image: logoKoi, menu: [menuKoi] },
-  "phe-la": { cover: coverPheLa, image: logoPheLa, menu: [menuPheLa] },
-  "milano-coffee": { cover: coverMilano, image: logoMilano, menu: [menuMilano] },
-  "viva-star-coffee": { cover: coverVivaStar, image: logoVivaStar, menu: [menuViva] },
-  "the-coffee-house": { cover: coverTheCoffeeHouse, image: logoTheCoffeeHouse, menu: [menuTheCoffeeHouse] },
-  "starbucks": { cover: coverStarbucks, image: logoStarbucks, menu: [menuStarbucks] }
+  "phuc-long": { image: logoPhucLong },
+  "highlands-coffee": { image: logoHighlands },
+  "trung-nguyen": { image: logoTrungNguyen },
+  "katinat": { image: logoKatinat },
+  "koi-the": { image: logoKoi },
+  "phe-la": { image: logoPheLa },
+  "milano-coffee": { image: logoMilano },
+  "viva-star-coffee": { image: logoVivaStar },
+  "the-coffee-house": { image: logoTheCoffeeHouse },
+  "starbucks": { image: logoStarbucks }
 };
 
 function getDatabaseBrandImages(brandId, brandName) {
