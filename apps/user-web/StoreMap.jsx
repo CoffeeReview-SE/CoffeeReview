@@ -33,6 +33,7 @@ function googleDirectionsUrl(item, userPosition) {
 }
 
 const DEFAULT_PROXIMITY_RADIUS_KM = 2;
+const WALKING_AUDIO_RADIUS_METERS = 500;
 const SAVED_LOCATION_KEY = "sgcoffee.lastGpsPosition";
 function readSavedPosition() {
   try {
@@ -99,6 +100,7 @@ export default function StoreMap({ fullScreen = false }) {
   const [radiusErrorOpen, setRadiusErrorOpen] = useState(false);
   const proximityRadiusMeters = proximityRadiusKm * 1000;
   const autoPlayedNearestBranch = useRef(false);
+  const playedNearbyBranchIds = useRef(new Set());
   const gpsAcquisition = useRef({ active: false, best: null, timer: null, watchId: null });
   const nearbyAudioQueue = useRef([]);
   const isSpeakingNearby = useRef(false);
@@ -106,6 +108,7 @@ export default function StoreMap({ fullScreen = false }) {
   const speakNextNearby = useRef(null);
   const proximityAudioActive = useRef(nearbyAudioEnabled);
   const proximityAudioGeneration = useRef(0);
+  const enableAudioAfterGps = useRef(false);
   proximityAudioActive.current = nearbyAudioEnabled;
 
   const finishGpsAcquisition = () => {
@@ -124,6 +127,11 @@ export default function StoreMap({ fullScreen = false }) {
     setMapZoom(16);
     setLocationStatus({ key: "map.located", values: { accuracy: Math.round(best.accuracy) } });
     setIsLocating(false);
+    if (enableAudioAfterGps.current) {
+      enableAudioAfterGps.current = false;
+      setNearbyAudioEnabled(true);
+      setNearbyAudioStatus(proximityText.enabled.replace("2 km", `${proximityRadiusKm} km`));
+    }
   };
 
   const updateUserPosition = coords => {
@@ -271,6 +279,7 @@ export default function StoreMap({ fullScreen = false }) {
       window.speechSynthesis.cancel();
       nearbyAudioQueue.current = [];
       autoPlayedNearestBranch.current = false;
+      playedNearbyBranchIds.current.clear();
       isSpeakingNearby.current = false;
       isPreparingNearby.current = false;
     };
@@ -283,31 +292,36 @@ export default function StoreMap({ fullScreen = false }) {
     isSpeakingNearby.current = false;
     isPreparingNearby.current = false;
     autoPlayedNearestBranch.current = false;
+    playedNearbyBranchIds.current.clear();
   }, [languageCode]);
 
   useEffect(() => {
     if (!nearbyAudioEnabled || !userPosition || !brandCatalog.length) return;
-    if (autoPlayedNearestBranch.current) return;
+    if (!fullScreen && autoPlayedNearestBranch.current) return;
     const nearest = locations
       .filter(branch => Number.isFinite(branch.lat) && Number.isFinite(branch.lng))
       .map(branch => ({ branch, distance: distanceMeters(userPosition.position[0], userPosition.position[1], branch.lat, branch.lng) }))
-      .filter(item => item.distance <= proximityRadiusMeters)
+      .filter(item => item.distance <= (fullScreen ? WALKING_AUDIO_RADIUS_METERS : proximityRadiusMeters))
       .sort((a, b) => a.distance - b.distance)[0];
     if (!nearest) {
-      setNearbyAudioStatus(proximityText.none.replace("2 km", `${proximityRadiusKm} km`));
+      if (!fullScreen) setNearbyAudioStatus(proximityText.none.replace("2 km", `${proximityRadiusKm} km`));
       return;
     }
-    const brandsById = new Map(brandCatalog.map(brand => [brand.id, brand]));
-    const brand = brandsById.get(nearest.branch.brandId);
+    const branchKey = String(nearest.branch.id);
+    if (fullScreen && playedNearbyBranchIds.current.has(branchKey)) return;
+    const brandsById = new Map(brandCatalog.map(brand => [String(brand.id), brand]));
+    const brand = brandsById.get(String(nearest.branch.brandId));
     if (!brand?.description?.trim()) {
-      setNearbyAudioStatus(proximityText.none.replace("2 km", `${proximityRadiusKm} km`));
+      if (fullScreen) playedNearbyBranchIds.current.add(branchKey);
+      else setNearbyAudioStatus(proximityText.none.replace("2 km", `${proximityRadiusKm} km`));
       return;
     }
-    autoPlayedNearestBranch.current = true;
+    if (fullScreen) playedNearbyBranchIds.current.add(branchKey);
+    else autoPlayedNearestBranch.current = true;
     nearbyAudioQueue.current = [brand];
     setNearbyAudioStatus(proximityText.found([nearest.branch.name || brand.name]));
     speakNextNearby.current?.();
-  }, [nearbyAudioEnabled, userPosition, locations, brandCatalog, languageCode, proximityRadiusMeters, proximityRadiusKm]);
+  }, [fullScreen, nearbyAudioEnabled, userPosition, locations, brandCatalog, languageCode, proximityRadiusMeters, proximityRadiusKm]);
 
   const toggleNearbyAudio = () => {
     if (!nearbyAudioEnabled) {
@@ -364,6 +378,10 @@ export default function StoreMap({ fullScreen = false }) {
       }
       if (!gpsAcquisition.current.active) return;
       gpsAcquisition.current.active = false;
+      if (enableAudioAfterGps.current) {
+        enableAudioAfterGps.current = false;
+        setNearbyAudioStatus(proximityText.denied);
+      }
       if (gpsAcquisition.current.watchId != null) navigator.geolocation.clearWatch(gpsAcquisition.current.watchId);
       gpsAcquisition.current.watchId = null;
       const key = error.code === error.PERMISSION_DENIED
@@ -387,14 +405,16 @@ export default function StoreMap({ fullScreen = false }) {
   };
 
   const locateAndEnableNearbyAudio = () => {
-    if (!nearbyAudioEnabled) {
-      if (!navigator.geolocation || !("speechSynthesis" in window)) {
-        setNearbyAudioStatus(proximityText.denied);
-        return;
-      }
-      setNearbyAudioEnabled(true);
-      setNearbyAudioStatus(proximityText.gps);
+    if (!navigator.geolocation || !("speechSynthesis" in window)) {
+      setNearbyAudioStatus(proximityText.denied);
+      return;
     }
+    enableAudioAfterGps.current = true;
+    if (nearbyAudioEnabled) {
+      setNearbyAudioEnabled(false);
+      window.speechSynthesis.cancel();
+    }
+    setNearbyAudioStatus(proximityText.gps);
     locateMe();
   };
 
