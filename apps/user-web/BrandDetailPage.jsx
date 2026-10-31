@@ -3,6 +3,8 @@ import { trackAudio } from "../analytics/tracking.js";
 import DescriptionSpeech from "./DescriptionSpeech.jsx";
 import { LANGUAGES, useLanguage } from "./LanguageContext.jsx";
 import { detailText, localizedCategory } from "./brandDetailTranslations.js";
+import { brandDescriptionLanguage } from "./api.js";
+import { getOfflineBrandTranslation } from "./offlineBrandTranslations.js";
 
 // 1. Ảnh Không gian (image coffee shop/)
 import coverHighlands from "../../public/image/High land coffee.jpg";
@@ -220,11 +222,7 @@ function AudioCard({ audio, brandId, languageCode, preferredLanguage }) {
   const [t, setT] = useState({ cur: 0, dur: 0 });
   
   const sources = audio && typeof audio === "object" ? Object.entries(audio) : [];
-  const [selected, setSelected] = useState('');
-  useEffect(() => setSelected(''), [preferredLanguage]);
-  const sourceKey = sources.some(([code]) => code === selected)
-    ? selected
-    : sources.find(([code]) => code.toLowerCase().split("-")[0] === preferredLanguage)?.[0] || sources[0]?.[0];
+  const sourceKey = sources.find(([code]) => code.toLowerCase().split("-")[0] === preferredLanguage)?.[0] || sources[0]?.[0];
   const src = sources.length ? audio[sourceKey] : typeof audio === "string" ? audio : '';
   const code = sourceKey || languageCode;
   const counted = useRef(false);
@@ -232,8 +230,9 @@ function AudioCard({ audio, brandId, languageCode, preferredLanguage }) {
   const playEvent = useRef(null);
 
   useEffect(() => {
+    ref.current?.pause();
     setPlaying(false); setT({ cur: 0, dur: 0 }); counted.current = false; requested.current = false;
-  }, [src, brandId, code]);
+  }, [src, brandId, code, preferredLanguage]);
   const started = () => {
     setPlaying(true);
     if (!requested.current || counted.current || !code) return;
@@ -266,7 +265,6 @@ function AudioCard({ audio, brandId, languageCode, preferredLanguage }) {
       <input className="bd-range" type="range" min="0" max={t.dur || 1} step="0.1" value={t.cur} disabled={!src} onChange={seek} aria-label="Tua audio" style={{ "--p": `${pct}%` }} />
     </div>
     <div className="bd-audio-r">
-      {sources.length > 1 && <select aria-label="Ngôn ngữ audio" value={sourceKey} onChange={e => setSelected(e.target.value)}>{sources.map(([language]) => <option key={language} value={language}>{language.toUpperCase()}</option>)}</select>}
       {!src && <span>Chưa có audio</span>}
       <button onClick={() => setLoop(v => !v)} aria-pressed={loop} aria-label="Lặp lại" className={loop ? "on" : ""}><Icon n="repeat" size={16} /></button>
     </div>
@@ -284,6 +282,7 @@ export default function BrandDetailPage({ brandId, brand, onBack, onNavigate, on
   const dt = (key, values) => detailText(languageCode, key, values);
   const [translation, setTranslation] = useState(null);
   const [translationStatus, setTranslationStatus] = useState({ languageCode: "", status: "idle" });
+  const [translationError, setTranslationError] = useState("");
   const translationCache = useRef(new Map());
   useEffect(() => {
     const controller = new AbortController();
@@ -302,7 +301,15 @@ export default function BrandDetailPage({ brandId, brand, onBack, onNavigate, on
   useEffect(() => {
     if (!sourceBrand?.description || !brandId) return;
     let active = true;
-    const sourceLanguage = sourceBrand.descriptionLanguageCode?.toLowerCase();
+    const sourceLanguage = brandDescriptionLanguage(sourceBrand);
+
+    const offlineTranslation = getOfflineBrandTranslation(sourceBrand, languageCode);
+    if (offlineTranslation) {
+      setTranslation({ languageCode, description: offlineTranslation, isTranslated: true });
+      setTranslationError("");
+      setTranslationStatus({ languageCode, status: "idle" });
+      return () => { active = false; };
+    }
 
     if (sourceLanguage === languageCode) {
       setTranslation({ languageCode, description: sourceBrand.description, isTranslated: false });
@@ -319,6 +326,7 @@ export default function BrandDetailPage({ brandId, brand, onBack, onNavigate, on
     }
 
     setTranslationStatus({ languageCode, status: "loading" });
+    setTranslationError("");
     fetch(`/api/localization/brands/${brandId}/translations/${languageCode}`, { method: "POST" })
       .then(async response => {
         const data = await response.json().catch(() => ({}));
@@ -329,11 +337,13 @@ export default function BrandDetailPage({ brandId, brand, onBack, onNavigate, on
         if (!active) return;
         translationCache.current.set(cacheKey, data.description);
         setTranslation({ languageCode, description: data.description, isTranslated: data.isTranslated === true });
+        setTranslationError("");
         setTranslationStatus({ languageCode, status: "idle" });
       })
-      .catch(() => {
+      .catch(error => {
         if (!active) return;
         setTranslation(null);
+        setTranslationError(error?.message || "Translation request failed.");
         setTranslationStatus({ languageCode, status: "error" });
       });
     return () => { active = false; };
@@ -348,7 +358,7 @@ export default function BrandDetailPage({ brandId, brand, onBack, onNavigate, on
 
   const localized = translation?.languageCode === languageCode ? translation : null;
   const currentDescription = localized?.description ?? item.description;
-  const descriptionLanguage = localized?.isTranslated ? languageCode : item.descriptionLanguageCode;
+  const descriptionLanguage = localized?.isTranslated ? languageCode : brandDescriptionLanguage(item);
   const isTranslating = translationStatus.languageCode === languageCode && translationStatus.status === "loading";
   const translationFailed = translationStatus.languageCode === languageCode && translationStatus.status === "error";
   const type = item.type || item.category || "";
@@ -399,10 +409,10 @@ export default function BrandDetailPage({ brandId, brand, onBack, onNavigate, on
 
           {item.audio && (typeof item.audio === 'string' || Object.values(item.audio).some(Boolean))
             ? <AudioCard key={item.id} audio={item.audio} brandId={Number(item.id)} languageCode={item.audioLanguageCode || item.descriptionLanguageCode} preferredLanguage={languageCode} />
-            : <DescriptionSpeech key={item.id} brandId={Number(item.id)} description={currentDescription} languageCode={descriptionLanguage} />}
+            : <DescriptionSpeech key={item.id} brandId={Number(item.id)} brandName={item.name} description={currentDescription} sourceLanguageCode={descriptionLanguage} />}
 
           {isTranslating && <p className="bd-translation-status" role="status">{dt("translating")}</p>}
-          {translationFailed && <p className="bd-translation-status" role="status">{dt("translationFailed")}</p>}
+          {translationFailed && <p className="bd-translation-status" role="status">{dt("translationFailed")} <small>({translationError})</small></p>}
           <p className="bd-desc">{currentDescription || (loadError ? dt("noSampleDescription") : dt("loadingBrand"))}</p>
 
           <section className="bd-card">

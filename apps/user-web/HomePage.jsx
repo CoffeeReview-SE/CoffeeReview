@@ -212,10 +212,7 @@ export default function HomePage({ onOpenBrand, onNavigate }) {
   }, []);
   
   const go = key => {
-    if (key === "map") {
-      document.getElementById("store-map")?.scrollIntoView({ behavior: "smooth", block: "start" });
-      return;
-    }
+    if (key === "home") window.dispatchEvent(new Event("saigoncoffee:show-all-stores"));
     if (onNavigate) {
       onNavigate(key);
     }

@@ -3,6 +3,58 @@ import { LANGUAGES, useLanguage } from "./LanguageContext.jsx";
 import { localizedCategory, screenText } from "./brandDetailTranslations.js";
 import { getUserApi, toBrandCard } from "./api.js";
 
+// 2. Ảnh Logo (image logo/)
+import logoHighlands from "../../public/image/logo highlands coffee.jpg";
+import logoKatinat from "../../public/image/logo katinat.png";
+import logoKoi from "../../public/image/logo koi the.jpg";
+import logoMilano from "../../public/image/logo milano.png";
+import logoPheLa from "../../public/image/logo phe la.jpg";
+import logoPhucLong from "../../public/image/logo phuc long.jpg";
+import logoStarbucks from "../../public/image/logo starbuck.png";
+import logoTheCoffeeHouse from "../../public/image/logo the coffee house.jpg";
+import logoTrungNguyen from "../../public/image/logo Trung nguyen.png";
+import logoVivaStar from "../../public/image/logo viva.png";
+
+const DATABASE_BRANDS_IMAGES = {
+  "phuc-long": { image: logoPhucLong },
+  "highlands-coffee": { image: logoHighlands },
+  "trung-nguyen": { image: logoTrungNguyen },
+  "katinat": { image: logoKatinat },
+  "koi-the": { image: logoKoi },
+  "phe-la": { image: logoPheLa },
+  "milano-coffee": { image: logoMilano },
+  "viva-star-coffee": { image: logoVivaStar },
+  "the-coffee-house": { image: logoTheCoffeeHouse },
+  "starbucks": { image: logoStarbucks }
+};
+
+function getDatabaseBrandImages(brandId, brandName) {
+  const idKey = String(brandId || "").toLowerCase().trim();
+  if (DATABASE_BRANDS_IMAGES[idKey]) return DATABASE_BRANDS_IMAGES[idKey];
+
+  const nameKey = String(brandName || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "");
+
+  if (DATABASE_BRANDS_IMAGES[nameKey]) return DATABASE_BRANDS_IMAGES[nameKey];
+
+  if (nameKey.includes("phuc-long") || nameKey.includes("phuclong")) return DATABASE_BRANDS_IMAGES["phuc-long"];
+  if (nameKey.includes("highland")) return DATABASE_BRANDS_IMAGES["highlands-coffee"];
+  if (nameKey.includes("trung-nguyen")) return DATABASE_BRANDS_IMAGES["trung-nguyen"];
+  if (nameKey.includes("katinat")) return DATABASE_BRANDS_IMAGES["katinat"];
+  if (nameKey.includes("koi")) return DATABASE_BRANDS_IMAGES["koi-the"];
+  if (nameKey.includes("phe-la")) return DATABASE_BRANDS_IMAGES["phe-la"];
+  if (nameKey.includes("milano")) return DATABASE_BRANDS_IMAGES["milano-coffee"];
+  if (nameKey.includes("viva")) return DATABASE_BRANDS_IMAGES["viva-star-coffee"];
+  if (nameKey.includes("coffee-house") || nameKey.includes("tch")) return DATABASE_BRANDS_IMAGES["the-coffee-house"];
+  if (nameKey.includes("starbuck")) return DATABASE_BRANDS_IMAGES["starbucks"];
+
+  return null;
+}
 
 const paths = {
   search: <><circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" /></>,
@@ -105,21 +157,35 @@ function Header({ currentNav = "suggestions", onNavigate }) {
   );
 }
 
-function BrandBadge({ item }) {
-  if (item.logo) {
-    return <img src={item.logo} alt={`Logo ${item.name}`} className="sg-badge-img" />;
+function Logo({ item, size }) {
+  const dbBrandImgs = getDatabaseBrandImages(item.id, item.name);
+  const resolvedLogo = item.logo || item.image || dbBrandImgs?.image;
+
+  if (resolvedLogo) {
+    const isKoiOrTrungNguyen = String(item.id || "").toLowerCase().includes("koi") || 
+                               String(item.name || "").toLowerCase().includes("koi") ||
+                               String(item.id || "").toLowerCase().includes("trung") || 
+                               String(item.name || "").toLowerCase().includes("trung");
+
+    const extraLogoStyle = isKoiOrTrungNguyen
+      ? { width: size, height: size, borderRadius: "50%", objectFit: "contain", background: "#fff", padding: "4px" }
+      : { width: size, height: size, borderRadius: "50%", objectFit: "cover" };
+
+    return <img src={resolvedLogo} alt={`Logo ${item.name}`} style={extraLogoStyle} />;
   }
-  const lines = item.mark || [item.name];
-  return (
-    <div className="sg-badge-circle" style={{ backgroundColor: item.badge || "#1F6B45" }}>
-      {lines.map((line, idx) => (
-        <span key={idx}>{line}</span>
-      ))}
-    </div>
-  );
+
+  const big = size > 60;
+  const text = big ? (item.mark || [item.name]) : [item.name?.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase() || ""];
+  return <span className="bd-mark" style={{ width: size, height: size, background: item.badge || "#1F6B45", fontSize: big ? size * 0.13 : size * 0.34, boxShadow: big ? "inset 0 0 0 4px rgba(255,255,255,.85)" : "none" }}>
+    {text.map(l => <span key={l}>{l}</span>)}
+  </span>;
 }
 
-export default function SuggestionsPage({ recentBrands = [], onSelectBrand, onNavigate }) {
+function BrandBadge({ item }) {
+  return <Logo item={item} size={48} />;
+}
+
+export default function SuggestionsPage({ recentBrands = [], onNavigate }) {
   const { languageCode } = useLanguage();
   const st = (key, values) => screenText(languageCode, key, values);
   const [catalogBrands, setCatalogBrands] = useState([]);
@@ -148,11 +214,8 @@ export default function SuggestionsPage({ recentBrands = [], onSelectBrand, onNa
   const handleSelectPreBrand = (brand) => {
     setFormData(prev => ({
       ...prev,
-      brandName: brand.name
+      brandName: prev.brandName === brand.name ? "" : brand.name
     }));
-    if (onSelectBrand) {
-      onSelectBrand(brand);
-    }
   };
 
   const handleChange = (e) => {
@@ -210,10 +273,12 @@ export default function SuggestionsPage({ recentBrands = [], onSelectBrand, onNa
             </div>
             <div className="sg-selected-grid">
               {displayBrands.map((b) => (
-                <div 
+                <button
                   key={b.id} 
+                  type="button"
                   className={`sg-selected-card ${formData.brandName === b.name ? "active" : ""}`}
                   onClick={() => handleSelectPreBrand(b)}
+                  aria-pressed={formData.brandName === b.name}
                 >
                   <BrandBadge item={b} />
                   <div className="sg-card-info">
@@ -224,7 +289,7 @@ export default function SuggestionsPage({ recentBrands = [], onSelectBrand, onNa
                   {formData.brandName === b.name && (
                     <span className="sg-card-check"><Icon n="check" size={14} /></span>
                   )}
-                </div>
+                </button>
               ))}
             </div>
           </section>
@@ -335,6 +400,8 @@ export default function SuggestionsPage({ recentBrands = [], onSelectBrand, onNa
 }
 
 const styles = `
+.bd-mark{display:inline-flex;flex-direction:column;align-items:center;justify-content:center;border-radius:50%;color:#fff;font-weight:800;line-height:1.12;letter-spacing:.4px;text-align:center}
+
 .sg-page {
   --brown-dark: #3A2012;
   --brown-mid: #6B3A22;
@@ -513,6 +580,9 @@ const styles = `
   border: 1.5px solid var(--border-color);
   border-radius: 12px;
   cursor: pointer;
+  font: inherit;
+  color: inherit;
+  text-align: left;
   transition: all 0.2s ease;
 }
 .sg-selected-card:hover {
@@ -525,28 +595,6 @@ const styles = `
   background: #FAF3EC;
 }
 
-.sg-badge-circle {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
-  font-size: 8px;
-  font-weight: 800;
-  line-height: 1.1;
-  text-align: center;
-  flex-shrink: 0;
-}
-.sg-badge-img {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  object-fit: cover;
-  flex-shrink: 0;
-}
 .sg-card-info { flex: 1; min-width: 0; }
 .sg-card-info h4 { margin: 0 0 2px; font-size: 13.5px; font-weight: 700; color: var(--text-dark); }
 .sg-card-info p { margin: 0 0 4px; font-size: 11.5px; color: var(--text-muted); }

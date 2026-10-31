@@ -52,7 +52,7 @@ builder.Services.AddRateLimiter(o =>
         _ => new FixedWindowRateLimiterOptions { PermitLimit = 6, Window = TimeSpan.FromMinutes(1) }));
     o.AddPolicy("translation-on-demand", c => RateLimitPartition.GetFixedWindowLimiter(
         "translation:" + ClientKey(c),
-        _ => new FixedWindowRateLimiterOptions { PermitLimit = 10, Window = TimeSpan.FromMinutes(1) }));
+        _ => new FixedWindowRateLimiterOptions { PermitLimit = 60, Window = TimeSpan.FromMinutes(1) }));
 });
 
 builder.Services.AddHttpClient("groq", client =>

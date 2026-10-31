@@ -5,6 +5,7 @@ const HomePage = lazy(() => import('./user-web/HomePage.jsx'));
 const BrandListPage = lazy(() => import('./user-web/Brand_list.jsx'));
 const BrandDetailPage = lazy(() => import('./user-web/BrandDetailPage.jsx'));
 const SuggestionsPage = lazy(() => import('./user-web/Suggest.jsx'));
+const MapPage = lazy(() => import('./user-web/MapPage.jsx'));
 
 const AdminDashboard = lazy(() => import('./admin/AdminDashboard.jsx'));
 const BrandManagement = lazy(() => import('./admin/Manage_Brand.jsx'));
@@ -94,13 +95,11 @@ function BrandDetail({ recentBrands }) {
 
 /* 4. Trang Đề xuất */
 function Suggestions({ recentBrands }) {
-  const nav = useNavigate();
   const go = useUserNav();
 
   return (
     <SuggestionsPage
       recentBrands={recentBrands}
-      onSelectBrand={(brand) => nav(`/brand/${brand.id}`)}
       onNavigate={go}
     />
   );
@@ -145,6 +144,7 @@ export default function App() {
           <Route path="/brand" element={<BrandDetail />} />
           <Route path="/brand/:id" element={<BrandDetail recentBrands={recentBrands} />} />
           <Route path="/suggestions" element={<Suggestions recentBrands={recentBrands} />} />
+          <Route path="/map" element={<MapPage />} />
 
           {/* Admin Routes */}
           <Route path="/admin" element={<Dashboard />} />
