@@ -214,7 +214,7 @@ export default function SuggestionsPage({ recentBrands = [], onNavigate }) {
   const handleSelectPreBrand = (brand) => {
     setFormData(prev => ({
       ...prev,
-      brandName: brand.name
+      brandName: prev.brandName === brand.name ? "" : brand.name
     }));
   };
 
@@ -273,10 +273,12 @@ export default function SuggestionsPage({ recentBrands = [], onNavigate }) {
             </div>
             <div className="sg-selected-grid">
               {displayBrands.map((b) => (
-                <div 
+                <button
                   key={b.id} 
+                  type="button"
                   className={`sg-selected-card ${formData.brandName === b.name ? "active" : ""}`}
                   onClick={() => handleSelectPreBrand(b)}
+                  aria-pressed={formData.brandName === b.name}
                 >
                   <BrandBadge item={b} />
                   <div className="sg-card-info">
@@ -287,7 +289,7 @@ export default function SuggestionsPage({ recentBrands = [], onNavigate }) {
                   {formData.brandName === b.name && (
                     <span className="sg-card-check"><Icon n="check" size={14} /></span>
                   )}
-                </div>
+                </button>
               ))}
             </div>
           </section>
@@ -578,6 +580,9 @@ const styles = `
   border: 1.5px solid var(--border-color);
   border-radius: 12px;
   cursor: pointer;
+  font: inherit;
+  color: inherit;
+  text-align: left;
   transition: all 0.2s ease;
 }
 .sg-selected-card:hover {
