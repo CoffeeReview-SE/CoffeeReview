@@ -112,6 +112,17 @@
 .store-map__search { width: min(100%, 460px); padding: 12px 14px; border: 1px solid #ded4c9; border-radius: 9px; background: #fff; color: inherit; font: inherit; }
 .store-map__search:focus { border-color: #8b7a6c; outline: none; box-shadow: none; }
 .store-map__action-row { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
+.store-map__routing { margin-top: 14px; padding: 14px; border: 1px solid #e5d8ca; border-radius: 12px; background: #fff; }
+.store-map__routing-points { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; font-size: 13px; }
+.store-map__routing-points span { flex: 1 1 220px; overflow-wrap: anywhere; }
+.store-map__routing button, .store-map__routing-actions a, .store-map__popup-route { min-height: 36px; padding: 7px 11px; border: 1px solid #d8c7b7; border-radius: 8px; background: #fbf8f4; color: #51311f; font: inherit; font-size: 12px; text-decoration: none; cursor: pointer; }
+.store-map__routing button:hover, .store-map__routing-actions a:hover, .store-map__popup-route:hover { background: #f1e7dc; }
+.store-map__routing button:disabled { opacity: .55; cursor: not-allowed; }
+.store-map__routing-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; }
+.store-map__routing-actions label { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; }
+.store-map__route-summary, .store-map__route-error { margin: 9px 0 0; font-size: 12px; }
+.store-map__route-error { color: #a12622; }
+.store-map__popup-route { margin: 6px 8px 0 0; }
 .store-map__locate { min-height: 48px; padding: 0 20px; border: 0; border-radius: 9px; background: #6b3d25; color: #fff; font: inherit; font-weight: 600; cursor: pointer; transition: background .18s, box-shadow .18s; }
 .store-map__locate:hover:not(:disabled) { background: #4f2b1a; }
 .store-map__locate:disabled { cursor: wait; opacity: .65; }

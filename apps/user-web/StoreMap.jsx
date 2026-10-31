@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { divIcon } from "leaflet";
-import { MapContainer, Marker, Popup, TileLayer, Tooltip, useMap } from "react-leaflet";
+import { MapContainer, Marker, Polyline, Popup, TileLayer, Tooltip, useMap, useMapEvents } from "react-leaflet";
 import { useLanguage } from "./LanguageContext.jsx";
 import { brandDescriptionLanguage, getUserApi } from "./api.js";
 import { trackAudio } from "../analytics/tracking.js";
@@ -66,6 +66,18 @@ function ChangeView({ center, zoom }) {
   return null;
 }
 
+function MapPointPicker({ enabled, onPick }) {
+  useMapEvents({ click: event => { if (enabled) onPick([event.latlng.lat, event.latlng.lng]); } });
+  return null;
+}
+
+function googleTwoWheelerUrl(origin, destination) {
+  const params = new URLSearchParams({ api: "1", travelmode: "two-wheeler" });
+  if (origin) params.set("origin", origin.join(","));
+  if (destination) params.set("destination", destination.join(","));
+  return `https://www.google.com/maps/dir/?${params.toString()}`;
+}
+
 function FitLocations({ locations, active, resetCenter }) {
   const map = useMap();
   const wasActive = useRef(active);
@@ -110,6 +122,13 @@ export default function StoreMap({ fullScreen = false }) {
   const [mapZoom, setMapZoom] = useState(() => readSavedPosition() ? 16 : 12);
   const [mapToast, setMapToast] = useState(null);
   const [isLocating, setIsLocating] = useState(false);
+  const [routeStart, setRouteStart] = useState(null);
+  const [routeEnd, setRouteEnd] = useState(null);
+  const [pickingPoint, setPickingPoint] = useState(null);
+  const [routeMode, setRouteMode] = useState("route");
+  const [routeResult, setRouteResult] = useState(null);
+  const [routeLoading, setRouteLoading] = useState(false);
+  const [routeError, setRouteError] = useState("");
   const [nearbyAudioEnabled, setNearbyAudioEnabled] = useState(false);
   const [showAllLocations, setShowAllLocations] = useState(false);
   const showAllLocationsRef = useRef(showAllLocations);
@@ -471,6 +490,32 @@ export default function StoreMap({ fullScreen = false }) {
   const nearestBranchId = nearbyLocationsByDistance[0]?.id;
   const mappedLocations = locationsByDistance.filter(item => Number.isFinite(item.lat) && Number.isFinite(item.lng));
   const formatDistance = distance => distance < 1000 ? `${Math.round(distance)} m` : `${(distance / 1000).toFixed(1)} km`;
+  const routeUi = {
+    vi: { start: "Điểm đi", end: "Điểm đến", useGps: "Dùng vị trí của tôi", pick: "Chấm trên bản đồ", bird: "Đường chim bay", route: "Đường thực tế (OSRM)", calculate: "Tính đường", clear: "Xóa lựa chọn", wait: "Đang tìm đường…", openGoogle: "Mở Google Maps (xe máy)", selectPrompt: "Chạm lên bản đồ để chọn", error: "Không lấy được tuyến đường. Thử lại hoặc mở Google Maps.", noStart: "Hãy chọn điểm đi và điểm đến trước.", routeNote: "Tuyến tham khảo từ OSRM/OpenStreetMap, không đảm bảo phù hợp cho xe máy.", chooseDestination: "Chọn làm điểm đến" },
+    en: { start: "From", end: "To", useGps: "Use my location", pick: "Pick on map", bird: "Straight line", route: "Road route (OSRM)", calculate: "Get route", clear: "Clear points", wait: "Finding route…", openGoogle: "Open Google Maps (motorcycle)", selectPrompt: "Tap the map to choose", error: "Could not get a route. Try again or open Google Maps.", noStart: "Choose both start and destination first.", routeNote: "Estimated route from OSRM/OpenStreetMap; it may not suit motorcycles.", chooseDestination: "Set as destination" },
+  }[languageCode] || { start: "From", end: "To", useGps: "Use my location", pick: "Pick on map", bird: "Straight line", route: "Road route (OSRM)", calculate: "Get route", clear: "Clear points", wait: "Finding route…", openGoogle: "Open Google Maps (motorcycle)", selectPrompt: "Tap the map to choose", error: "Could not get a route. Try again or open Google Maps.", noStart: "Choose both start and destination first.", routeNote: "Estimated route from OSRM/OpenStreetMap; it may not suit motorcycles.", chooseDestination: "Set as destination" };
+  const setRoutePoint = (which, point) => {
+    if (which === "start") setRouteStart(point); else setRouteEnd(point);
+    setRouteResult(null);
+    setRouteError("");
+  };
+  const requestRoute = async () => {
+    if (!routeStart || !routeEnd) { setRouteError(routeUi.noStart); return; }
+    setRouteLoading(true);
+    setRouteError("");
+    try {
+      const coords = `${routeStart[1]},${routeStart[0]};${routeEnd[1]},${routeEnd[0]}`;
+      const response = await fetch(`https://router.project-osrm.org/route/v1/driving/${coords}?overview=full&geometries=geojson`, { headers: { Accept: "application/json" } });
+      if (!response.ok) throw new Error("OSRM request failed");
+      const data = await response.json();
+      const route = data.code === "Ok" ? data.routes?.[0] : null;
+      if (!route?.geometry?.coordinates?.length) throw new Error("No route found");
+      setRouteResult({ points: route.geometry.coordinates.map(([lng, lat]) => [lat, lng]), distance: route.distance, duration: route.duration });
+    } catch {
+      setRouteError(routeUi.error);
+      setRouteResult(null);
+    } finally { setRouteLoading(false); }
+  };
   const selectLocation = (item) => {
     if (item.lat == null || item.lng == null) return;
     setMapCenter([item.lat, item.lng]);
@@ -581,6 +626,27 @@ export default function StoreMap({ fullScreen = false }) {
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10 5 4h14l2 6M4 10v10h16V10M9 20v-6h6v6"/><path d="M3 10a2.5 2.5 0 0 0 5 0 2 2 0 0 0 4 0 2 2 0 0 0 4 0 2.5 2.5 0 0 0 5 0"/></svg>
         </button>
       </div>
+      <section className="store-map__routing" aria-label="Distance and directions">
+        <div className="store-map__routing-points">
+          <span><b>{routeUi.start}:</b> {routeStart ? `${routeStart[0].toFixed(5)}, ${routeStart[1].toFixed(5)}` : "—"}</span>
+          <button type="button" onClick={() => userPosition ? setRoutePoint("start", userPosition.position) : locateMe()} disabled={isLocating}>{isLocating ? t("map.locating") : routeUi.useGps}</button>
+          <button type="button" aria-pressed={pickingPoint === "start"} onClick={() => setPickingPoint(pickingPoint === "start" ? null : "start")}>{pickingPoint === "start" ? routeUi.selectPrompt : `${routeUi.pick} · ${routeUi.start}`}</button>
+        </div>
+        <div className="store-map__routing-points">
+          <span><b>{routeUi.end}:</b> {routeEnd ? `${routeEnd[0].toFixed(5)}, ${routeEnd[1].toFixed(5)}` : "—"}</span>
+          <button type="button" aria-pressed={pickingPoint === "end"} onClick={() => setPickingPoint(pickingPoint === "end" ? null : "end")}>{pickingPoint === "end" ? routeUi.selectPrompt : `${routeUi.pick} · ${routeUi.end}`}</button>
+        </div>
+        <div className="store-map__routing-actions">
+          <label><input type="radio" name="store-map-route-mode" checked={routeMode === "straight"} onChange={() => { setRouteMode("straight"); setRouteResult(null); }} /> {routeUi.bird}</label>
+          <label><input type="radio" name="store-map-route-mode" checked={routeMode === "route"} onChange={() => { setRouteMode("route"); setRouteResult(null); }} /> {routeUi.route}</label>
+          {routeMode === "route" && <button type="button" onClick={requestRoute} disabled={routeLoading || !routeStart || !routeEnd}>{routeLoading ? routeUi.wait : routeUi.calculate}</button>}
+          <button type="button" onClick={() => { setRouteStart(null); setRouteEnd(null); setRouteResult(null); setRouteError(""); setPickingPoint(null); }}>{routeUi.clear}</button>
+          {(routeStart || routeEnd) && <a href={googleTwoWheelerUrl(routeStart, routeEnd)} target="_blank" rel="noopener noreferrer">{routeUi.openGoogle}</a>}
+        </div>
+        {routeMode === "straight" && routeStart && routeEnd && <p className="store-map__route-summary">{routeUi.bird}: {formatDistance(distanceMeters(routeStart[0], routeStart[1], routeEnd[0], routeEnd[1]))}</p>}
+        {routeResult && <p className="store-map__route-summary">{formatDistance(routeResult.distance)} · {Math.round(routeResult.duration / 60)} min. {routeUi.routeNote}</p>}
+        {routeError && <p className="store-map__route-error" role="alert">{routeError}</p>}
+      </section>
       <form className="store-map__radius-form" onSubmit={applyRadius}>
         <label htmlFor="store-map-radius">{t("map.radiusLabel")}</label>
         <input
@@ -642,6 +708,7 @@ export default function StoreMap({ fullScreen = false }) {
           zoomControl={false}
           scrollWheelZoom
         >
+          <MapPointPicker enabled={Boolean(pickingPoint)} onPick={point => { setRoutePoint(pickingPoint, point); setPickingPoint(null); }} />
           <ChangeView center={mapCenter} zoom={mapZoom} />
           <FitLocations locations={locations} active={showAllLocations} resetCenter={userPosition?.position} />
           <MapControls onLocate={locateAndEnableNearbyAudio} t={t} />
@@ -665,12 +732,17 @@ export default function StoreMap({ fullScreen = false }) {
                   {brandInfo?.description && <span>{brandInfo.description}</span>}
                   {brandInfo?.website && <a href={brandInfo.website} target="_blank" rel="noopener noreferrer">{brandInfo.website}</a>}
                 </div>
+                <button type="button" className="store-map__popup-route" onClick={() => { setRoutePoint("end", [item.lat, item.lng]); if (userPosition) setRoutePoint("start", userPosition.position); }}>{routeUi.chooseDestination}</button>
                 <a className="store-map__directions" href={googleDirectionsUrl(item, userPosition)} target="_blank" rel="noopener noreferrer">
                   {t("map.directionsGoogle")}
                 </a>
               </Popup>
             </Marker>;
           })}
+          {routeStart && <Marker position={routeStart}><Popup>{routeUi.start}</Popup></Marker>}
+          {routeEnd && <Marker position={routeEnd}><Popup>{routeUi.end}</Popup></Marker>}
+          {routeMode === "straight" && routeStart && routeEnd && <Polyline positions={[routeStart, routeEnd]} pathOptions={{ color: "#d97706", weight: 4, dashArray: "8 8" }} />}
+          {routeResult && <Polyline positions={routeResult.points} pathOptions={{ color: "#1769aa", weight: 5 }} />}
           {userPosition && (
             <Marker position={userPosition.position} icon={currentLocationIcon} zIndexOffset={1000}>
               <Tooltip permanent direction="top" offset={[0, -12]}>
