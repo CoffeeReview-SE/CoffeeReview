@@ -126,7 +126,8 @@
 .store-map__measure-action:hover { background: #f7eee5; }
 .store-map__measure-action:disabled { opacity: .6; cursor: wait; }
 .store-map__canvas--measuring { cursor: crosshair; }
-.store-map__canvas .store-map__measure-tooltip { padding: 6px 10px; border: 1px solid #d9b17b; border-radius: 8px; background: #fffaf2; color: #57351f; font-size: 13px; font-weight: 700; box-shadow: 0 2px 8px #24150c30; }
+.store-map__canvas .store-map__distance-anchor { border: 0; background: transparent; }
+.store-map__canvas .store-map__measure-marker { border: 0; background: transparent; filter: drop-shadow(0 3px 3px #24150c45); }
 .store-map__popup-route { display: inline-block; margin: 7px 0 0; padding: 7px 10px; border: 0; border-radius: 7px; background: #6b3d25; color: #fff; font: inherit; font-size: 11px; cursor: pointer; }
 .store-map__locate { min-height: 48px; padding: 0 20px; border: 0; border-radius: 9px; background: #6b3d25; color: #fff; font: inherit; font-weight: 600; cursor: pointer; transition: background .18s, box-shadow .18s; }
 .store-map__locate:hover:not(:disabled) { background: #4f2b1a; }
@@ -199,6 +200,7 @@
 .current-location-icon__dot { position: absolute; top: 8px; left: 8px; width: 12px; height: 12px; border: 2px solid #fff; border-radius: 50%; background: #0878ed; box-shadow: 0 1px 5px #163c67a6; }
 .store-map__canvas .leaflet-tooltip { padding: 5px 9px; border: 0; border-radius: 6px; background: #0878ed; color: #fff; font-size: 12px; font-weight: 700; box-shadow: 0 2px 8px #163c6740; }
 .store-map__canvas .leaflet-tooltip-top::before { border-top-color: #0878ed; }
+.store-map__canvas .leaflet-tooltip.store-map__measure-tooltip { padding: 7px 12px; border: 1px solid #e3c18d; border-radius: 999px; background: linear-gradient(135deg, #315746, #243e34); color: #fffaf2; font-size: 13px; font-weight: 700; letter-spacing: .01em; box-shadow: 0 4px 12px #24150c40; }
 .coffee-map-marker-icon { border: 0; background: transparent; }
 .coffee-map-pin { position: relative; display: grid; width: 32px; height: 32px; place-items: center; border: 2px solid #fff; border-radius: 50% 50% 50% 8px; background: var(--pin-color); box-shadow: 0 4px 10px #24150c55, 0 0 0 1px #24150c18; transform: rotate(-45deg); transition: transform .16s ease, box-shadow .16s ease; }
 .coffee-map-pin::after { position: absolute; inset: 3px; border: 1px solid #ffffff70; border-radius: inherit; content: ""; }

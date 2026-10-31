@@ -15,6 +15,27 @@ const currentLocationIcon = divIcon({
   iconAnchor: [14, 14],
 });
 
+const distanceLabelAnchorIcon = divIcon({
+  className: "store-map__distance-anchor",
+  html: "",
+  iconSize: [1, 1],
+  iconAnchor: [0, 0],
+});
+
+const measurementStartIcon = divIcon({
+  className: "store-map__measure-marker",
+  html: '<svg viewBox="0 0 24 32" aria-hidden="true"><path d="M12 31S2 21.3 2 12a10 10 0 1 1 20 0c0 9.3-10 19-10 19Z" fill="#315746" stroke="#fff" stroke-width="1.5"/><circle cx="12" cy="11" r="6" fill="#fff"/><text x="12" y="14" text-anchor="middle" font-size="8" font-weight="700" fill="#315746">A</text></svg>',
+  iconSize: [34, 44],
+  iconAnchor: [17, 42],
+});
+
+const measurementEndIcon = divIcon({
+  className: "store-map__measure-marker",
+  html: '<svg viewBox="0 0 24 32" aria-hidden="true"><path d="M12 31S2 21.3 2 12a10 10 0 1 1 20 0c0 9.3-10 19-10 19Z" fill="#a85c2a" stroke="#fff" stroke-width="1.5"/><circle cx="12" cy="11" r="6" fill="#fff"/><text x="12" y="14" text-anchor="middle" font-size="8" font-weight="700" fill="#a85c2a">B</text></svg>',
+  iconSize: [34, 44],
+  iconAnchor: [17, 42],
+});
+
 const brandPinColors = ["#273b2e", "#8a4f2d", "#536c54", "#9a3d32", "#745c3f", "#35566b"];
 function coffeeMarkerIcon(brandId) {
   const color = brandPinColors[Math.abs(Number(brandId) || 0) % brandPinColors.length];
@@ -748,15 +769,21 @@ export default function StoreMap({ fullScreen = false, enableDistanceMeasure = f
             </Marker>;
           })}
           {enableDistanceMeasure && measurement && <>
-            <Marker position={measurement.start}><Popup>{measureUi.start}</Popup></Marker>
-            <Marker position={measurement.end}><Popup>{measureUi.next}</Popup></Marker>
-            <Polyline positions={[measurement.start, measurement.end]} pathOptions={{ color: "#d97706", weight: 4, dashArray: "8 8" }}>
-              <Tooltip permanent direction="center" className="store-map__measure-tooltip">
-                {formatKilometers(distanceMeters(measurement.start[0], measurement.start[1], measurement.end[0], measurement.end[1]))}
+            <Marker position={measurement.start} icon={measurementStartIcon}><Popup>{measureUi.start}</Popup></Marker>
+            <Marker position={measurement.end} icon={measurementEndIcon}><Popup>{measureUi.next}</Popup></Marker>
+            <Polyline positions={[measurement.start, measurement.end]} pathOptions={{ color: "#d97706", weight: 4, dashArray: "8 8" }} />
+            <Marker
+              position={[(measurement.start[0] + measurement.end[0]) / 2, (measurement.start[1] + measurement.end[1]) / 2]}
+              icon={distanceLabelAnchorIcon}
+              interactive={false}
+              keyboard={false}
+            >
+              <Tooltip permanent direction="center" offset={[0, 0]} className="store-map__measure-tooltip">
+                ↔ {formatKilometers(distanceMeters(measurement.start[0], measurement.start[1], measurement.end[0], measurement.end[1]))}
               </Tooltip>
-            </Polyline>
+            </Marker>
           </>}
-          {enableDistanceMeasure && measureActive && draftStart && <Marker position={draftStart}><Popup>{measureUi.start}</Popup></Marker>}
+          {enableDistanceMeasure && measureActive && draftStart && <Marker position={draftStart} icon={measurementStartIcon}><Popup>{measureUi.start}</Popup></Marker>}
           {userPosition && (
             <Marker position={userPosition.position} icon={currentLocationIcon} zIndexOffset={1000}>
               <Tooltip permanent direction="top" offset={[0, -12]}>
