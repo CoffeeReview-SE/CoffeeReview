@@ -255,7 +255,8 @@
 
 @media (max-width: 760px) {
   .store-map__toast { top: 14px; right: 64px; width: min(300px, calc(100vw - 100px)); padding: 10px; font-size: 12px; }
-  .store-map-page__bar { gap: 12px; flex-wrap: wrap; min-height: 58px; padding: 8px 5vw 0; }
+  .store-map-page__bar { gap: 12px; flex-wrap: wrap; min-height: 58px; padding: 10px 5vw 0; }
+  .store-map-page .hp-lang-dropdown { margin-left: auto; }
   .store-map-page__nav { order: 3; flex-basis: 100%; gap: 20px; overflow-x: auto; }
   .store-map-page__nav button { padding: 10px 0; }
   .store-map-page__brand small { display: none; }
@@ -267,8 +268,8 @@
   .store-map__canvas { height: 420px; }
   .store-map--full-screen { height: calc(100dvh - 58px); min-height: 560px; }
   .store-map--full-screen .store-map__search-label { top: 60px; left: 14px; }
-  .store-map--full-screen .store-map__search { top: 14px; left: 12px; width: calc(100vw - 24px); }
-  .store-map--full-screen .store-map__action-row { top: 68px; left: 12px; }
+  .store-map--full-screen .store-map__search { top: 14px; left: 12px; width: calc(100vw - 166px); }
+  .store-map--full-screen .store-map__action-row { top: 14px; right: 12px; left: auto; }
   .store-map--full-screen .store-map__locate,
   .store-map--full-screen .store-map__nearby-audio { min-height: 42px; padding: 0 12px; }
   .store-map--full-screen .store-map__radius-form { top: 120px; left: 12px; gap: 6px; padding: 6px; }

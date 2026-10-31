@@ -268,7 +268,6 @@ export default function StoreMap({ fullScreen = false }) {
       speech.onerror = finish;
       isPreparingNearby.current = false;
       isSpeakingNearby.current = true;
-      window.speechSynthesis.cancel();
       try {
         window.speechSynthesis.speak(speech);
       } catch {
@@ -440,6 +439,17 @@ export default function StoreMap({ fullScreen = false }) {
       setNearbyAudioStatus(proximityText.denied);
       showMapToast(proximityText.denied);
       return;
+    }
+    // iOS Safari only permits speech synthesis after a user gesture. Start a
+    // silent utterance here, before GPS/network work moves playback out of the
+    // gesture handler; later nearby descriptions can then be queued normally.
+    try {
+      const unlockSpeech = new SpeechSynthesisUtterance(" ");
+      unlockSpeech.volume = 0;
+      window.speechSynthesis.cancel();
+      window.speechSynthesis.speak(unlockSpeech);
+    } catch {
+      // Keep GPS usable if a browser rejects the speech unlock attempt.
     }
     enableAudioAfterGps.current = true;
     if (nearbyAudioEnabled) {
