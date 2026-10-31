@@ -30,7 +30,7 @@ export default function MapPage() {
     <div className="store-map-page">
       <header className="store-map-page__bar">
         <button className="store-map-page__brand" onClick={() => {
-          window.dispatchEvent(new Event("saigoncoffee:clear-map-notice"));
+          window.dispatchEvent(new Event("saigoncoffee:show-all-stores"));
           navigate("/");
         }} type="button">
           <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -41,7 +41,7 @@ export default function MapPage() {
         <nav className="store-map-page__nav" aria-label="Điều hướng chính">
           {navItems.map(([key, label, path]) => (
             <button key={key} type="button" aria-current={key === "map" ? "page" : undefined} onClick={() => {
-              if (key === "home") window.dispatchEvent(new Event("saigoncoffee:clear-map-notice"));
+              if (key === "home") window.dispatchEvent(new Event("saigoncoffee:show-all-stores"));
               navigate(path);
             }}>
               {label}

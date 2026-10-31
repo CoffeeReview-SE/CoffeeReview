@@ -112,6 +112,7 @@ export default function StoreMap({ fullScreen = false }) {
   const [isLocating, setIsLocating] = useState(false);
   const [nearbyAudioEnabled, setNearbyAudioEnabled] = useState(false);
   const [showAllLocations, setShowAllLocations] = useState(false);
+  const showAllLocationsRef = useRef(showAllLocations);
   const [radiusInput, setRadiusInput] = useState(String(DEFAULT_PROXIMITY_RADIUS_KM));
   const [proximityRadiusKm, setProximityRadiusKm] = useState(DEFAULT_PROXIMITY_RADIUS_KM);
   const [radiusErrorOpen, setRadiusErrorOpen] = useState(false);
@@ -119,6 +120,7 @@ export default function StoreMap({ fullScreen = false }) {
   const autoPlayedNearestBranch = useRef(false);
   const playedNearbyBranchIds = useRef(new Set());
   const gpsAcquisition = useRef({ active: false, best: null, timer: null, watchId: null });
+  const liveGpsWatchId = useRef(null);
   const nearbyAudioQueue = useRef([]);
   const isSpeakingNearby = useRef(false);
   const isPreparingNearby = useRef(false);
@@ -127,9 +129,12 @@ export default function StoreMap({ fullScreen = false }) {
   const proximityAudioGeneration = useRef(0);
   const enableAudioAfterGps = useRef(false);
   const mapToastTimer = useRef(null);
+  const notificationsSuppressed = useRef(false);
   proximityAudioActive.current = nearbyAudioEnabled;
+  showAllLocationsRef.current = showAllLocations;
 
   const showMapToast = useCallback(message => {
+    if (notificationsSuppressed.current) return;
     setMapToast({ id: Date.now(), message });
     if (mapToastTimer.current) window.clearTimeout(mapToastTimer.current);
     mapToastTimer.current = window.setTimeout(() => {
@@ -144,10 +149,48 @@ export default function StoreMap({ fullScreen = false }) {
     setMapToast(null);
   }, []);
 
-  useEffect(() => {
-    window.addEventListener("saigoncoffee:clear-map-notice", clearMapToast);
-    return () => window.removeEventListener("saigoncoffee:clear-map-notice", clearMapToast);
+  const showAllAndStop = useCallback(() => {
+    notificationsSuppressed.current = true;
+    showAllLocationsRef.current = true;
+    setShowAllLocations(true);
+    setSearchTerm("");
+    setNearbyAudioEnabled(false);
+    proximityAudioGeneration.current += 1;
+    nearbyAudioQueue.current = [];
+    isSpeakingNearby.current = false;
+    isPreparingNearby.current = false;
+    enableAudioAfterGps.current = false;
+    window.speechSynthesis?.cancel();
+    clearMapToast();
   }, [clearMapToast]);
+
+  useEffect(() => {
+    window.addEventListener("saigoncoffee:show-all-stores", showAllAndStop);
+    return () => window.removeEventListener("saigoncoffee:show-all-stores", showAllAndStop);
+  }, [showAllAndStop]);
+
+  const startLiveGpsTracking = () => {
+    if (!navigator.geolocation || liveGpsWatchId.current != null) return;
+    liveGpsWatchId.current = navigator.geolocation.watchPosition(
+      ({ coords }) => {
+        const next = {
+          position: [coords.latitude, coords.longitude],
+          accuracy: Number.isFinite(coords.accuracy) && coords.accuracy > 0 ? coords.accuracy : 1000,
+        };
+        setUserPosition(next);
+        savePosition(next);
+      },
+      error => {
+        const key = error.code === error.PERMISSION_DENIED
+          ? "map.denied"
+          : error.code === error.POSITION_UNAVAILABLE
+            ? "map.unavailable"
+            : "map.timeout";
+        showMapToast(t(key));
+      },
+      { enableHighAccuracy: true, timeout: 25000, maximumAge: 3000 },
+    );
+  };
 
   const finishGpsAcquisition = () => {
     const acquisition = gpsAcquisition.current;
@@ -159,10 +202,13 @@ export default function StoreMap({ fullScreen = false }) {
     acquisition.watchId = null;
     const best = acquisition.best;
     if (!best) return;
+    startLiveGpsTracking();
     setUserPosition(best);
     savePosition(best);
-    setMapCenter(best.position);
-    setMapZoom(16);
+    if (!showAllLocationsRef.current) {
+      setMapCenter(best.position);
+      setMapZoom(16);
+    }
     showMapToast(t("map.located", { accuracy: Math.round(best.accuracy) }));
     setIsLocating(false);
     if (enableAudioAfterGps.current) {
@@ -183,8 +229,10 @@ export default function StoreMap({ fullScreen = false }) {
         acquisition.best = next;
         setUserPosition(next);
         savePosition(next);
-        setMapCenter(next.position);
-        setMapZoom(16);
+        if (!showAllLocationsRef.current) {
+          setMapCenter(next.position);
+          setMapZoom(16);
+        }
       }
       if (isFirstFix) showMapToast(t("map.waitingForBetterFix", { accuracy: Math.round(acquisition.best.accuracy) }));
       if (!acquisition.timer) acquisition.timer = window.setTimeout(finishGpsAcquisition, 3000);
@@ -199,6 +247,7 @@ export default function StoreMap({ fullScreen = false }) {
     const acquisition = gpsAcquisition.current;
     if (acquisition.timer) window.clearTimeout(acquisition.timer);
     if (acquisition.watchId != null) navigator.geolocation?.clearWatch(acquisition.watchId);
+    if (liveGpsWatchId.current != null) navigator.geolocation?.clearWatch(liveGpsWatchId.current);
     if (mapToastTimer.current) window.clearTimeout(mapToastTimer.current);
   }, []);
 
@@ -234,7 +283,9 @@ export default function StoreMap({ fullScreen = false }) {
       return;
     }
     setProximityRadiusKm(requestedRadius);
+    showAllLocationsRef.current = false;
     setShowAllLocations(false);
+    notificationsSuppressed.current = false;
     setRadiusInput(String(requestedRadius));
     setRadiusErrorOpen(false);
     if (nearbyAudioEnabled) {
@@ -319,16 +370,8 @@ export default function StoreMap({ fullScreen = false }) {
       showMapToast(proximityText.denied);
       return undefined;
     }
-    const watchId = navigator.geolocation.watchPosition(
-      ({ coords }) => updateUserPosition(coords),
-      () => {
-        showMapToast(proximityText.denied);
-      },
-      { enableHighAccuracy: true, maximumAge: 0, timeout: 25000 },
-    );
     return () => {
       proximityAudioGeneration.current += 1;
-      navigator.geolocation.clearWatch(watchId);
       window.speechSynthesis.cancel();
       nearbyAudioQueue.current = [];
       autoPlayedNearestBranch.current = false;
@@ -387,6 +430,7 @@ export default function StoreMap({ fullScreen = false }) {
 
   const toggleNearbyAudio = () => {
     if (!nearbyAudioEnabled) {
+      notificationsSuppressed.current = false;
       if (!navigator.geolocation) { showMapToast(proximityText.denied); return; }
       if (!("speechSynthesis" in window)) { showMapToast(proximityText.denied); return; }
       try {
@@ -431,14 +475,6 @@ export default function StoreMap({ fullScreen = false }) {
     if (item.lat == null || item.lng == null) return;
     setMapCenter([item.lat, item.lng]);
     setMapZoom(16);
-  };
-
-  const toggleAllLocations = () => {
-    const showAll = !showAllLocations;
-    setShowAllLocations(showAll);
-    if (showAll) {
-      setSearchTerm("");
-    }
   };
 
   const locateMe = () => {
@@ -494,6 +530,8 @@ export default function StoreMap({ fullScreen = false }) {
       return;
     }
     clearMapToast();
+    notificationsSuppressed.current = false;
+    showAllLocationsRef.current = false;
     setShowAllLocations(false);
     // iOS Safari only permits speech synthesis after a user gesture. Start a
     // silent utterance here, before GPS/network work moves playback out of the
@@ -539,7 +577,7 @@ export default function StoreMap({ fullScreen = false }) {
         {(fullScreen || userPosition) && <button className="store-map__nearby-audio" type="button" onClick={toggleNearbyAudio} aria-pressed={nearbyAudioEnabled} aria-label={nearbyAudioEnabled ? proximityText.disable : t("map.listenNearest")} title={nearbyAudioEnabled ? proximityText.disable : t("map.listenNearest")}>
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4V5Z"/><path d="M15.5 8.5a5 5 0 0 1 0 7m3-10a9 9 0 0 1 0 13"/></svg>
         </button>}
-        <button className="store-map__show-all" type="button" onClick={toggleAllLocations} aria-pressed={showAllLocations} aria-label={showAllLocations ? t("map.showNearbyBranches") : t("map.showAllBranches")} title={showAllLocations ? t("map.showNearbyBranches") : t("map.showAllBranches")}>
+        <button className="store-map__show-all" type="button" onClick={showAllAndStop} aria-pressed={showAllLocations} aria-label={t("map.showAllBranches")} title={t("map.showAllBranches")}>
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10 5 4h14l2 6M4 10v10h16V10M9 20v-6h6v6"/><path d="M3 10a2.5 2.5 0 0 0 5 0 2 2 0 0 0 4 0 2 2 0 0 0 4 0 2.5 2.5 0 0 0 5 0"/></svg>
         </button>
       </div>
