@@ -20,9 +20,9 @@ app.Use(async (ctx, next) => {
 });
 
 app.MapGet("/admin/brands", async (NpgsqlDataSource db) => {
-    const string sql = """SELECT b.brand_id, b.brand_name, b.description, b.logo_url, b.website_url, b.is_active, COUNT(br.branch_id)::int AS branches FROM brand b LEFT JOIN branch br ON br.brand_id=b.brand_id GROUP BY b.brand_id ORDER BY b.brand_id DESC""";
+    const string sql = """SELECT b.brand_id, b.brand_name, b.description, b.logo_url, b.website_url, b.is_active, COUNT(br.branch_id)::int AS branches, COALESCE(b.type,'') AS type FROM brand b LEFT JOIN branch br ON br.brand_id=b.brand_id GROUP BY b.brand_id ORDER BY b.brand_id DESC""";
     await using var cmd=db.CreateCommand(sql); await using var r=await cmd.ExecuteReaderAsync(); var list=new List<object>();
-    while(await r.ReadAsync()) list.Add(new { id=r.GetInt64(0), name=r.GetString(1), description=r.IsDBNull(2)?"":r.GetString(2), logoUrl=r.IsDBNull(3)?"":r.GetString(3), websiteUrl=r.IsDBNull(4)?"":r.GetString(4), isActive=r.GetBoolean(5), branches=r.GetInt32(6) });
+    while(await r.ReadAsync()) list.Add(new { id=r.GetInt64(0), name=r.GetString(1), description=r.IsDBNull(2)?"":r.GetString(2), logoUrl=r.IsDBNull(3)?"":r.GetString(3), websiteUrl=r.IsDBNull(4)?"":r.GetString(4), isActive=r.GetBoolean(5), branches=r.GetInt32(6), type=r.GetString(7) });
     return Results.Ok(list);
 });
 app.MapPost("/admin/brands", async (BrandInput input,NpgsqlDataSource db) => {
@@ -65,7 +65,7 @@ app.MapGet("/brands", async (NpgsqlDataSource db, CancellationToken ct) =>
     const string sql = """
         SELECT b.brand_id, b.brand_name, COALESCE(b.description, ''), COALESCE(b.logo_url, ''),
                COALESCE(b.website_url, ''), b.description_language_code,
-               COUNT(br.branch_id)::int AS branch_count
+               COUNT(br.branch_id)::int AS branch_count, COALESCE(b.type, '') AS type
         FROM brand b
         LEFT JOIN branch br ON br.brand_id = b.brand_id AND br.is_active
         WHERE b.is_active
@@ -82,7 +82,7 @@ app.MapGet("/brands", async (NpgsqlDataSource db, CancellationToken ct) =>
             id = reader.GetInt64(0), name = reader.GetString(1), description = reader.GetString(2),
             logo = reader.GetString(3), website = reader.GetString(4),
             descriptionLanguageCode = reader.IsDBNull(5) ? null : reader.GetString(5),
-            branchCount = reader.GetInt32(6)
+            branchCount = reader.GetInt32(6), type = reader.GetString(7)
         });
     return Results.Ok(brands);
 });
@@ -115,13 +115,13 @@ app.MapGet("/branches", async (NpgsqlDataSource db, CancellationToken ct) =>
 app.MapGet("/brands/{id:long}", async (long id, NpgsqlDataSource db, CancellationToken ct) =>
 {
     long brandId;
-    string name, description, logo, website;
+    string name, description, logo, website, type;
     string? descriptionLanguageCode;
     long branchCount;
     await using (var cmd = db.CreateCommand("""
         SELECT b.brand_id, b.brand_name, COALESCE(b.description,''), COALESCE(b.logo_url,''),
           COALESCE(b.website_url,''), b.description_language_code,
-          (SELECT COUNT(*) FROM branch br WHERE br.brand_id=b.brand_id AND br.is_active)
+          (SELECT COUNT(*) FROM branch br WHERE br.brand_id=b.brand_id AND br.is_active), COALESCE(b.type, '')
         FROM brand b WHERE b.brand_id=@id AND b.is_active
         """))
     {
@@ -131,7 +131,7 @@ app.MapGet("/brands/{id:long}", async (long id, NpgsqlDataSource db, Cancellatio
         brandId = reader.GetInt64(0); name = reader.GetString(1); description = reader.GetString(2);
         logo = reader.GetString(3); website = reader.GetString(4);
         descriptionLanguageCode = reader.IsDBNull(5) ? null : reader.GetString(5);
-        branchCount = reader.GetInt64(6);
+        branchCount = reader.GetInt64(6); type = reader.GetString(7);
     }
 
     var branches = new List<object>();
@@ -154,7 +154,7 @@ app.MapGet("/brands/{id:long}", async (long id, NpgsqlDataSource db, Cancellatio
     }
 
     return Results.Ok(new { id = brandId, name, description, logo, website, descriptionLanguageCode,
-        branchCount, audio = "", branches });
+        branchCount, type, audio = "", branches });
 });
 app.Run();
 record BrandInput(string Name,string? Description,string? LogoUrl,string? WebsiteUrl,bool IsActive=true);
