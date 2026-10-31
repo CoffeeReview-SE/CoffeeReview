@@ -49,6 +49,9 @@ const screenLabels = {
 };
 
 const categories = {
+  "tra": { en: "Tea", ja: "??", zh: "?" },
+  "ca phe": { en: "Coffee", ja: "????", zh: "??" },
+  "banh": { en: "Pastries", ja: "?????", zh: "??" },
   "tra, ca phe": { en: "Tea, coffee", ja: "お茶、コーヒー", zh: "茶、咖啡" },
   "ca phe, tra, banh": { en: "Coffee, tea, pastries", ja: "コーヒー、お茶、ペストリー", zh: "咖啡、茶、糕点" },
   "ca phe, do uong": { en: "Coffee, beverages", ja: "コーヒー、ドリンク", zh: "咖啡、饮品" },
