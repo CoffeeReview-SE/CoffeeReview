@@ -116,9 +116,11 @@ export default function StoreMap({ fullScreen = false, enableDistanceMeasure = f
   const [mapToast, setMapToast] = useState(null);
   const [isLocating, setIsLocating] = useState(false);
   const [measureActive, setMeasureActive] = useState(false);
-  const [measureStart, setMeasureStart] = useState(null);
-  const [measureEnd, setMeasureEnd] = useState(null);
+  const [measurements, setMeasurements] = useState([null, null]);
+  const [measureSlot, setMeasureSlot] = useState(0);
+  const [draftStart, setDraftStart] = useState(null);
   const [pendingGpsStart, setPendingGpsStart] = useState(false);
+  const [pendingGpsDestination, setPendingGpsDestination] = useState(null);
   const [nearbyAudioEnabled, setNearbyAudioEnabled] = useState(false);
   const [showAllLocations, setShowAllLocations] = useState(false);
   const showAllLocationsRef = useRef(showAllLocations);
@@ -143,12 +145,19 @@ export default function StoreMap({ fullScreen = false, enableDistanceMeasure = f
   showAllLocationsRef.current = showAllLocations;
 
   useEffect(() => {
-    if (!pendingGpsStart || !userPosition) return;
-    setMeasureStart(userPosition.position);
-    setMeasureEnd(null);
-    setMeasureActive(true);
+    if (!userPosition) return;
+    if (pendingGpsDestination) {
+      setMeasurements(previous => previous.map((measurement, index) => index === measureSlot
+        ? { start: userPosition.position, end: pendingGpsDestination }
+        : measurement));
+      setMeasureActive(false);
+      setPendingGpsDestination(null);
+    } else if (pendingGpsStart) {
+      setDraftStart(userPosition.position);
+      setMeasureActive(true);
+    } else return;
     setPendingGpsStart(false);
-  }, [pendingGpsStart, userPosition]);
+  }, [measureSlot, pendingGpsDestination, pendingGpsStart, userPosition]);
 
   const showMapToast = useCallback(message => {
     if (notificationsSuppressed.current) return;
@@ -489,26 +498,41 @@ export default function StoreMap({ fullScreen = false, enableDistanceMeasure = f
   const mappedLocations = locationsByDistance.filter(item => Number.isFinite(item.lat) && Number.isFinite(item.lng));
   const formatDistance = distance => distance < 1000 ? `${Math.round(distance)} m` : `${(distance / 1000).toFixed(1)} km`;
   const measureUi = languageCode === "vi"
-    ? { start: "Chọn điểm đầu", next: "Chọn điểm thứ hai", button: "Đo khoảng cách", stop: "Đang đo · chạm bản đồ", clear: "Xóa", useGps: "Lấy vị trí làm điểm đầu" }
-    : { start: "Choose the first point", next: "Choose the second point", button: "Measure distance", stop: "Measuring · tap the map", clear: "Clear", useGps: "Use my location as start" };
+    ? { start: "Điểm đầu", next: "Điểm đến", pin: "Ghim khoảng cách", slot: "Khoảng cách", button: "Chọn điểm trên bản đồ", stop: "Chạm bản đồ: chọn điểm tiếp theo", clear: "Xóa", useGps: "Từ vị trí của tôi", toPlace: "Đo từ vị trí của tôi đến đây" }
+    : { start: "Start", next: "End", pin: "Pin distance", slot: "Distance", button: "Pick points on map", stop: "Tap map to pick next point", clear: "Clear", useGps: "From my location", toPlace: "Measure from my location to here" };
   const onMeasureMapPick = point => {
-    if (!measureStart || measureEnd) {
-      setMeasureStart(point);
-      setMeasureEnd(null);
+    if (!draftStart) {
+      setDraftStart(point);
     } else {
-      setMeasureEnd(point);
+      setMeasurements(previous => previous.map((measurement, index) => index === measureSlot ? { start: draftStart, end: point } : measurement));
+      setDraftStart(null);
       setMeasureActive(false);
     }
   };
   const beginMeasureFromGps = () => {
     if (userPosition) {
-      setMeasureStart(userPosition.position);
-      setMeasureEnd(null);
+      setDraftStart(userPosition.position);
       setMeasureActive(true);
       return;
     }
     setPendingGpsStart(true);
     locateMe();
+  };
+  const selectMeasureSlot = index => {
+    setMeasureSlot(index);
+    setDraftStart(null);
+    setPendingGpsStart(false);
+    setMeasureActive(true);
+  };
+  const measureFromMeTo = destination => {
+    if (userPosition) {
+      setMeasurements(previous => previous.map((measurement, index) => index === measureSlot ? { start: userPosition.position, end: destination } : measurement));
+      setMeasureActive(false);
+      setDraftStart(null);
+    } else {
+      setPendingGpsDestination(destination);
+      locateMe();
+    }
   };
   const selectLocation = (item) => {
     if (item.lat == null || item.lng == null) return;
@@ -549,6 +573,8 @@ export default function StoreMap({ fullScreen = false, enableDistanceMeasure = f
           : "map.timeout";
       showMapToast(t(key));
       setIsLocating(false);
+      setPendingGpsStart(false);
+      setPendingGpsDestination(null);
     };
     gpsAcquisition.current.watchId = navigator.geolocation.watchPosition(
       ({ coords }) => updateUserPosition(coords),
@@ -619,16 +645,28 @@ export default function StoreMap({ fullScreen = false, enableDistanceMeasure = f
         <button className="store-map__show-all" type="button" onClick={showAllAndStop} aria-pressed={showAllLocations} aria-label={t("map.showAllBranches")} title={t("map.showAllBranches")}>
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10 5 4h14l2 6M4 10v10h16V10M9 20v-6h6v6"/><path d="M3 10a2.5 2.5 0 0 0 5 0 2 2 0 0 0 4 0 2 2 0 0 0 4 0 2.5 2.5 0 0 0 5 0"/></svg>
         </button>
+        {enableDistanceMeasure && <button className="store-map__measure-pin" type="button" aria-label={measureUi.pin} title={measureUi.pin} aria-pressed={measureActive} onClick={() => {
+          if (!measureActive) {
+            const emptySlot = measurements.findIndex(measurement => !measurement);
+            if (emptySlot >= 0) setMeasureSlot(emptySlot);
+            setMeasureActive(true);
+            setDraftStart(null);
+          }
+          else setMeasureActive(false);
+        }}>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22s7-6.2 7-13a7 7 0 1 0-14 0c0 6.8 7 13 7 13Z"/><circle cx="12" cy="9" r="2.5"/></svg>
+        </button>}
+        {enableDistanceMeasure && (measureActive || measurements.some(Boolean)) && <div className="store-map__measure-tools">
+          {measurements.map((measurement, index) => <span className="store-map__measure-slot" key={index}>
+            <button type="button" className={measureSlot === index ? "active" : ""} aria-label={`${measureUi.slot} ${index + 1}`} aria-pressed={measureSlot === index} onClick={() => selectMeasureSlot(index)}>
+              {index + 1}{measurement ? ` · ${formatDistance(distanceMeters(measurement.start[0], measurement.start[1], measurement.end[0], measurement.end[1]))}` : " · —"}
+            </button>
+            {measurement && <button type="button" className="store-map__measure-remove" aria-label={`${measureUi.clear} ${index + 1}`} onClick={() => setMeasurements(previous => previous.map((entry, slot) => slot === index ? null : entry))}>×</button>}
+          </span>)}
+          <button type="button" onClick={beginMeasureFromGps} disabled={isLocating}>{isLocating ? t("map.locating") : measureUi.useGps}</button>
+          {measureActive && <span className="store-map__measure-hint">{draftStart ? measureUi.next : measureUi.button}</span>}
+        </div>}
       </div>
-      {enableDistanceMeasure && <div className="store-map__measure-tools">
-        <button className="store-map__measure-toggle" type="button" aria-pressed={measureActive} onClick={() => {
-          setMeasureActive(active => !active);
-          if (!measureActive) { setMeasureStart(null); setMeasureEnd(null); }
-        }}>{measureActive ? measureUi.stop : measureUi.button}</button>
-        <button className="store-map__measure-gps" type="button" onClick={beginMeasureFromGps} disabled={isLocating}>{isLocating ? t("map.locating") : measureUi.useGps}</button>
-        {measureStart && measureEnd && <span className="store-map__measure-result" role="status">{formatDistance(distanceMeters(measureStart[0], measureStart[1], measureEnd[0], measureEnd[1]))}</span>}
-        {(measureStart || measureEnd) && <button className="store-map__measure-clear" type="button" onClick={() => { setMeasureStart(null); setMeasureEnd(null); setMeasureActive(false); setPendingGpsStart(false); }}>{measureUi.clear}</button>}
-      </div>}
       <form className="store-map__radius-form" onSubmit={applyRadius}>
         <label htmlFor="store-map-radius">{t("map.radiusLabel")}</label>
         <input
@@ -717,12 +755,16 @@ export default function StoreMap({ fullScreen = false, enableDistanceMeasure = f
                 <a className="store-map__directions" href={googleDirectionsUrl(item, userPosition)} target="_blank" rel="noopener noreferrer">
                   {t("map.directionsGoogle")}
                 </a>
+                {enableDistanceMeasure && <button type="button" className="store-map__popup-route" onClick={() => measureFromMeTo([item.lat, item.lng])}>{measureUi.toPlace}</button>}
               </Popup>
             </Marker>;
           })}
-          {enableDistanceMeasure && measureStart && <Marker position={measureStart}><Popup>{measureUi.start}</Popup></Marker>}
-          {enableDistanceMeasure && measureEnd && <Marker position={measureEnd}><Popup>{measureUi.next}</Popup></Marker>}
-          {enableDistanceMeasure && measureStart && measureEnd && <Polyline positions={[measureStart, measureEnd]} pathOptions={{ color: "#d97706", weight: 4, dashArray: "8 8" }} />}
+          {enableDistanceMeasure && measurements.map((measurement, index) => measurement && <React.Fragment key={`measure-${index}`}>
+            <Marker position={measurement.start}><Popup>{measureUi.start} {index + 1}</Popup></Marker>
+            <Marker position={measurement.end}><Popup>{measureUi.next} {index + 1}</Popup></Marker>
+            <Polyline positions={[measurement.start, measurement.end]} pathOptions={{ color: index === 0 ? "#d97706" : "#1769aa", weight: 4, dashArray: "8 8" }} />
+          </React.Fragment>)}
+          {enableDistanceMeasure && measureActive && draftStart && <Marker position={draftStart}><Popup>{measureUi.start}</Popup></Marker>}
           {userPosition && (
             <Marker position={userPosition.position} icon={currentLocationIcon} zIndexOffset={1000}>
               <Tooltip permanent direction="top" offset={[0, -12]}>

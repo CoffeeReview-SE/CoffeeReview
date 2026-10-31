@@ -112,12 +112,19 @@
 .store-map__search { width: min(100%, 460px); padding: 12px 14px; border: 1px solid #ded4c9; border-radius: 9px; background: #fff; color: inherit; font: inherit; }
 .store-map__search:focus { border-color: #8b7a6c; outline: none; box-shadow: none; }
 .store-map__action-row { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
-.store-map__measure-tools { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
-.store-map__measure-tools button { min-height: 42px; padding: 0 13px; border: 1px solid #d8c7b7; border-radius: 9px; background: #fff; color: #51311f; font: inherit; font-size: 12px; cursor: pointer; box-shadow: 0 3px 14px #24150c22; }
+.store-map__measure-pin { position: relative; z-index: 1002; display: grid; flex: 0 0 46px; width: 46px; height: 46px; place-items: center; padding: 10px; border: 1px solid #d8c8b7; border-radius: 50%; background: #fff; color: #6b3d25; cursor: pointer; box-shadow: 0 3px 14px #24150c22; }
+.store-map__measure-pin svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.store-map__measure-pin[aria-pressed="true"] { background: #6b3d25; color: #fff; }
+.store-map__measure-tools { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; }
+.store-map__measure-tools button { min-height: 40px; padding: 0 10px; border: 1px solid #d8c7b7; border-radius: 9px; background: #fff; color: #51311f; font: inherit; font-size: 12px; cursor: pointer; box-shadow: 0 3px 14px #24150c22; }
 .store-map__measure-tools button:hover { background: #f7eee5; }
-.store-map__measure-tools .store-map__measure-toggle[aria-pressed="true"] { border-color: #765035; background: #6b3d25; color: #fff; }
+.store-map__measure-tools .store-map__measure-slot button.active { border-color: #765035; background: #6b3d25; color: #fff; }
+.store-map__measure-tools .store-map__measure-slot { display: inline-flex; align-items: center; }
+.store-map__measure-tools .store-map__measure-slot button:first-child { border-radius: 9px 0 0 9px; }
+.store-map__measure-tools .store-map__measure-slot .store-map__measure-remove { min-width: 30px; padding: 0 7px; border-left: 0; border-radius: 0 9px 9px 0; font-size: 17px; }
 .store-map__measure-tools button:disabled { opacity: .6; cursor: wait; }
-.store-map__measure-result { padding: 9px 12px; border-radius: 8px; background: #fff; color: #3d2a1e; font-size: 13px; font-weight: 700; box-shadow: 0 3px 14px #24150c22; }
+.store-map__measure-hint { padding: 6px 9px; border-radius: 7px; background: #ffffffed; color: #51311f; font-size: 11px; }
+.store-map__popup-route { display: inline-block; margin: 7px 0 0; padding: 7px 10px; border: 0; border-radius: 7px; background: #6b3d25; color: #fff; font: inherit; font-size: 11px; cursor: pointer; }
 .store-map__locate { min-height: 48px; padding: 0 20px; border: 0; border-radius: 9px; background: #6b3d25; color: #fff; font: inherit; font-weight: 600; cursor: pointer; transition: background .18s, box-shadow .18s; }
 .store-map__locate:hover:not(:disabled) { background: #4f2b1a; }
 .store-map__locate:disabled { cursor: wait; opacity: .65; }
