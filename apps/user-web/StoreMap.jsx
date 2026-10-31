@@ -646,6 +646,14 @@ export default function StoreMap({ fullScreen = false, enableDistanceMeasure = f
         }}>
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22s7-6.2 7-13a7 7 0 1 0-14 0c0 6.8 7 13 7 13Z"/><circle cx="12" cy="9" r="2.5"/></svg>
         </button>}
+        {enableDistanceMeasure && (measureActive || measurement) && <>
+          <button type="button" className="store-map__measure-action" aria-label={isLocating ? t("map.locating") : measureUi.useGps} title={isLocating ? t("map.locating") : measureUi.useGps} onClick={beginMeasureFromGps} disabled={isLocating}>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3"/></svg><span>{isLocating ? t("map.locating") : measureUi.useGps}</span>
+          </button>
+          {(measurement || draftStart) && <button type="button" className="store-map__measure-action" aria-label={measureUi.clear} title={measureUi.clear} onClick={() => { setMeasurement(null); setDraftStart(null); setMeasureActive(false); setPendingGpsStart(false); setPendingGpsDestination(null); }}>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg><span>{measureUi.clear}</span>
+          </button>}
+        </>}
       </div>
       <form className="store-map__radius-form" onSubmit={applyRadius}>
         <label htmlFor="store-map-radius">{t("map.radiusLabel")}</label>
@@ -659,10 +667,6 @@ export default function StoreMap({ fullScreen = false, enableDistanceMeasure = f
         <span>km</span>
         <button type="submit">{t("map.applyRadius")}</button>
       </form>
-      {enableDistanceMeasure && (measureActive || measurement) && <div className="store-map__measure-actions">
-        <button type="button" className="store-map__measure-action" onClick={beginMeasureFromGps} disabled={isLocating}>{isLocating ? t("map.locating") : measureUi.useGps}</button>
-        {(measurement || draftStart) && <button type="button" className="store-map__measure-action" onClick={() => { setMeasurement(null); setDraftStart(null); setMeasureActive(false); setPendingGpsStart(false); setPendingGpsDestination(null); }}>{measureUi.clear}</button>}
-      </div>}
       {mapToast && <div key={mapToast.id} className="store-map__toast" role="status" aria-live="polite">
         <span className="store-map__toast-icon" aria-hidden="true">✓</span>
         <span>{mapToast.message}</span>

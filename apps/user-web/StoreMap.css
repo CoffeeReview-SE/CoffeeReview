@@ -1,5 +1,10 @@
 .store-map-page {
-  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
   background: #f8f6f2;
   color: #2a1810;
   font-family: Inter, system-ui, "Segoe UI", sans-serif;
@@ -8,6 +13,7 @@
 .store-map-page__bar {
   position: relative;
   z-index: 1102;
+  flex: 0 0 auto;
   display: flex;
   align-items: center;
   gap: 28px;
@@ -115,7 +121,8 @@
 .store-map__measure-pin { position: relative; z-index: 1002; display: grid; flex: 0 0 46px; width: 46px; height: 46px; place-items: center; padding: 10px; border: 1px solid #d8c8b7; border-radius: 50%; background: #fff; color: #6b3d25; cursor: pointer; box-shadow: 0 3px 14px #24150c22; }
 .store-map__measure-pin svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 .store-map__measure-pin[aria-pressed="true"] { background: #6b3d25; color: #fff; }
-.store-map__measure-action { min-height: 40px; padding: 10px 12px; border: 1px solid #d8c8b7; border-radius: 8px; background: #fff; color: #694126; font: inherit; font-size: 12px; cursor: pointer; }
+.store-map__measure-action { min-height: 46px; flex: 0 0 auto; padding: 0 12px; border: 1px solid #d8c8b7; border-radius: 9px; background: #fff; color: #694126; font: inherit; font-size: 12px; white-space: nowrap; cursor: pointer; box-shadow: 0 3px 14px #24150c22; }
+.store-map__measure-action svg { display: none; }
 .store-map__measure-action:hover { background: #f7eee5; }
 .store-map__measure-action:disabled { opacity: .6; cursor: wait; }
 .store-map__canvas--measuring { cursor: crosshair; }
@@ -128,7 +135,6 @@
 .store-map__radius-form label { color: #47372c; font-size: 13px; font-weight: 600; }
 .store-map__radius-form input { width: 78px; padding: 10px 8px; border: 1px solid #ded4c9; border-radius: 8px; font: inherit; }
 .store-map__radius-form button { padding: 10px 12px; border: 1px solid #d8c8b7; border-radius: 8px; background: #fffaf4; color: #694126; font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; }
-.store-map__measure-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
 .store-map__radius-status { min-height: 0; margin: 4px 0 0; color: #536c54; font-size: 12px; }
 .store-map__modal-backdrop { position: fixed; z-index: 3000; inset: 0; display: grid; place-items: center; padding: 20px; background: #1f1712a6; }
 .store-map__modal { width: min(100%, 420px); padding: 26px; border: 1px solid #eee5dc; border-radius: 14px; background: #fff; box-shadow: 0 18px 55px #1f171255; text-align: center; }
@@ -206,10 +212,11 @@
 /* Dedicated map route: keep the map as the canvas and float search/results above it. */
 .store-map--full-screen {
   position: relative;
+  flex: 1 1 auto;
   width: 100%;
   max-width: none;
-  height: calc(100dvh - 64px);
-  min-height: 520px;
+  height: auto;
+  min-height: 0;
   margin: 0;
   padding: 0;
   overflow: hidden;
@@ -226,7 +233,6 @@
 .store-map--full-screen .store-map__radius-form { position: absolute; z-index: 1001; top: 68px; left: 16px; margin: 0; padding: 8px 10px; border: 1px solid #eee5dc; border-radius: 9px; background: #fff; box-shadow: 0 3px 14px #24150c1c; }
 .store-map--full-screen .store-map__radius-form input { padding: 7px; }
 .store-map--full-screen .store-map__radius-form button { padding: 8px 10px; }
-.store-map--full-screen .store-map__measure-actions { position: absolute; z-index: 1002; top: 68px; left: 420px; margin: 0; }
 .store-map--full-screen .store-map__location-status,
 .store-map--full-screen .store-map__nearby-status,
 .store-map--full-screen .store-map__radius-status { position: absolute; z-index: 1001; top: 119px; left: 18px; max-width: 340px; margin: 0; padding: 5px 8px; border-radius: 6px; background: #ffffffed; }
@@ -286,25 +292,28 @@
   .store-map__radius-form { display: flex; margin-left: 0; }
   .store-map__results { max-height: 220px; }
   .store-map__canvas { height: 420px; }
-  .store-map--full-screen { height: calc(100dvh - 58px); min-height: 560px; }
-  .store-map--full-screen .store-map__search-label { top: 70px; left: 14px; }
-  .store-map--full-screen .store-map__search { top: 14px; left: 12px; box-sizing: border-box; width: calc(100vw - 84px); }
-  .store-map--full-screen .store-map__action-row { top: auto; right: 14px; bottom: calc(min(30dvh, 250px) + 34px); left: auto; }
+  .store-map--full-screen { flex: 1 1 auto; height: auto; min-height: 0; }
+  .store-map--full-screen .store-map__search-label { display: none; }
+  .store-map--full-screen .store-map__search { top: 10px; left: 12px; box-sizing: border-box; width: calc(100vw - 76px); min-height: 46px; }
+  .store-map--full-screen .store-map__action-row { top: auto; right: 12px; bottom: calc(min(22dvh, 190px) + 18px + env(safe-area-inset-bottom)); left: auto; }
   .store-map--full-screen .store-map__locate,
   .store-map--full-screen .store-map__nearby-audio { min-height: 42px; padding: 0 12px; }
   .store-map--full-screen .store-map__nearby-audio { width: 44px; height: 44px; min-height: 44px; }
   .store-map--full-screen .store-map__show-all { width: 44px; height: 44px; }
-  .store-map--full-screen .store-map__radius-form { top: 96px; left: 12px; display: flex; box-sizing: border-box; width: max-content; max-width: calc(100vw - 86px); gap: 6px; padding: 8px; }
+  .store-map--full-screen .store-map__radius-form { top: 66px; left: 12px; display: flex; box-sizing: border-box; width: max-content; max-width: calc(100vw - 76px); gap: 6px; padding: 6px 8px; }
   .store-map--full-screen .store-map__radius-form label { font-size: 11px; }
   .store-map--full-screen .store-map__radius-form input { width: 58px; }
   .store-map--full-screen .store-map__radius-form button { padding: 7px 8px; font-size: 11px; }
-  .store-map--full-screen .store-map__measure-actions { top: 160px; left: 12px; right: 12px; gap: 8px; }
-  .store-map--full-screen .store-map__measure-action { min-height: 42px; flex: 1 1 130px; padding: 9px 12px; }
+  .store-map--full-screen .store-map__action-row { right: 12px; left: 12px; justify-content: flex-end; gap: 7px; }
+  .store-map--full-screen .store-map__measure-action { display: grid; width: 44px; min-width: 44px; height: 44px; min-height: 44px; padding: 0; place-items: center; border-radius: 50%; }
+  .store-map--full-screen .store-map__measure-action svg { display: block; width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  .store-map--full-screen .store-map__measure-action span { display: none; }
   .store-map--full-screen .store-map__location-status,
   .store-map--full-screen .store-map__nearby-status,
-  .store-map--full-screen .store-map__radius-status { top: 210px; left: 14px; max-width: calc(100vw - 28px); }
-  .store-map--full-screen .store-map__nearby-status { top: 232px; }
-  .store-map--full-screen .store-map__results { top: auto; right: 10px; bottom: 10px; left: 10px; width: auto; height: min(30dvh, 250px); padding: 10px; }
+  .store-map--full-screen .store-map__radius-status { top: 118px; left: 14px; max-width: calc(100vw - 28px); }
+  .store-map--full-screen .store-map__radius-status { top: 140px; }
+  .store-map--full-screen .store-map__nearby-status { top: 162px; }
+  .store-map--full-screen .store-map__results { top: auto; right: 8px; bottom: calc(8px + env(safe-area-inset-bottom)); left: 8px; width: auto; height: min(22dvh, 190px); padding: 8px; }
   .store-map--full-screen .store-map__summary-table { display: none; }
 }
 
