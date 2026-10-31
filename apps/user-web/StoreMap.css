@@ -259,6 +259,7 @@
 }
 .store-map__toast-icon { display: grid; flex: 0 0 30px; place-items: center; width: 30px; height: 30px; border-radius: 50%; background: #6b3a22; color: #fff; font-size: 18px; }
 .store-map__toast button { flex: 0 0 auto; margin-left: auto; padding: 0 2px; border: 0; background: transparent; color: #6b3a22; font-size: 24px; line-height: 1; cursor: pointer; }
+.store-map:not(.store-map--full-screen) .store-map__toast { position: fixed; z-index: 3000; top: max(14px, env(safe-area-inset-top)); right: 14px; bottom: auto; left: auto; width: min(430px, calc(100vw - 28px)); }
 @keyframes store-map-toast-in { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
 
 @media (max-width: 760px) {

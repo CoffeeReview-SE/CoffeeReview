@@ -29,7 +29,10 @@ export default function MapPage() {
   return (
     <div className="store-map-page">
       <header className="store-map-page__bar">
-        <button className="store-map-page__brand" onClick={() => navigate("/")} type="button">
+        <button className="store-map-page__brand" onClick={() => {
+          window.dispatchEvent(new Event("saigoncoffee:clear-map-notice"));
+          navigate("/");
+        }} type="button">
           <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <path d="M4 9h13v5a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5zM17 10h2a2 2 0 0 1 0 4h-2M3 21h16M8 3c0 2 2 2 2 4M12 3c0 2 2 2 2 4" />
           </svg>
@@ -37,7 +40,10 @@ export default function MapPage() {
         </button>
         <nav className="store-map-page__nav" aria-label="Điều hướng chính">
           {navItems.map(([key, label, path]) => (
-            <button key={key} type="button" aria-current={key === "map" ? "page" : undefined} onClick={() => navigate(path)}>
+            <button key={key} type="button" aria-current={key === "map" ? "page" : undefined} onClick={() => {
+              if (key === "home") window.dispatchEvent(new Event("saigoncoffee:clear-map-notice"));
+              navigate(path);
+            }}>
               {label}
             </button>
           ))}

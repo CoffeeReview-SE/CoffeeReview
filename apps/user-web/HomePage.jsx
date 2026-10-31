@@ -212,6 +212,7 @@ export default function HomePage({ onOpenBrand, onNavigate }) {
   }, []);
   
   const go = key => {
+    if (key === "home") window.dispatchEvent(new Event("saigoncoffee:clear-map-notice"));
     if (onNavigate) {
       onNavigate(key);
     }
