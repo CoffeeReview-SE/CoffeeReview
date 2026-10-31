@@ -69,7 +69,7 @@ export default function MapPage() {
           )}
         </div>
       </header>
-      <StoreMap fullScreen enableRouting />
+      <StoreMap fullScreen enableDistanceMeasure />
     </div>
   );
 }
