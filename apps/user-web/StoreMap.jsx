@@ -658,11 +658,11 @@ export default function StoreMap({ fullScreen = false, enableDistanceMeasure = f
         />
         <span>km</span>
         <button type="submit">{t("map.applyRadius")}</button>
-        {enableDistanceMeasure && (measureActive || measurement) && <>
-          <button type="button" className="store-map__measure-action" onClick={beginMeasureFromGps} disabled={isLocating}>{isLocating ? t("map.locating") : measureUi.useGps}</button>
-          {(measurement || draftStart) && <button type="button" className="store-map__measure-action" onClick={() => { setMeasurement(null); setDraftStart(null); setMeasureActive(false); setPendingGpsStart(false); setPendingGpsDestination(null); }}>{measureUi.clear}</button>}
-        </>}
       </form>
+      {enableDistanceMeasure && (measureActive || measurement) && <div className="store-map__measure-actions">
+        <button type="button" className="store-map__measure-action" onClick={beginMeasureFromGps} disabled={isLocating}>{isLocating ? t("map.locating") : measureUi.useGps}</button>
+        {(measurement || draftStart) && <button type="button" className="store-map__measure-action" onClick={() => { setMeasurement(null); setDraftStart(null); setMeasureActive(false); setPendingGpsStart(false); setPendingGpsDestination(null); }}>{measureUi.clear}</button>}
+      </div>}
       {mapToast && <div key={mapToast.id} className="store-map__toast" role="status" aria-live="polite">
         <span className="store-map__toast-icon" aria-hidden="true">✓</span>
         <span>{mapToast.message}</span>
