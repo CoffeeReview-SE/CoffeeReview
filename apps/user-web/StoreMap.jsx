@@ -111,7 +111,7 @@ function MapControls({ onLocate, t }) {
   );
 }
 
-export default function StoreMap({ fullScreen = false }) {
+export default function StoreMap({ fullScreen = false, enableRouting = false }) {
   const { t, languageCode } = useLanguage();
   const voiceTargetLanguage = languageCode;
   const [searchTerm, setSearchTerm] = useState("");
@@ -626,7 +626,7 @@ export default function StoreMap({ fullScreen = false }) {
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10 5 4h14l2 6M4 10v10h16V10M9 20v-6h6v6"/><path d="M3 10a2.5 2.5 0 0 0 5 0 2 2 0 0 0 4 0 2 2 0 0 0 4 0 2.5 2.5 0 0 0 5 0"/></svg>
         </button>
       </div>
-      <section className="store-map__routing" aria-label="Distance and directions">
+      {enableRouting && <section className="store-map__routing" aria-label="Distance and directions">
         <div className="store-map__routing-points">
           <span><b>{routeUi.start}:</b> {routeStart ? `${routeStart[0].toFixed(5)}, ${routeStart[1].toFixed(5)}` : "—"}</span>
           <button type="button" onClick={() => userPosition ? setRoutePoint("start", userPosition.position) : locateMe()} disabled={isLocating}>{isLocating ? t("map.locating") : routeUi.useGps}</button>
@@ -646,7 +646,7 @@ export default function StoreMap({ fullScreen = false }) {
         {routeMode === "straight" && routeStart && routeEnd && <p className="store-map__route-summary">{routeUi.bird}: {formatDistance(distanceMeters(routeStart[0], routeStart[1], routeEnd[0], routeEnd[1]))}</p>}
         {routeResult && <p className="store-map__route-summary">{formatDistance(routeResult.distance)} · {Math.round(routeResult.duration / 60)} min. {routeUi.routeNote}</p>}
         {routeError && <p className="store-map__route-error" role="alert">{routeError}</p>}
-      </section>
+      </section>}
       <form className="store-map__radius-form" onSubmit={applyRadius}>
         <label htmlFor="store-map-radius">{t("map.radiusLabel")}</label>
         <input
@@ -708,7 +708,7 @@ export default function StoreMap({ fullScreen = false }) {
           zoomControl={false}
           scrollWheelZoom
         >
-          <MapPointPicker enabled={Boolean(pickingPoint)} onPick={point => { setRoutePoint(pickingPoint, point); setPickingPoint(null); }} />
+          {enableRouting && <MapPointPicker enabled={Boolean(pickingPoint)} onPick={point => { setRoutePoint(pickingPoint, point); setPickingPoint(null); }} />}
           <ChangeView center={mapCenter} zoom={mapZoom} />
           <FitLocations locations={locations} active={showAllLocations} resetCenter={userPosition?.position} />
           <MapControls onLocate={locateAndEnableNearbyAudio} t={t} />
@@ -732,17 +732,17 @@ export default function StoreMap({ fullScreen = false }) {
                   {brandInfo?.description && <span>{brandInfo.description}</span>}
                   {brandInfo?.website && <a href={brandInfo.website} target="_blank" rel="noopener noreferrer">{brandInfo.website}</a>}
                 </div>
-                <button type="button" className="store-map__popup-route" onClick={() => { setRoutePoint("end", [item.lat, item.lng]); if (userPosition) setRoutePoint("start", userPosition.position); }}>{routeUi.chooseDestination}</button>
+                {enableRouting && <button type="button" className="store-map__popup-route" onClick={() => { setRoutePoint("end", [item.lat, item.lng]); if (userPosition) setRoutePoint("start", userPosition.position); }}>{routeUi.chooseDestination}</button>}
                 <a className="store-map__directions" href={googleDirectionsUrl(item, userPosition)} target="_blank" rel="noopener noreferrer">
                   {t("map.directionsGoogle")}
                 </a>
               </Popup>
             </Marker>;
           })}
-          {routeStart && <Marker position={routeStart}><Popup>{routeUi.start}</Popup></Marker>}
-          {routeEnd && <Marker position={routeEnd}><Popup>{routeUi.end}</Popup></Marker>}
-          {routeMode === "straight" && routeStart && routeEnd && <Polyline positions={[routeStart, routeEnd]} pathOptions={{ color: "#d97706", weight: 4, dashArray: "8 8" }} />}
-          {routeResult && <Polyline positions={routeResult.points} pathOptions={{ color: "#1769aa", weight: 5 }} />}
+          {enableRouting && routeStart && <Marker position={routeStart}><Popup>{routeUi.start}</Popup></Marker>}
+          {enableRouting && routeEnd && <Marker position={routeEnd}><Popup>{routeUi.end}</Popup></Marker>}
+          {enableRouting && routeMode === "straight" && routeStart && routeEnd && <Polyline positions={[routeStart, routeEnd]} pathOptions={{ color: "#d97706", weight: 4, dashArray: "8 8" }} />}
+          {enableRouting && routeResult && <Polyline positions={routeResult.points} pathOptions={{ color: "#1769aa", weight: 5 }} />}
           {userPosition && (
             <Marker position={userPosition.position} icon={currentLocationIcon} zIndexOffset={1000}>
               <Tooltip permanent direction="top" offset={[0, -12]}>
