@@ -127,8 +127,10 @@
 .store-map__modal button { min-width: 100px; padding: 10px 18px; border: 0; border-radius: 8px; background: #6b3d25; color: #fff; font: inherit; font-weight: 700; cursor: pointer; }
 .store-map__modal button:hover { background: #4f2b1a; }
 .store-map__nearby-audio { min-height: 48px; padding: 0 20px; border: 0; border-radius: 9px; background: #6b3d25; color: #fff; font: inherit; font-weight: 600; cursor: pointer; transition: background .18s, box-shadow .18s; }
+.store-map__nearby-audio svg { display: block; width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 .store-map__nearby-audio:hover { background: #4f2b1a; box-shadow: 0 3px 10px #4f2b1a20; }
 .store-map__nearby-audio[aria-pressed="true"] { background: #6b3d25; color: #fff; }
+.store-map__nearby-audio[aria-pressed="false"] { background: #273b2e; color: #fff; }
 .store-map__nearby-status { margin: 8px 0; color: #536c54; font-size: 12px; }
 .store-map__location-status { min-height: 18px; margin: 8px 0 0; color: #75675d; font-size: 12px; }
 
@@ -205,6 +207,7 @@
 .store-map--full-screen .store-map__action-row { position: absolute; z-index: 1001; top: 14px; left: 362px; margin: 0; }
 .store-map--full-screen .store-map__locate,
 .store-map--full-screen .store-map__nearby-audio { min-height: 46px; box-shadow: 0 3px 14px #24150c22; }
+.store-map--full-screen .store-map__nearby-audio { display: grid; width: 46px; height: 46px; min-height: 46px; padding: 0; place-items: center; border-radius: 50%; }
 .store-map--full-screen .store-map__radius-form { position: absolute; z-index: 1001; top: 68px; left: 16px; margin: 0; padding: 8px 10px; border: 1px solid #eee5dc; border-radius: 9px; background: #fff; box-shadow: 0 3px 14px #24150c1c; }
 .store-map--full-screen .store-map__radius-form input { padding: 7px; }
 .store-map--full-screen .store-map__radius-form button { padding: 8px 10px; }
@@ -267,18 +270,19 @@
   .store-map__results { max-height: 220px; }
   .store-map__canvas { height: 420px; }
   .store-map--full-screen { height: calc(100dvh - 58px); min-height: 560px; }
-  .store-map--full-screen .store-map__search-label { top: 60px; left: 14px; }
-  .store-map--full-screen .store-map__search { top: 14px; left: 12px; width: calc(100vw - 166px); }
+  .store-map--full-screen .store-map__search-label { top: 70px; left: 14px; }
+  .store-map--full-screen .store-map__search { top: 14px; left: 12px; box-sizing: border-box; width: calc(100vw - 84px); }
   .store-map--full-screen .store-map__action-row { top: 14px; right: 12px; left: auto; }
   .store-map--full-screen .store-map__locate,
   .store-map--full-screen .store-map__nearby-audio { min-height: 42px; padding: 0 12px; }
-  .store-map--full-screen .store-map__radius-form { top: 120px; left: 12px; gap: 6px; padding: 6px; }
+  .store-map--full-screen .store-map__nearby-audio { width: 44px; height: 44px; min-height: 44px; }
+  .store-map--full-screen .store-map__radius-form { top: 112px; left: 12px; display: flex; box-sizing: border-box; width: max-content; max-width: calc(100vw - 86px); gap: 6px; padding: 8px; }
   .store-map--full-screen .store-map__radius-form label { font-size: 11px; }
   .store-map--full-screen .store-map__radius-form input { width: 58px; }
+  .store-map--full-screen .store-map__radius-form button { padding: 7px 8px; font-size: 11px; }
   .store-map--full-screen .store-map__location-status,
   .store-map--full-screen .store-map__nearby-status,
-  .store-map--full-screen .store-map__radius-status { top: 178px; left: 14px; max-width: calc(100vw - 28px); }
-  .store-map--full-screen .store-map__radius-status { top: 204px; }
+  .store-map--full-screen .store-map__radius-status { top: 204px; left: 14px; max-width: calc(100vw - 28px); }
   .store-map--full-screen .store-map__nearby-status { top: 230px; }
   .store-map--full-screen .store-map__results { top: auto; right: 10px; bottom: 10px; left: 10px; width: auto; height: min(38dvh, 300px); padding: 10px; }
   .store-map--full-screen .store-map__summary-table { display: none; }

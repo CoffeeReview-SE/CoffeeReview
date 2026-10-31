@@ -355,6 +355,12 @@ export default function StoreMap({ fullScreen = false }) {
     if (!nearbyAudioEnabled) {
       if (!navigator.geolocation) { setNearbyAudioStatus(proximityText.denied); return; }
       if (!("speechSynthesis" in window)) { setNearbyAudioStatus(proximityText.denied); return; }
+      try {
+        const unlockSpeech = new SpeechSynthesisUtterance(" ");
+        unlockSpeech.volume = 0;
+        window.speechSynthesis.cancel();
+        window.speechSynthesis.speak(unlockSpeech);
+      } catch { /* Audio can still be enabled on browsers that reject this. */ }
       setNearbyAudioEnabled(true);
       setNearbyAudioStatus(proximityText.gps);
       return;
@@ -482,7 +488,9 @@ export default function StoreMap({ fullScreen = false }) {
         {!fullScreen && <button className="store-map__locate" type="button" onClick={locateAndEnableNearbyAudio} disabled={isLocating} aria-label={t("map.locate")}>
           {isLocating ? t("map.locating") : t("map.locate")}
         </button>}
-        {nearbyAudioEnabled && <button className="store-map__nearby-audio" type="button" onClick={toggleNearbyAudio} aria-pressed="true">{proximityText.disable}</button>}
+        <button className="store-map__nearby-audio" type="button" onClick={toggleNearbyAudio} aria-pressed={nearbyAudioEnabled} aria-label={nearbyAudioEnabled ? proximityText.disable : proximityText.enable} title={nearbyAudioEnabled ? proximityText.disable : proximityText.enable}>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4V5Z"/><path d="M15.5 8.5a5 5 0 0 1 0 7m3-10a9 9 0 0 1 0 13"/></svg>
+        </button>
       </div>
       <form className="store-map__radius-form" onSubmit={applyRadius}>
         <label htmlFor="store-map-radius">{t("map.radiusLabel")}</label>
