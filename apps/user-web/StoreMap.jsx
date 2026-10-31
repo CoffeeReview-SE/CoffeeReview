@@ -94,6 +94,7 @@ export default function StoreMap({ fullScreen = false }) {
   const [mapToast, setMapToast] = useState(null);
   const [isLocating, setIsLocating] = useState(false);
   const [nearbyAudioEnabled, setNearbyAudioEnabled] = useState(false);
+  const [nearbyAudioIsSpeaking, setNearbyAudioIsSpeaking] = useState(false);
   const [nearbyAudioStatus, setNearbyAudioStatus] = useState("");
   const [radiusInput, setRadiusInput] = useState(String(DEFAULT_PROXIMITY_RADIUS_KM));
   const [proximityRadiusKm, setProximityRadiusKm] = useState(DEFAULT_PROXIMITY_RADIUS_KM);
@@ -257,10 +258,12 @@ export default function StoreMap({ fullScreen = false }) {
       if (voice) speech.voice = voice;
       speech.onstart = () => {
         isSpeakingNearby.current = true;
+        setNearbyAudioIsSpeaking(true);
         trackAudio({ brandId: Number(brand.id), languageCode: voiceLanguage, eventId: crypto.randomUUID() });
       };
       const finish = () => {
         isSpeakingNearby.current = false;
+        setNearbyAudioIsSpeaking(false);
         isPreparingNearby.current = false;
         speakNextNearby.current?.();
       };
@@ -271,6 +274,7 @@ export default function StoreMap({ fullScreen = false }) {
       try {
         window.speechSynthesis.speak(speech);
       } catch {
+        setNearbyAudioIsSpeaking(false);
         finish();
       }
     };
@@ -299,6 +303,7 @@ export default function StoreMap({ fullScreen = false }) {
       autoPlayedNearestBranch.current = false;
       playedNearbyBranchIds.current.clear();
       isSpeakingNearby.current = false;
+      setNearbyAudioIsSpeaking(false);
       isPreparingNearby.current = false;
     };
   }, [nearbyAudioEnabled, fullScreen, showMapToast]);
@@ -308,6 +313,7 @@ export default function StoreMap({ fullScreen = false }) {
     window.speechSynthesis?.cancel();
     nearbyAudioQueue.current = [];
     isSpeakingNearby.current = false;
+    setNearbyAudioIsSpeaking(false);
     isPreparingNearby.current = false;
     autoPlayedNearestBranch.current = false;
     playedNearbyBranchIds.current.clear();
@@ -488,9 +494,9 @@ export default function StoreMap({ fullScreen = false }) {
         {!fullScreen && <button className="store-map__locate" type="button" onClick={locateAndEnableNearbyAudio} disabled={isLocating} aria-label={t("map.locate")}>
           {isLocating ? t("map.locating") : t("map.locate")}
         </button>}
-        <button className="store-map__nearby-audio" type="button" onClick={toggleNearbyAudio} aria-pressed={nearbyAudioEnabled} aria-label={nearbyAudioEnabled ? proximityText.disable : proximityText.enable} title={nearbyAudioEnabled ? proximityText.disable : proximityText.enable}>
+        {(fullScreen || (userPosition && nearbyAudioEnabled && nearbyAudioIsSpeaking)) && <button className="store-map__nearby-audio" type="button" onClick={toggleNearbyAudio} aria-pressed={nearbyAudioEnabled} aria-label={nearbyAudioEnabled ? proximityText.disable : proximityText.enable} title={nearbyAudioEnabled ? proximityText.disable : proximityText.enable}>
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4V5Z"/><path d="M15.5 8.5a5 5 0 0 1 0 7m3-10a9 9 0 0 1 0 13"/></svg>
-        </button>
+        </button>}
       </div>
       <form className="store-map__radius-form" onSubmit={applyRadius}>
         <label htmlFor="store-map-radius">{t("map.radiusLabel")}</label>
