@@ -66,6 +66,24 @@ function ChangeView({ center, zoom }) {
   return null;
 }
 
+function FitLocations({ locations, active, resetCenter }) {
+  const map = useMap();
+  const wasActive = useRef(active);
+  const previousLocations = useRef(locations);
+  useEffect(() => {
+    const locationsChanged = previousLocations.current !== locations;
+    if (active && (!wasActive.current || locationsChanged)) {
+      const mapped = locations.filter(item => Number.isFinite(item.lat) && Number.isFinite(item.lng));
+      if (mapped.length) map.fitBounds(mapped.map(item => [item.lat, item.lng]), { padding: [42, 42], maxZoom: 13, animate: true });
+    } else if (!active && wasActive.current && resetCenter) {
+      map.setView(resetCenter, 16, { animate: true, duration: 0.65 });
+    }
+    wasActive.current = active;
+    previousLocations.current = locations;
+  }, [active, locations, map, resetCenter]);
+  return null;
+}
+
 function MapControls({ onLocate, t }) {
   const map = useMap();
   return (
@@ -94,7 +112,7 @@ export default function StoreMap({ fullScreen = false }) {
   const [mapToast, setMapToast] = useState(null);
   const [isLocating, setIsLocating] = useState(false);
   const [nearbyAudioEnabled, setNearbyAudioEnabled] = useState(false);
-  const [nearbyAudioIsSpeaking, setNearbyAudioIsSpeaking] = useState(false);
+  const [showAllLocations, setShowAllLocations] = useState(false);
   const [nearbyAudioStatus, setNearbyAudioStatus] = useState("");
   const [radiusInput, setRadiusInput] = useState(String(DEFAULT_PROXIMITY_RADIUS_KM));
   const [proximityRadiusKm, setProximityRadiusKm] = useState(DEFAULT_PROXIMITY_RADIUS_KM);
@@ -213,9 +231,23 @@ export default function StoreMap({ fullScreen = false }) {
       return;
     }
     setProximityRadiusKm(requestedRadius);
+    setShowAllLocations(false);
     setRadiusInput(String(requestedRadius));
     setRadiusErrorOpen(false);
     setRadiusStatus({ key: "map.appliedRadius", values: { radius: requestedRadius } });
+    if (nearbyAudioEnabled) {
+      proximityAudioGeneration.current += 1;
+      nearbyAudioQueue.current = [];
+      isSpeakingNearby.current = false;
+      isPreparingNearby.current = false;
+      setNearbyAudioEnabled(false);
+      window.speechSynthesis?.cancel();
+    }
+    if (userPosition) {
+      const prompt = t("map.tapToPlay");
+      if (fullScreen) showMapToast(prompt);
+      else setNearbyAudioStatus(prompt);
+    }
   };
 
   useEffect(() => {
@@ -258,14 +290,19 @@ export default function StoreMap({ fullScreen = false }) {
       if (voice) speech.voice = voice;
       speech.onstart = () => {
         isSpeakingNearby.current = true;
-        setNearbyAudioIsSpeaking(true);
         trackAudio({ brandId: Number(brand.id), languageCode: voiceLanguage, eventId: crypto.randomUUID() });
       };
+      let hasFinished = false;
       const finish = () => {
+        if (hasFinished) return;
+        hasFinished = true;
         isSpeakingNearby.current = false;
-        setNearbyAudioIsSpeaking(false);
         isPreparingNearby.current = false;
-        speakNextNearby.current?.();
+        nearbyAudioQueue.current = [];
+        setNearbyAudioEnabled(false);
+        const prompt = t("map.tapToPlay");
+        if (fullScreen) showMapToast(prompt);
+        else setNearbyAudioStatus(prompt);
       };
       speech.onend = finish;
       speech.onerror = finish;
@@ -274,11 +311,10 @@ export default function StoreMap({ fullScreen = false }) {
       try {
         window.speechSynthesis.speak(speech);
       } catch {
-        setNearbyAudioIsSpeaking(false);
         finish();
       }
     };
-  }, [voiceTargetLanguage]);
+  }, [voiceTargetLanguage, fullScreen, showMapToast, t]);
 
   useEffect(() => {
     if (!nearbyAudioEnabled) return undefined;
@@ -303,7 +339,6 @@ export default function StoreMap({ fullScreen = false }) {
       autoPlayedNearestBranch.current = false;
       playedNearbyBranchIds.current.clear();
       isSpeakingNearby.current = false;
-      setNearbyAudioIsSpeaking(false);
       isPreparingNearby.current = false;
     };
   }, [nearbyAudioEnabled, fullScreen, showMapToast]);
@@ -313,7 +348,6 @@ export default function StoreMap({ fullScreen = false }) {
     window.speechSynthesis?.cancel();
     nearbyAudioQueue.current = [];
     isSpeakingNearby.current = false;
-    setNearbyAudioIsSpeaking(false);
     isPreparingNearby.current = false;
     autoPlayedNearestBranch.current = false;
     playedNearbyBranchIds.current.clear();
@@ -375,9 +409,6 @@ export default function StoreMap({ fullScreen = false }) {
     setNearbyAudioStatus("");
   };
   const normalizedSearch = searchTerm.trim().toLocaleLowerCase("vi");
-  const filteredLocations = locations.filter((item) =>
-    `${item.name} ${item.brand} ${item.address}`.toLocaleLowerCase("vi").includes(normalizedSearch),
-  );
   const nearbyLocationsByDistance = userPosition
     ? locations
       .filter(item => Number.isFinite(item.lat) && Number.isFinite(item.lng))
@@ -385,9 +416,20 @@ export default function StoreMap({ fullScreen = false }) {
       .filter(item => item.distanceFromUser <= proximityRadiusMeters)
       .sort((a, b) => a.distanceFromUser - b.distanceFromUser)
     : [];
-  const locationsByDistance = userPosition
-    ? nearbyLocationsByDistance.filter(item => `${item.name} ${item.brand} ${item.address}`.toLocaleLowerCase("vi").includes(normalizedSearch))
-    : filteredLocations;
+  const allLocationsByDistance = userPosition
+    ? locations
+      .map(item => ({
+        ...item,
+        distanceFromUser: Number.isFinite(item.lat) && Number.isFinite(item.lng)
+          ? distanceMeters(userPosition.position[0], userPosition.position[1], item.lat, item.lng)
+          : undefined,
+      }))
+      .sort((a, b) => (a.distanceFromUser ?? Infinity) - (b.distanceFromUser ?? Infinity))
+    : locations;
+  const locationsByDistance = (showAllLocations
+    ? allLocationsByDistance
+    : userPosition ? nearbyLocationsByDistance : locations)
+    .filter(item => `${item.name} ${item.brand} ${item.address}`.toLocaleLowerCase("vi").includes(normalizedSearch));
   const nearbyRankById = new Map(nearbyLocationsByDistance.map((item, index) => [item.id, index + 1]));
   const nearestBranchId = nearbyLocationsByDistance[0]?.id;
   const mappedLocations = locationsByDistance.filter(item => Number.isFinite(item.lat) && Number.isFinite(item.lng));
@@ -396,6 +438,14 @@ export default function StoreMap({ fullScreen = false }) {
     if (item.lat == null || item.lng == null) return;
     setMapCenter([item.lat, item.lng]);
     setMapZoom(16);
+  };
+
+  const toggleAllLocations = () => {
+    const showAll = !showAllLocations;
+    setShowAllLocations(showAll);
+    if (showAll) {
+      setSearchTerm("");
+    }
   };
 
   const locateMe = () => {
@@ -452,6 +502,7 @@ export default function StoreMap({ fullScreen = false }) {
       showMapToast(proximityText.denied);
       return;
     }
+    setShowAllLocations(false);
     // iOS Safari only permits speech synthesis after a user gesture. Start a
     // silent utterance here, before GPS/network work moves playback out of the
     // gesture handler; later nearby descriptions can then be queued normally.
@@ -494,9 +545,12 @@ export default function StoreMap({ fullScreen = false }) {
         {!fullScreen && <button className="store-map__locate" type="button" onClick={locateAndEnableNearbyAudio} disabled={isLocating} aria-label={t("map.locate")}>
           {isLocating ? t("map.locating") : t("map.locate")}
         </button>}
-        {(fullScreen || (userPosition && nearbyAudioEnabled && nearbyAudioIsSpeaking)) && <button className="store-map__nearby-audio" type="button" onClick={toggleNearbyAudio} aria-pressed={nearbyAudioEnabled} aria-label={nearbyAudioEnabled ? proximityText.disable : proximityText.enable} title={nearbyAudioEnabled ? proximityText.disable : proximityText.enable}>
+        {(fullScreen || userPosition) && <button className="store-map__nearby-audio" type="button" onClick={toggleNearbyAudio} aria-pressed={nearbyAudioEnabled} aria-label={nearbyAudioEnabled ? proximityText.disable : t("map.listenNearest")} title={nearbyAudioEnabled ? proximityText.disable : t("map.listenNearest")}>
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4V5Z"/><path d="M15.5 8.5a5 5 0 0 1 0 7m3-10a9 9 0 0 1 0 13"/></svg>
         </button>}
+        <button className="store-map__show-all" type="button" onClick={toggleAllLocations} aria-pressed={showAllLocations} aria-label={showAllLocations ? t("map.showNearbyBranches") : t("map.showAllBranches")} title={showAllLocations ? t("map.showNearbyBranches") : t("map.showAllBranches")}>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10 5 4h14l2 6M4 10v10h16V10M9 20v-6h6v6"/><path d="M3 10a2.5 2.5 0 0 0 5 0 2 2 0 0 0 4 0 2 2 0 0 0 4 0 2.5 2.5 0 0 0 5 0"/></svg>
+        </button>
       </div>
       <form className="store-map__radius-form" onSubmit={applyRadius}>
         <label htmlFor="store-map-radius">{t("map.radiusLabel")}</label>
@@ -536,12 +590,12 @@ export default function StoreMap({ fullScreen = false }) {
           </div>
           <div className="store-map__table-wrap">
             <table className="store-map__table store-map__nearby-table">
-              <caption>{userPosition ? t("map.nearbyBranches", { radius: proximityRadiusKm, count: locationsByDistance.length }) : t("map.allBranches", { count: locationsByDistance.length })}</caption>
+              <caption>{userPosition && !showAllLocations ? t("map.nearbyBranches", { radius: proximityRadiusKm, count: locationsByDistance.length }) : t("map.allBranches", { count: locationsByDistance.length })}</caption>
               <thead><tr><th scope="col">#</th><th scope="col">{t("map.branch")}</th><th scope="col">{t("map.distance")}</th></tr></thead>
               <tbody>
                 {locationsByDistance.length ? locationsByDistance.map((item, index) => (
                   <tr key={item.id} className={userPosition && item.id === nearestBranchId ? "store-map__nearest-row" : undefined}>
-                    <td>{userPosition && !fullScreen ? nearbyRankById.get(item.id) : index + 1}</td>
+                    <td>{userPosition && !fullScreen && !showAllLocations ? nearbyRankById.get(item.id) : index + 1}</td>
                     <td>
                       <button className="store-map__table-select" onClick={() => selectLocation(item)} type="button">{item.name}</button>
                       <small>{item.address}</small>
@@ -551,7 +605,7 @@ export default function StoreMap({ fullScreen = false }) {
                     <td>{userPosition && Number.isFinite(item.distanceFromUser) ? formatDistance(item.distanceFromUser) : "—"}</td>
                   </tr>
                 )) : (
-                  <tr><td colSpan={3} className="store-map__table-empty">{userPosition ? t("map.noBranchesWithinRadius", { radius: proximityRadiusKm }) : t("map.empty")}</td></tr>
+                  <tr><td colSpan={3} className="store-map__table-empty">{userPosition && !showAllLocations ? t("map.noBranchesWithinRadius", { radius: proximityRadiusKm }) : t("map.empty")}</td></tr>
                 )}
               </tbody>
             </table>
@@ -566,6 +620,7 @@ export default function StoreMap({ fullScreen = false }) {
           scrollWheelZoom
         >
           <ChangeView center={mapCenter} zoom={mapZoom} />
+          <FitLocations locations={locations} active={showAllLocations} resetCenter={userPosition?.position} />
           <MapControls onLocate={locateAndEnableNearbyAudio} t={t} />
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
