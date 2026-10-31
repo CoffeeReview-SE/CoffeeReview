@@ -115,15 +115,11 @@
 .store-map__measure-pin { position: relative; z-index: 1002; display: grid; flex: 0 0 46px; width: 46px; height: 46px; place-items: center; padding: 10px; border: 1px solid #d8c8b7; border-radius: 50%; background: #fff; color: #6b3d25; cursor: pointer; box-shadow: 0 3px 14px #24150c22; }
 .store-map__measure-pin svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 .store-map__measure-pin[aria-pressed="true"] { background: #6b3d25; color: #fff; }
-.store-map__measure-tools { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; }
-.store-map__measure-tools button { min-height: 40px; padding: 0 10px; border: 1px solid #d8c7b7; border-radius: 9px; background: #fff; color: #51311f; font: inherit; font-size: 12px; cursor: pointer; box-shadow: 0 3px 14px #24150c22; }
-.store-map__measure-tools button:hover { background: #f7eee5; }
-.store-map__measure-tools .store-map__measure-slot button.active { border-color: #765035; background: #6b3d25; color: #fff; }
-.store-map__measure-tools .store-map__measure-slot { display: inline-flex; align-items: center; }
-.store-map__measure-tools .store-map__measure-slot button:first-child { border-radius: 9px 0 0 9px; }
-.store-map__measure-tools .store-map__measure-slot .store-map__measure-remove { min-width: 30px; padding: 0 7px; border-left: 0; border-radius: 0 9px 9px 0; font-size: 17px; }
-.store-map__measure-tools button:disabled { opacity: .6; cursor: wait; }
-.store-map__measure-hint { padding: 6px 9px; border-radius: 7px; background: #ffffffed; color: #51311f; font-size: 11px; }
+.store-map__measure-action { min-height: 40px; padding: 10px 12px; border: 1px solid #d8c8b7; border-radius: 8px; background: #fff; color: #694126; font: inherit; font-size: 12px; cursor: pointer; }
+.store-map__measure-action:hover { background: #f7eee5; }
+.store-map__measure-action:disabled { opacity: .6; cursor: wait; }
+.store-map__canvas--measuring { cursor: crosshair; }
+.store-map__canvas .store-map__measure-tooltip { padding: 6px 10px; border: 1px solid #d9b17b; border-radius: 8px; background: #fffaf2; color: #57351f; font-size: 13px; font-weight: 700; box-shadow: 0 2px 8px #24150c30; }
 .store-map__popup-route { display: inline-block; margin: 7px 0 0; padding: 7px 10px; border: 0; border-radius: 7px; background: #6b3d25; color: #fff; font: inherit; font-size: 11px; cursor: pointer; }
 .store-map__locate { min-height: 48px; padding: 0 20px; border: 0; border-radius: 9px; background: #6b3d25; color: #fff; font: inherit; font-weight: 600; cursor: pointer; transition: background .18s, box-shadow .18s; }
 .store-map__locate:hover:not(:disabled) { background: #4f2b1a; }
@@ -132,6 +128,7 @@
 .store-map__radius-form label { color: #47372c; font-size: 13px; font-weight: 600; }
 .store-map__radius-form input { width: 78px; padding: 10px 8px; border: 1px solid #ded4c9; border-radius: 8px; font: inherit; }
 .store-map__radius-form button { padding: 10px 12px; border: 1px solid #d8c8b7; border-radius: 8px; background: #fffaf4; color: #694126; font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; }
+.store-map__radius-form .store-map__measure-action { min-height: 40px; padding: 10px 12px; background: #fff; font-weight: 500; }
 .store-map__radius-status { min-height: 0; margin: 4px 0 0; color: #536c54; font-size: 12px; }
 .store-map__modal-backdrop { position: fixed; z-index: 3000; inset: 0; display: grid; place-items: center; padding: 20px; background: #1f1712a6; }
 .store-map__modal { width: min(100%, 420px); padding: 26px; border: 1px solid #eee5dc; border-radius: 14px; background: #fff; box-shadow: 0 18px 55px #1f171255; text-align: center; }

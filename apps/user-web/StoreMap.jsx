@@ -646,12 +646,6 @@ export default function StoreMap({ fullScreen = false, enableDistanceMeasure = f
         }}>
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22s7-6.2 7-13a7 7 0 1 0-14 0c0 6.8 7 13 7 13Z"/><circle cx="12" cy="9" r="2.5"/></svg>
         </button>}
-        {enableDistanceMeasure && (measureActive || measurement) && <div className="store-map__measure-tools">
-          <button type="button" onClick={beginMeasureFromGps} disabled={isLocating}>{isLocating ? t("map.locating") : measureUi.useGps}</button>
-          {measureActive && <span className="store-map__measure-hint">{draftStart ? measureUi.next : measureUi.button}</span>}
-          {measurement && <span className="store-map__measure-result" role="status">{formatKilometers(distanceMeters(measurement.start[0], measurement.start[1], measurement.end[0], measurement.end[1]))}</span>}
-          {measurement && <button type="button" className="store-map__measure-clear" aria-label={measureUi.clear} onClick={() => setMeasurement(null)}>{measureUi.clear}</button>}
-        </div>}
       </div>
       <form className="store-map__radius-form" onSubmit={applyRadius}>
         <label htmlFor="store-map-radius">{t("map.radiusLabel")}</label>
@@ -664,6 +658,10 @@ export default function StoreMap({ fullScreen = false, enableDistanceMeasure = f
         />
         <span>km</span>
         <button type="submit">{t("map.applyRadius")}</button>
+        {enableDistanceMeasure && (measureActive || measurement) && <>
+          <button type="button" className="store-map__measure-action" onClick={beginMeasureFromGps} disabled={isLocating}>{isLocating ? t("map.locating") : measureUi.useGps}</button>
+          {(measurement || draftStart) && <button type="button" className="store-map__measure-action" onClick={() => { setMeasurement(null); setDraftStart(null); setMeasureActive(false); setPendingGpsStart(false); setPendingGpsDestination(null); }}>{measureUi.clear}</button>}
+        </>}
       </form>
       {mapToast && <div key={mapToast.id} className="store-map__toast" role="status" aria-live="polite">
         <span className="store-map__toast-icon" aria-hidden="true">✓</span>
@@ -708,7 +706,7 @@ export default function StoreMap({ fullScreen = false, enableDistanceMeasure = f
         </aside>
 
         <MapContainer
-          className="store-map__canvas"
+          className={`store-map__canvas${measureActive ? " store-map__canvas--measuring" : ""}`}
           center={mapCenter}
           zoom={mapZoom}
           zoomControl={false}
@@ -748,7 +746,11 @@ export default function StoreMap({ fullScreen = false, enableDistanceMeasure = f
           {enableDistanceMeasure && measurement && <>
             <Marker position={measurement.start}><Popup>{measureUi.start}</Popup></Marker>
             <Marker position={measurement.end}><Popup>{measureUi.next}</Popup></Marker>
-            <Polyline positions={[measurement.start, measurement.end]} pathOptions={{ color: "#d97706", weight: 4, dashArray: "8 8" }} />
+            <Polyline positions={[measurement.start, measurement.end]} pathOptions={{ color: "#d97706", weight: 4, dashArray: "8 8" }}>
+              <Tooltip permanent direction="center" className="store-map__measure-tooltip">
+                {formatKilometers(distanceMeters(measurement.start[0], measurement.start[1], measurement.end[0], measurement.end[1]))}
+              </Tooltip>
+            </Polyline>
           </>}
           {enableDistanceMeasure && measureActive && draftStart && <Marker position={draftStart}><Popup>{measureUi.start}</Popup></Marker>}
           {userPosition && (
