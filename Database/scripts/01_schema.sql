@@ -1,0 +1,1 @@
+-- Vinh: script tạo bảng. Chưa viết.
