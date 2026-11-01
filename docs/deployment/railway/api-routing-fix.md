@@ -1,6 +1,6 @@
 # Sửa API trả HTML trên Railway
 
-**Phương án hiện tại:** do giới hạn số service, dùng Dockerfile gốc để chạy tất cả trong một service. Làm theo `docs/Railway-Single-Service.md`; hướng dẫn tách nhiều service bên dưới chỉ còn là phương án thay thế.
+**Phương án hiện tại:** do giới hạn số service, dùng Dockerfile gốc để chạy tất cả trong một service. Làm theo [hướng dẫn single-service](single-service.md); hướng dẫn tách nhiều service bên dưới chỉ còn là phương án thay thế.
 
 Lỗi `Unexpected token '<', '<!doctype' ... is not valid JSON` xuất hiện vì `/api/...` nhận trang frontend. Import SQL không sửa được lỗi routing này.
 
@@ -69,4 +69,4 @@ $env:API_GATEWAY_URL = 'http://127.0.0.1:5100'
 npm.cmd start
 ```
 
-Chạy Gateway và các backend local riêng như `docs/Admin-Dashboard-Local.md`. Việc sửa source chưa thay đổi cấu hình hay triển khai Railway.
+Chạy Gateway và các backend local riêng như [hướng dẫn chạy Admin local](../../admin/local-development.md). Việc sửa source chưa thay đổi cấu hình hay triển khai Railway.

@@ -17,7 +17,7 @@ SaigonCoffee is a workspace for a coffee shop discovery and review product focus
 - `backend/` — existing .NET API and test project scaffold, retained until its service boundaries are extracted
 - `infrastructure/` — Docker, deployment, database scripts, and seed data
 - `tools/` — API code generation and i18n extraction utilities
-- `docs/` — architecture, ADRs, product requirements, and API documentation
+- [`docs/`](docs/README.md) — documentation index for architecture, backend, product, data, admin, and deployment guides
 - `features/` — feature planning placeholders retained from the original project scaffold
 
 The application and service directories are currently scaffolds. The existing product documents are in `docs/`.
