@@ -1,65 +1,55 @@
-﻿# SaigonCoffee
+# SaigonCoffee
 
-SaigonCoffee is a workspace for a coffee shop discovery and review product focused on Ho Chi Minh City. The repository is organized as a pnpm and Turborepo monorepo, with frontend apps, shared packages, and independently deployable backend services.
+SaigonCoffee là ứng dụng khám phá thương hiệu và chi nhánh cà phê tại TP. Hồ Chí Minh. Repository hiện có giao diện khách hàng, khu vực quản trị, bản đồ, API Gateway và các backend service kết nối PostgreSQL/Supabase.
 
-## Repository structure
+## Bắt đầu nhanh
 
-- `apps/web` — customer website placeholder
-- `apps/main.jsx` — Vite entry point for the four current UI screens
-- `apps/App.jsx` — React Router route definitions
-- `apps/admin` — administration interface
-- `packages/ui` — shared UI components and design system
-- `packages/i18n` — locale resources and text-to-speech integration
-- `packages/api-client` — generated API client and query hooks
-- `packages/types` — shared TypeScript types
-- `packages/config` — shared lint, formatting, and TypeScript configuration
-- `services/` — gateway, identity, catalog, reviews, submissions, localization, media, and analytics services
-- `backend/` — existing .NET API and test project scaffold, retained until its service boundaries are extracted
-- `infrastructure/` — Docker, deployment, database scripts, and seed data
-- `tools/` — API code generation and i18n extraction utilities
-- [`docs/`](docs/README.md) — documentation index for architecture, backend, product, data, admin, and deployment guides
-- `features/` — feature planning placeholders retained from the original project scaffold
+Yêu cầu: Node.js `>=20.19`, npm và .NET SDK 10.
 
-The application and service directories are currently scaffolds. The existing product documents are in `docs/`.
-
-## Prerequisites
-
-- Node.js 20 or later
-- npm 10 or later
-- .NET SDK 10 for the local backend services
-
-## Getting started
-
-```sh
+```bash
 npm install
 ```
 
-Copy `.env.example` to `.env`, set a real `ConnectionStrings__Supabase` and a private `Gateway__SharedKey`, then start the complete local stack:
+Để chạy giao diện độc lập:
 
-```sh
+```bash
+npm run dev
+```
+
+Để chạy giao diện cùng Catalog, Localization và Gateway:
+
+1. Sao chép `.env.example` thành `.env`.
+2. Điền `ConnectionStrings__Supabase` và đặt `Gateway__SharedKey` riêng, đủ mạnh.
+3. Chạy:
+
+```bash
 npm run dev:stack
 ```
 
-Open `http://localhost:8080`. The command starts Vite, the catalog service, localization service, and gateway; press `Ctrl+C` to stop them. Apply the existing SQL files in `infrastructure/Database` to Supabase before using database-backed pages.
+Mở `http://localhost:8080`. `dev:stack` không chạy Analytics hoặc Submission; một số chức năng gọi hai service này cần môi trường triển khai đầy đủ. Lệnh không tự chạy SQL migration.
 
-For frontend-only work, use `npm run dev`. Backend services can also be built and run independently.
+## Chạy production
 
-To run the frontend with the catalog, localization, and gateway services together, configure `ConnectionStrings__Supabase` and a private `Gateway__SharedKey` in `.env`, then run:
+`npm run build` tạo frontend trong `dist`. `npm start` chạy web server phục vụ `dist` và proxy `/api` đến `API_GATEWAY_URL`; cần khởi động Gateway cùng các service phía sau. Dockerfile ở thư mục gốc đóng gói frontend và năm service: Gateway, Catalog, Localization, Submission, Analytics. Runtime cần `ConnectionStrings__Supabase` và `Gateway__SharedKey`.
 
-```sh
-npm run dev:stack
-```
+## Cấu trúc chính
 
-Open `http://localhost:8080`. Press `Ctrl+C` to stop the services. This command does not run database migrations; apply the SQL files in `infrastructure/Database` to the Supabase project first.
+- `apps/` — React SPA: trang khách hàng, quản trị, bản đồ và tracking.
+- `services/` — API Gateway và backend .NET cho Catalog, Localization, Submission, Analytics.
+- `infrastructure/Database/` — schema, migration và dữ liệu seed PostgreSQL.
+- `scripts/` — chạy local stack và web server/proxy production.
+- `docs/` — tài liệu hệ thống theo nhóm chủ đề.
 
-## Workspace commands
+## Tài liệu
 
-```sh
-npm run build
-npm run lint
-npm run typecheck
-```
+- [Tổng quan hệ thống](docs/system/README.md)
+- [Sơ đồ kiến trúc](docs/system/architecture.md)
+- [Module và API](docs/system/modules-and-apis.md)
+- [Mô hình dữ liệu](docs/system/data-model.md)
+- [Chạy hệ thống và cấu hình](docs/system/runtime-and-configuration.md)
+- [Mục lục tài liệu](docs/README.md)
 
-## License
+## Ghi chú
 
-See `LICENSE` when a license is selected.
+- Admin API hiện không có đăng nhập người dùng tích hợp; chỉ bật endpoint quản trị trong môi trường được bảo vệ phù hợp. `Gateway__SharedKey` phục vụ xác thực giữa gateway và backend, không thay thế xác thực admin.
+- Một số route review và một số tài liệu là kế hoạch/khung. Xem [Modules và API](docs/system/modules-and-apis.md) để biết trạng thái từng phần.
