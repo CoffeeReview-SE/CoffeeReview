@@ -1,6 +1,5 @@
 # SmartShop - Quy tắc chung cho mọi công cụ AI
 
-File này dùng cho Codex, Copilot và các công cụ khác. `CLAUDE.md` và `GEMINI.md` trỏ về file này. Sửa quy tắc ở đây, đừng sửa ở ba nơi.
 
 ## Dự án
 Đồ án học phần Lập trình C#: SmartShop, phần mềm quản lý bán hàng đồ điện tử.

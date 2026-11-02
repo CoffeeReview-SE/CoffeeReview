@@ -27,8 +27,6 @@ SmartShop/
 ├── tools/
 │   └── cap-nhat-tien-do.js
 ├── AGENTS.md              # Quy tắc chung cho mọi công cụ AI
-├── CLAUDE.md              # Trỏ về AGENTS.md
-├── GEMINI.md              # Trỏ về AGENTS.md
 └── .github/copilot-instructions.md
 ```
 
