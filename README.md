@@ -37,6 +37,3 @@ SmartShop/
 1. Làm xong một việc nhỏ thì tick `- [x]` trong file `progress/<chức năng>.md`, thêm một dòng vào Nhật ký tiến độ, sửa dòng `Trạng thái`.
 2. Chạy `node tools/cap-nhat-tien-do.js` để cập nhật `progress/TONG_QUAN.md`.
 3. Commit file progress cùng với code của chức năng đó.
-
-## Công cụ AI
-Mọi công cụ (Claude Code, Codex, Gemini CLI, Copilot) đọc chung `AGENTS.md`. Đổi công cụ giữa chừng thì ghi vào `progress/AI_HANDOFF.md`.
