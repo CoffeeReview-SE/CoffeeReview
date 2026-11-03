@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <BlazorDisableThrowNavigationException>true</BlazorDisableThrowNavigationException>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Database/src/SmartShop.BUS/SmartShop.BUS.csproj" />
+    <ProjectReference Include="../Database/src/SmartShop.DTO/SmartShop.DTO.csproj" />
+    <ProjectReference Include="Shared/SmartShop.UI.Shared.csproj" />
+    <ProjectReference Include="../Admin/SmartShop.Admin.csproj" />
+    <Compile Remove="Shared/**/*.cs" />
+    <Content Remove="Shared/**" />
+    <None Remove="Shared/**" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,8 @@
+<Solution>
+  <Project Path="User/SmartShop.User.csproj" />
+  <Project Path="User/Shared/SmartShop.UI.Shared.csproj" />
+  <Project Path="Admin/SmartShop.Admin.csproj" />
+  <Project Path="Database/src/SmartShop.BUS/SmartShop.BUS.csproj" />
+  <Project Path="Database/src/SmartShop.DAO/SmartShop.DAO.csproj" />
+  <Project Path="Database/src/SmartShop.DTO/SmartShop.DTO.csproj" />
+</Solution>
