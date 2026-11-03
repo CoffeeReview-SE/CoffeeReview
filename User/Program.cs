@@ -9,6 +9,8 @@ builder.Services.AddScoped<IShopRepository, DemoShopDao>();
 builder.Services.AddScoped<IShopService, ShopState>();
 builder.Services.AddScoped<ICustomerRepository, DemoCustomerRepository>();
 builder.Services.AddScoped<ICustomerService, CustomerService>();
+builder.Services.AddScoped<IEmployeeRepository, DemoEmployeeRepository>();
+builder.Services.AddScoped<IEmployeeService, EmployeeService>();
 builder.Services.AddScoped<SmartShop.UI.Shared.ShopUiState>();
 
 // Add services to the container.

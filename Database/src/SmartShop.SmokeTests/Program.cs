@@ -63,6 +63,7 @@ serviceA.Add(serviceA.Products[0]);
 Check(serviceA.Count == 1 && serviceB.Count == 0 && !ReferenceEquals(serviceA, serviceB),
     "DI scopes isolate customer session data");
 CustomerChecks.Run();
+EmployeeChecks.Run();
 Console.WriteLine("All integration smoke checks passed.");
 
 sealed class RejectingRepository : IShopRepository

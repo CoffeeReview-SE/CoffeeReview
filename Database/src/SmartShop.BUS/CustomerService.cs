@@ -1,7 +1,5 @@
 using System.Collections;
 using System.ComponentModel.DataAnnotations;
-using System.Globalization;
-using System.Text;
 using SmartShop.DTO;
 using SmartShop.DTO.Contracts;
 
@@ -22,12 +20,12 @@ public sealed class CustomerService : ICustomerService
 
     public IReadOnlyList<Customer> Search(string query = "", bool? isActive = null)
     {
-        var term = SearchKey((query ?? "").Trim());
+        var term = SearchText.Normalize((query ?? "").Trim());
         // Search the BUS cache, never re-query storage while typing.
         return customers.Cast<Customer>()
             .Where(c => (isActive is null || c.IsActive == isActive)
                 && (term.Length == 0 || new[] { c.Code, c.Name, c.Phone, c.Email, c.Address }
-                    .Any(value => SearchKey(value).Contains(term, StringComparison.OrdinalIgnoreCase))))
+                    .Any(value => SearchText.Normalize(value).Contains(term, StringComparison.OrdinalIgnoreCase))))
             .OrderBy(c => c.Code, StringComparer.OrdinalIgnoreCase).ToArray();
     }
 
@@ -102,10 +100,4 @@ public sealed class CustomerService : ICustomerService
         return value;
     }
 
-    private static string SearchKey(string value)
-    {
-        var decomposed = value.Normalize(NormalizationForm.FormD);
-        return new string(decomposed.Where(c => CharUnicodeInfo.GetUnicodeCategory(c) != UnicodeCategory.NonSpacingMark)
-            .ToArray()).Replace('đ', 'd').Replace('Đ', 'D');
-    }
 }

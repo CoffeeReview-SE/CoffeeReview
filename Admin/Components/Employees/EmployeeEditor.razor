@@ -1,0 +1,36 @@
+<div class="customer-editor">
+    @if (!string.IsNullOrEmpty(Error))
+    {
+        <div class="customer-feedback error" role="alert">@Error</div>
+    }
+    <ValidatedForm Model="Model" OnValidSubmit="OnSave">
+        <div class="customer-form-grid">
+            <FormField Label="Mã nhân viên">
+                <InputText @bind-Value="Model.Code" readonly="@IsEditing" aria-readonly="@IsEditing" maxlength="20" />
+            </FormField>
+            <FormField Label="Họ và tên"><InputText @bind-Value="Model.Name" maxlength="120" /></FormField>
+            <FormField Label="Số điện thoại"><InputText @bind-Value="Model.Phone" maxlength="10" inputmode="tel" /></FormField>
+            <FormField Label="Email (không bắt buộc)"><InputText @bind-Value="Model.Email" maxlength="150" inputmode="email" /></FormField>
+            <div class="customer-span-all">
+                <FormField Label="Địa chỉ"><InputTextArea @bind-Value="Model.Address" maxlength="250" /></FormField>
+            </div>
+        </div>
+        <label class="customer-checkbox"><InputCheckbox @bind-Value="Model.IsActive" /> Nhân viên đang làm việc</label>
+        @if (IsEditing)
+        {
+            <p class="customer-help">Mã nhân viên và ngày tạo được giữ nguyên khi chỉnh sửa.</p>
+        }
+        <div class="customer-actions">
+            <button type="submit" class="primary">Lưu nhân viên</button>
+            <button type="button" class="secondary" @onclick="OnCancel">Hủy</button>
+        </div>
+    </ValidatedForm>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public EmployeeDraft Model { get; set; } = default!;
+    [Parameter] public bool IsEditing { get; set; }
+    [Parameter] public string? Error { get; set; }
+    [Parameter] public EventCallback OnSave { get; set; }
+    [Parameter] public EventCallback OnCancel { get; set; }
+}
