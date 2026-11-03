@@ -1,0 +1,9 @@
+<label>
+    @Label
+    @ChildContent
+</label>
+
+@code {
+    [Parameter, EditorRequired] public string Label { get; set; } = "";
+    [Parameter, EditorRequired] public RenderFragment ChildContent { get; set; } = default!;
+}

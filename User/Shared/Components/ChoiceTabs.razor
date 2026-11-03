@@ -1,0 +1,16 @@
+<div class="chips @CssClass">
+    @foreach (var item in Items)
+    {
+        <button type="button" class="@(Value == item ? "selected" : "")"
+                aria-pressed="@(Value == item)" @onclick="() => ValueChanged.InvokeAsync(item)">
+            @item
+        </button>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired] public IEnumerable<string> Items { get; set; } = [];
+    [Parameter] public string Value { get; set; } = "";
+    [Parameter] public EventCallback<string> ValueChanged { get; set; }
+    [Parameter] public string? CssClass { get; set; }
+}

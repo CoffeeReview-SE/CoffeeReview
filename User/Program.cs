@@ -1,7 +1,14 @@
 using SmartShop.User.Components;
+using SmartShop.BUS;
+using SmartShop.DAO;
+using SmartShop.DTO.Contracts;
 
 var builder = WebApplication.CreateBuilder(args);
-builder.Services.AddScoped<SmartShop.BUS.ShopState>();
+// The composition root selects storage; pages and BUS depend only on contracts.
+builder.Services.AddScoped<IShopRepository, DemoShopDao>();
+builder.Services.AddScoped<IShopService, ShopState>();
+builder.Services.AddScoped<ICustomerRepository, DemoCustomerRepository>();
+builder.Services.AddScoped<ICustomerService, CustomerService>();
 builder.Services.AddScoped<SmartShop.UI.Shared.ShopUiState>();
 
 // Add services to the container.

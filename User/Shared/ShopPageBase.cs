@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Routing;
-using SmartShop.UI.Shared;
 using SmartShop.BUS;
 using SmartShop.DTO;
 
@@ -9,7 +8,7 @@ namespace SmartShop.UI.Shared;
 // Common presentation actions; business operations remain in the C# shop service.
 public abstract class ShopPageBase : ComponentBase, IDisposable
 {
-    [Inject] protected ShopState Shop { get; set; } = default!;
+    [Inject] protected IShopService Shop { get; set; } = default!;
     [Inject] protected ShopUiState Ui { get; set; } = default!;
     [Inject] protected NavigationManager Navigation { get; set; } = default!;
 
@@ -21,7 +20,7 @@ public abstract class ShopPageBase : ComponentBase, IDisposable
     protected string PageName => page switch
     {
         "home" => "Trang chủ", "cart" => "Giỏ hàng", "checkout" => "Thanh toán",
-        "success" => "Đặt hàng thành công", "admin" => "Quản trị", "orders" => "Đơn hàng",
+        "success" => "Đặt hàng thành công", "admin" => "Quản trị", "admin/customers" => "Khách hàng", "orders" => "Đơn hàng",
         "account" => "Tài khoản", "favorites" => "Yêu thích", "support" => "Hỗ trợ", _ => "Sản phẩm"
     };
     protected static readonly string[] categories = ["Tất cả", "Điện thoại", "Laptop", "Máy tính bảng", "Phụ kiện"];

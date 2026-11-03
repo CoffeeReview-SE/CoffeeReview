@@ -1,0 +1,26 @@
+@typeparam TItem
+
+<div class="table-scroll">
+    <table aria-label="@Label">
+        <thead><tr>@Header</tr></thead>
+        <tbody>
+            @foreach (var item in Items)
+            {
+                <tr @key="item">@RowTemplate(item)</tr>
+            }
+            @if (!Items.Any())
+            {
+                <tr><td colspan="@ColumnCount">@EmptyText</td></tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public IEnumerable<TItem> Items { get; set; } = [];
+    [Parameter, EditorRequired] public RenderFragment Header { get; set; } = default!;
+    [Parameter, EditorRequired] public RenderFragment<TItem> RowTemplate { get; set; } = default!;
+    [Parameter, EditorRequired] public string Label { get; set; } = "";
+    [Parameter] public int ColumnCount { get; set; } = 1;
+    [Parameter] public string EmptyText { get; set; } = "Chưa có dữ liệu.";
+}

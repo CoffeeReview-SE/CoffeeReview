@@ -1,10 +1,11 @@
 using System.Collections;
 using SmartShop.DTO;
+using SmartShop.DTO.Contracts;
 
 namespace SmartShop.DAO;
 
 // Per-session demo store. SQL Server storage can replace this DAO when the schema is ready.
-public sealed class DemoShopDao
+public sealed class DemoShopDao : IShopRepository
 {
     private List<Product> products = [
         new(1,"uPhone 16 Pro Max","Điện thoại","titan",34990000,37990000,24,"256GB · Titan sa mạc"),

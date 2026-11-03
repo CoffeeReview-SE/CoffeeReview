@@ -1,0 +1,32 @@
+@inherits ShopPageBase
+<header class="admin-header">
+    <a class="brand" href="/admin"><span class="brand-icon">S</span>Smart<span>Shop</span><small>ADMINISTRATION</small></a>
+    <span class="admin-mode">Không gian quản trị · Demo</span>
+    <a class="secondary" href="/">Xem cửa hàng ↗</a>
+</header>
+<div class="shell admin-shell">
+    <aside>
+        <div class="nav-caption">QUẢN TRỊ CỬA HÀNG</div>
+        <button class="nav-item @(page == "admin" ? "active" : "")" @onclick='() => Go("admin")'><span>◫</span>Tổng quan</button>
+        <button class="nav-item @(page == "admin/customers" ? "active" : "")" @onclick='() => Go("admin/customers")'><span>♙</span>Khách hàng</button>
+        <div class="sidebar-bottom">
+            <div class="help-card"><strong>SmartShop Admin</strong><p>Quản lý dữ liệu cửa hàng trong không gian riêng.</p></div>
+            <button class="nav-item" @onclick='() => Go("home")'><span>↗</span>Xem cửa hàng</button>
+        </div>
+    </aside>
+    <main>
+        <div class="breadcrumbs">Quản trị <span>/</span> @(page == "admin" ? "Tổng quan" : PageName)</div>
+        @ChildContent
+        <footer><span class="brand-small">S <b>SmartShop Admin</b></span><small>Quản trị demo theo phiên</small></footer>
+    </main>
+</div>
+<nav class="mobile-nav">
+    <button @onclick='() => Go("admin")'>◫<span>Tổng quan</span></button>
+    <button @onclick='() => Go("admin/customers")'>♙<span>Khách hàng</span></button>
+    <button @onclick='() => Go("home")'>↗<span>Cửa hàng</span></button>
+</nav>
+<ShopOverlays />
+
+@code {
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+}

@@ -1,19 +1,27 @@
 using System.Collections.ObjectModel;
-using System.Globalization;
 using System.Text.RegularExpressions;
-using SmartShop.DAO;
 using SmartShop.DTO;
+using SmartShop.DTO.Contracts;
 
 namespace SmartShop.BUS;
 
 // The GUI calls this service; only BUS talks to DAO.
-public sealed class ShopState
+public sealed class ShopState : IShopService
 {
-    private readonly DemoShopDao dao = new();
+    private readonly IShopRepository dao;
     private readonly Dictionary<int, int> cart = [];
+    private readonly IReadOnlyDictionary<int, int> cartView;
+
+    public ShopState(IShopRepository repository)
+    {
+        ArgumentNullException.ThrowIfNull(repository);
+        dao = repository;
+        cartView = new ReadOnlyDictionary<int, int>(cart);
+    }
+
     public IReadOnlyList<Product> Products => dao.GetProducts();
     public IReadOnlyList<Order> Orders => dao.GetOrders();
-    public IReadOnlyDictionary<int, int> Cart => new ReadOnlyDictionary<int, int>(cart);
+    public IReadOnlyDictionary<int, int> Cart => cartView;
     public int Count => cart.Values.Sum();
     public decimal Total => cart.Sum(x => FindProduct(x.Key).Price * x.Value);
 
@@ -79,5 +87,4 @@ public sealed class ShopState
     }
     private Product FindProduct(int id) => Products.SingleOrDefault(p => p.Id == id)
         ?? throw new InvalidOperationException("Không tìm thấy sản phẩm.");
-    public static string Money(decimal value) => value.ToString("N0", CultureInfo.GetCultureInfo("vi-VN")) + " ₫";
 }
