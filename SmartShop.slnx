@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="SmartShop.BUS/SmartShop.BUS.csproj" />
+  <Project Path="SmartShop.DAO/SmartShop.DAO.csproj" />
+  <Project Path="SmartShop.DTO/SmartShop.DTO.csproj" />
+  <Project Path="SmartShop.GUI/SmartShop.GUI.csproj" />
+</Solution>

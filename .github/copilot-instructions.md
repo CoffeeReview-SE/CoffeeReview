@@ -2,7 +2,7 @@
 
 Quy tắc đầy đủ nằm ở `AGENTS.md` ở gốc repo. Tóm tắt:
 
-- WinForms 3 lớp GUI-BUS-DAO, SQL Server.
+- Blazor Web/Mobile responsive C# .NET 10; GUI-BUS-DAO và DTO. SQL Server sẽ tích hợp khi schema hoàn thiện.
 - GUI chỉ gọi BUS, BUS chỉ gọi DAO, DAO là nơi duy nhất dùng MyConnection.
 - Không viết SQL trong GUI, dùng truy vấn có tham số.
 - Tính tiền, trừ/cộng tồn, kiểm tra dữ liệu nằm ở BUS.

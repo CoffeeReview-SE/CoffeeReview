@@ -97,7 +97,7 @@ Ví dụ cho hóa đơn:
 
 ## 6. Điểm còn cần xác nhận (từ mục 11 của bảng phân công)
 
-- Công nghệ chính: WinForms 3 lớp là phần lõi, Web/Mobile ưu tiên 3: Phúc hỏi GVHD
+- Cập nhật 03/11/2026: người dùng chọn web/mobile bằng Blazor, dùng lại sườn GUI-BUS-DAO-DTO. Xem docs/KIEN_TRUC_WEB_MOBILE.md. Phúc đối chiếu với GVHD về yêu cầu môn học.
 - Chuỗi kết nối: dùng SQL Server, không gắn hậu tố kiểu MySQL: Phúc hỏi GVHD
 - "Report PDF: hóa đơn, bảng điểm": giả định thay bằng bảng thống kê: Phúc hỏi GVHD
 - Công thức lợi nhuận, loại hóa đơn tính doanh thu: Vinh, Phúc

@@ -3,7 +3,7 @@
 
 ## Dự án
 Đồ án học phần Lập trình C#: SmartShop, phần mềm quản lý bán hàng đồ điện tử.
-WinForms theo mô hình 3 lớp GUI-BUS-DAO (3-Layer ver2), Microsoft SQL Server, Visual Studio.
+Theo quyết định của người dùng ngày 03/11/2026: Blazor Web/Mobile responsive, C# .NET 10, giữ mô hình GUI-BUS-DAO và DTO. Xem docs/KIEN_TRUC_WEB_MOBILE.md. SQL Server là phần tích hợp tiếp theo; hiện dùng DAO demo trong bộ nhớ.
 Nhóm: Phúc (trưởng nhóm), Vinh, Triết, Bảo. Giảng viên: Phùng Thái Thiên Trang.
 
 ## Kiến trúc (bắt buộc)
@@ -12,8 +12,8 @@ Nhóm: Phúc (trưởng nhóm), Vinh, Triết, Bảo. Giảng viên: Phùng Thá
 - Nghiệp vụ (tính tiền, trừ/cộng tồn, kiểm tra dữ liệu) nằm ở BUS, không nằm trong sự kiện nút bấm.
 - Bán hàng trừ tồn, nhập hàng cộng tồn: làm trong một transaction.
 - Tìm kiếm trên ArrayList viết trong BUS, không query lại CSDL.
-- Nút "..." tìm kiếm và điền form bằng biến static.
-- Mã tự sinh, thành tiền, tồn kho là field không cho nhập tay.
+- Web: dùng component chọn/tìm kiếm và state scoped theo phiên; không dùng biến static để giữ thông tin của người dùng.
+- Mã đơn và thành tiền do BUS tính. Tồn kho sẽ cập nhật qua nghiệp vụ nhập/bán; Admin demo hiện có chỉnh tồn qua BUS và kiểm tra hợp lệ.
 - Cột tiếng Việt dùng nvarchar. Chuỗi kết nối để ở một chỗ duy nhất.
 - Đổi lớp Entity/DTO, tên trường, tên bảng, cột hoặc chữ ký phương thức BUS phải báo cả nhóm trước.
 
@@ -34,5 +34,5 @@ Nhóm: Phúc (trưởng nhóm), Vinh, Triết, Bảo. Giảng viên: Phùng Thá
 - Bảo: Sản phẩm, Đơn vị, Export/Import xls, Report PDF, mở rộng UC15-UC19
 
 ## Build
-Build bằng Visual Studio (Ctrl+Shift+B).
-[Cần bổ sung: phiên bản .NET, thư viện Excel, công cụ Report PDF]
+Build bằng dotnet build SmartShop.slnx hoặc Visual Studio hỗ trợ .NET 10. Startup project: SmartShop.GUI.
+Chạy: dotnet run --project SmartShop.GUI --launch-profile http --urls http://localhost:5188. Thư viện Excel/PDF và backend SQL chưa được chọn.

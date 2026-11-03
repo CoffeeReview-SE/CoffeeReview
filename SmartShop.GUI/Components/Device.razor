@@ -1,0 +1,7 @@
+<div class="device-art @Color @(Category=="Laptop"?"laptop":Category=="Máy tính bảng"?"tablet":Category=="Phụ kiện"?"pods":"")" role="img" aria-label="Minh họa @Category">
+<div class="device-back"><i></i><i></i><i></i><span>●</span></div><div class="device-front"><span></span><b></b></div>
+</div>
+@code {
+ [Parameter] public string Color {get;set;}="blue";
+ [Parameter] public string Category {get;set;}="Điện thoại";
+}

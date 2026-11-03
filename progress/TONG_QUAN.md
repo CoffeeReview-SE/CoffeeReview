@@ -4,9 +4,9 @@ Cập nhật bằng lệnh (chạy ở gốc repo): `node tools/cap-nhat-tien-do
 Bảng bên dưới do script sinh ra từ các file trong `progress/`. Đừng sửa tay giữa hai dòng đánh dấu.
 
 <!-- BEGIN:TIEN_DO -->
-_Cập nhật tự động: 2/11/2026 06:56:14_
+_Cập nhật tự động: 3/11/2026 08:37:13_
 
-**Tổng: 0/154 việc (0%)**
+**Tổng: 7/161 việc (4%)**
 
 | File | Chức năng | Phụ trách | Trạng thái | Việc | % |
 |---|---|---|---|---|---|
@@ -32,12 +32,13 @@ _Cập nhật tự động: 2/11/2026 06:56:14_
 | 20-bao-cao | Báo cáo cuối kỳ | Phúc | Chưa làm | 0/8 | 0% |
 | 21-kiem-thu-nghiem-thu | Kiểm thử, nghiệm thu, chạy máy sạch | Phúc | Chưa làm | 0/7 | 0% |
 | 22-cho-xac-nhan | Chờ xác nhận: UC04, UC11, Web/Mobile/API | Phúc | Chưa làm | 0/5 | 0% |
+| 23-web-mobile-gui | Ghép giao diện web mobile vào sườn dự án | Triết | Xong | 7/7 | 100% |
 
 | Thành viên | Việc | % |
 |---|---|---|
 | Phúc | 0/54 | 0% |
 | Vinh | 0/30 | 0% |
-| Triết | 0/44 | 0% |
+| Triết | 7/51 | 14% |
 | Bảo | 0/26 | 0% |
 <!-- END:TIEN_DO -->
 
