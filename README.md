@@ -6,10 +6,16 @@
 
 ```
 SmartShop/
-├── SmartShop.GUI/         # WinForms (Forms/Main, Auth, DanhMuc, NghiepVu, ThongKe, TimKiem)
-├── SmartShop.BUS/         # Nghiệp vụ, tìm kiếm ArrayList
-├── SmartShop.DAO/         # Truy cập CSDL, MyConnection
-├── SmartShop.DTO/         # Các class thực thể
+├── GUI/ # WinForms (Forms/Main, Auth, DanhMuc, NghiepVu, ThongKe, TimKiem)
+	├──admin/      # Form quản trị, thêm/sửa/xóa người dùng
+	├──user/       # Form người dùng, thêm/sửa/xóa sản phẩm, hóa đơn
+├── BUS/         # Nghiệp vụ, tìm kiếm ArrayList
+	├──admin/     
+	├──user/   
+├── DAO/# Truy cập CSDL, MyConnection
+	├──admin/     
+	├──user/   
+├── DTO/         # Các class thực thể
 ├── Database/              # Script SQL, dữ liệu mẫu, ERD
 ├── docs/
 │   ├── word/              # Nơi lưu file .docx
