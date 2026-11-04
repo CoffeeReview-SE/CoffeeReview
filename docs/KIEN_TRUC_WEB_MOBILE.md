@@ -1,13 +1,13 @@
 # Giao diện web mobile trên develop
 
-Bản giao diện được gộp từ `feature/web-mobile-gui` vào `develop`, giữ nguyên toàn bộ các file và thư mục đã pull từ `origin/develop`. Chỉ bổ sung mã ứng dụng vào sườn `User`, `Admin`, `Database/src` và các tài liệu mới. Không sửa nội dung README, phân công hoặc checklist gốc của nhóm.
+Bản giao diện được gộp từ `feature/web-mobile-gui` vào `develop`, giữ nguyên toàn bộ các file và thư mục đã pull từ `origin/develop`. Mã ứng dụng đặt theo sườn nhánh `main`: giao diện trong `GUI/user`, `GUI/admin`, component dùng chung trong `GUI/shared`, nghiệp vụ trong `BUS`, truy cập dữ liệu trong `DAO` và mô hình dữ liệu trong `DTO`. Không sửa nội dung README, phân công hoặc checklist gốc của nhóm.
 
 ## Chạy ứng dụng
 
 Yêu cầu .NET 10 SDK. Mở `SmartShop.slnx`, chọn `SmartShop.User` làm startup project, hoặc chạy:
 
 ```powershell
-dotnet run --project User/SmartShop.User.csproj --launch-profile http --urls http://localhost:5190
+dotnet run --project GUI/user/SmartShop.User.csproj --launch-profile http --urls http://localhost:5190
 ```
 
 Mở http://localhost:5190. Admin ở `/admin`; khung xem điện thoại ở `/mobile-preview.html`. Admin được nạp vào cùng ứng dụng, không cần chạy máy chủ thứ hai.
@@ -16,16 +16,16 @@ Mở http://localhost:5190. Admin ở `/admin`; khung xem điện thoại ở `/
 
 | Vị trí | Nội dung |
 |---|---|
-| User/Components/Pages | Trang chủ, sản phẩm, giỏ hàng, thanh toán, đơn, tài khoản, trợ giúp |
-| User/Components/Layout | Header, menu trái, thanh điều hướng mobile và popup |
-| User/wwwroot | CSS, minh họa thiết bị và tài nguyên giao diện |
-| User/Shared | State và lớp điều khiển UI dùng chung cho User và Admin |
-| Admin/Components/Pages/Admin.razor | Quản trị sản phẩm, đơn hàng, thống kê demo |
-| Admin/SmartShop.Admin.csproj | Thư viện Razor chứa màn hình quản trị |
-| Database/src/SmartShop.DTO | Model Product, Order, OrderLine |
-| Database/src/SmartShop.BUS | Tìm kiếm ArrayList, tính tiền, giỏ hàng, kiểm tra dữ liệu |
-| Database/src/SmartShop.DAO | Kho dữ liệu demo theo phiên |
-| Database/src/SmartShop.SmokeTests | Kiểm tra nghiệp vụ không cần thư viện test ngoài |
+| GUI/user/Components/Pages | Trang chủ, sản phẩm, giỏ hàng, thanh toán, đơn, tài khoản, trợ giúp |
+| GUI/user/Components/Layout | Header, menu trái, thanh điều hướng mobile và popup |
+| GUI/user/wwwroot | CSS, minh họa thiết bị và tài nguyên giao diện |
+| GUI/shared | State và lớp điều khiển UI dùng chung cho User và Admin |
+| GUI/admin/Components/Pages/Admin.razor | Quản trị sản phẩm, đơn hàng, thống kê demo |
+| GUI/admin/SmartShop.Admin.csproj | Thư viện Razor chứa màn hình quản trị |
+| DTO | Model Product, Order, OrderLine |
+| BUS | Tìm kiếm ArrayList, tính tiền, giỏ hàng, kiểm tra dữ liệu |
+| DAO | Kho dữ liệu demo theo phiên |
+| tools/SmartShop.SmokeTests | Kiểm tra nghiệp vụ không cần thư viện test ngoài |
 
 GUI gọi BUS; BUS gọi DAO; DTO dùng để trao đổi dữ liệu. User và Admin dùng chung service scoped trong phiên Blazor. Router và endpoint máy chủ khai báo thêm assembly Admin để `/admin` hoạt động khi truy cập trực tiếp và khi chuyển trang.
 
@@ -33,7 +33,7 @@ GUI gọi BUS; BUS gọi DAO; DTO dùng để trao đổi dữ liệu. User và 
 
 ```powershell
 dotnet build SmartShop.slnx
-dotnet run --project Database/src/SmartShop.SmokeTests
+dotnet run --project tools/SmartShop.SmokeTests
 ```
 
 ## Phạm vi

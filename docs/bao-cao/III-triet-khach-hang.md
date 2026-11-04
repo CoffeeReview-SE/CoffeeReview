@@ -34,13 +34,13 @@ DTO Customer bất biến, danh sách kết quả tìm kiếm và thông báo th
 ## 6 Xử lý theo mô hình ba lớp
 
 ```text
-Admin/Components/Pages/Customers.razor và Components/Customers
+GUI/admin/Components/Pages/Customers.razor và Components/Customers
     -> ICustomerService / CustomerService trong SmartShop.BUS
     -> ICustomerRepository / DemoCustomerRepository trong SmartShop.DAO
     -> Dữ liệu demo theo phiên
 ```
 
-Hợp đồng và DTO ở `Database/src/SmartShop.DTO`. BUS nạp danh sách một lần vào ArrayList; tìm kiếm/lọc thực hiện trên ArrayList, không gọi lại DAO khi gõ. BUS kiểm tra đầu vào và mã trùng trước khi gọi DAO. DAO cũng kiểm tra mã duy nhất. Khi thao tác DAO thành công, BUS mới cập nhật ArrayList. Component không viết SQL và không tự tạo DAO.
+Hợp đồng và DTO ở `DTO`. BUS nạp danh sách một lần vào ArrayList; tìm kiếm/lọc thực hiện trên ArrayList, không gọi lại DAO khi gõ. BUS kiểm tra đầu vào và mã trùng trước khi gọi DAO. DAO cũng kiểm tra mã duy nhất. Khi thao tác DAO thành công, BUS mới cập nhật ArrayList. Component không viết SQL và không tự tạo DAO.
 
 `User/Program.cs` là composition root đăng ký ICustomerService/ICustomerRepository với lifetime scoped, vì ứng dụng User là máy chủ Blazor nạp thư viện màn hình Admin. Việc đăng ký này không đặt trang quản lý trong giao diện User. Các component, layout và CSS chuyên biệt của module nằm trong Admin.
 

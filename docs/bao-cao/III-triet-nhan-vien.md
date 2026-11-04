@@ -8,7 +8,7 @@ Mã được gợi ý theo NV001, NV002...; chặn trùng không phân biệt ho
 
 ## Kiến trúc và tái sử dụng
 
-- GUI: `Admin/Components/Pages/Employees.razor` và các component EmployeeEditor, EmployeeProfile, EmployeePicker, EmployeeSelector.
+- GUI: `GUI/admin/Components/Pages/Employees.razor` và các component EmployeeEditor, EmployeeProfile, EmployeePicker, EmployeeSelector.
 - BUS: IEmployeeService/EmployeeService xử lý kiểm tra, CRUD và tìm kiếm trên ArrayList đã nạp một lần.
 - DAO: IEmployeeRepository/DemoEmployeeRepository truy cập kho demo; BUS không tham chiếu lớp DAO cụ thể.
 - DTO: Employee bất biến và EmployeeDraft dành cho form nhập.

@@ -2,7 +2,8 @@
   <PropertyGroup><TargetFramework>net10.0</TargetFramework><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings></PropertyGroup>
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
-    <ProjectReference Include="../../Database/src/SmartShop.BUS/SmartShop.BUS.csproj" />
-    <ProjectReference Include="../../Database/src/SmartShop.DTO/SmartShop.DTO.csproj" />
+    <ProjectReference Include="../shared/SmartShop.UI.Shared.csproj" />
+    <ProjectReference Include="../../BUS/SmartShop.BUS.csproj" />
+    <ProjectReference Include="../../DTO/SmartShop.DTO.csproj" />
   </ItemGroup>
 </Project>
