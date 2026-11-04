@@ -20,7 +20,7 @@ public abstract class ShopPageBase : ComponentBase, IDisposable
     protected string PageName => page switch
     {
         "home" => "Trang chủ", "cart" => "Giỏ hàng", "checkout" => "Thanh toán",
-        "success" => "Đặt hàng thành công", "admin" => "Quản trị", "admin/customers" => "Khách hàng", "admin/employees" => "Nhân viên", "orders" => "Đơn hàng",
+        "success" => "Đặt hàng thành công", "admin" => "Quản trị", "admin/customers" => "Khách hàng", "admin/employees" => "Nhân viên", "admin/suppliers" => "Nhà cung cấp", "orders" => "Đơn hàng",
         "account" => "Tài khoản", "favorites" => "Yêu thích", "support" => "Hỗ trợ", _ => "Sản phẩm"
     };
     protected static readonly string[] categories = ["Tất cả", "Điện thoại", "Laptop", "Máy tính bảng", "Phụ kiện"];

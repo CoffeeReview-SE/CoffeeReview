@@ -11,6 +11,8 @@ builder.Services.AddScoped<ICustomerRepository, DemoCustomerRepository>();
 builder.Services.AddScoped<ICustomerService, CustomerService>();
 builder.Services.AddScoped<IEmployeeRepository, DemoEmployeeRepository>();
 builder.Services.AddScoped<IEmployeeService, EmployeeService>();
+builder.Services.AddScoped<ISupplierRepository, DemoSupplierRepository>();
+builder.Services.AddScoped<ISupplierService, SupplierService>();
 builder.Services.AddScoped<SmartShop.UI.Shared.ShopUiState>();
 
 // Add services to the container.

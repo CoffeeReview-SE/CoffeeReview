@@ -10,6 +10,7 @@
         <button class="nav-item @(page == "admin" ? "active" : "")" @onclick='() => Go("admin")'><span>◫</span>Tổng quan</button>
         <button class="nav-item @(page == "admin/customers" ? "active" : "")" @onclick='() => Go("admin/customers")'><span>♙</span>Khách hàng</button>
         <button class="nav-item @(page == "admin/employees" ? "active" : "")" @onclick='() => Go("admin/employees")'><span>♟</span>Nhân viên</button>
+        <button class="nav-item @(page == "admin/suppliers" ? "active" : "")" @onclick='() => Go("admin/suppliers")'><span>▦</span>Nhà cung cấp</button>
         <div class="sidebar-bottom">
             <div class="help-card"><strong>SmartShop Admin</strong><p>Quản lý dữ liệu cửa hàng trong không gian riêng.</p></div>
             <button class="nav-item" @onclick='() => Go("home")'><span>↗</span>Xem cửa hàng</button>
@@ -25,6 +26,7 @@
     <button @onclick='() => Go("admin")'>◫<span>Tổng quan</span></button>
     <button @onclick='() => Go("admin/customers")'>♙<span>Khách hàng</span></button>
     <button @onclick='() => Go("admin/employees")'>♟<span>Nhân viên</span></button>
+    <button @onclick='() => Go("admin/suppliers")'>▦<span>Nhà cung cấp</span></button>
     <button @onclick='() => Go("home")'>↗<span>Cửa hàng</span></button>
 </nav>
 <ShopOverlays />
