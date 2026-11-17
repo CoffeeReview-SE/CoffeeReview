@@ -1,10 +1,11 @@
 import React, { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { LANGUAGES, useLanguage } from "./LanguageContext.jsx";
 import StoreMap from "./StoreMap.jsx";
 
 export default function MapPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { languageCode, setLanguageCode, t } = useLanguage();
   const [languageMenuOpen, setLanguageMenuOpen] = useState(false);
   const languageMenuRef = useRef(null);
@@ -69,7 +70,12 @@ export default function MapPage() {
           )}
         </div>
       </header>
-      <StoreMap fullScreen enableDistanceMeasure />
+      <StoreMap
+        fullScreen
+        enableDistanceMeasure
+        routeDestination={location.state?.routeDestination}
+        initialSearch={location.state?.routeSearch}
+      />
     </div>
   );
 }

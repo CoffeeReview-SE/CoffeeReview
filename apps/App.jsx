@@ -82,6 +82,21 @@ function BrandDetail({ recentBrands }) {
   const nav = useNavigate();
   const go = useUserNav();
   const fallbackBrand = recentBrands.find((item) => String(item.id) === String(id));
+  const openBranchOnMap = branch => {
+    const rawLatitude = branch.latitude ?? branch.lat;
+    const rawLongitude = branch.longitude ?? branch.lng;
+    const latitude = Number(rawLatitude);
+    const longitude = Number(rawLongitude);
+    const hasCoordinates =
+      rawLatitude != null && rawLatitude !== '' && rawLongitude != null && rawLongitude !== '' &&
+      Number.isFinite(latitude) && latitude >= -90 && latitude <= 90 &&
+      Number.isFinite(longitude) && longitude >= -180 && longitude <= 180;
+    nav('/map', {
+      state: hasCoordinates
+        ? { routeDestination: { latitude, longitude, name: branch.name } }
+        : { routeSearch: `${branch.name || ''} ${branch.address || ''}`.trim() },
+    });
+  };
 
   return (
     <BrandDetailPage
@@ -89,6 +104,7 @@ function BrandDetail({ recentBrands }) {
       brand={fallbackBrand}
       onBack={() => nav('/brands')}
       onNavigate={go}
+      onOpenBranch={openBranchOnMap}
     />
   );
 }

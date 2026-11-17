@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { trackAudio } from "../analytics/tracking.js";
 import DescriptionSpeech from "./DescriptionSpeech.jsx";
 import { LANGUAGES, useLanguage } from "./LanguageContext.jsx";
+import LocalizedBranchAddress from "./LocalizedBranchAddress.jsx";
 import { detailText, localizedCategory } from "./brandDetailTranslations.js";
 import { brandDescriptionLanguage } from "./api.js";
 import { getOfflineBrandTranslation } from "./offlineBrandTranslations.js";
@@ -434,10 +435,20 @@ export default function BrandDetailPage({ brandId, brand, onBack, onNavigate, on
             {branches.length ? <ul className="bd-br">
               {branches.map((b, i) => <li key={b.id || b.name || i}>
                 <Logo item={item} size={36} />
-                <div><strong>{b.name}</strong><span>{b.address || dt("noAddress")}</span></div>
-                <a className="bd-branch-map-link" href={branchMapsUrl(b)} target="_blank" rel="noopener noreferrer" aria-label={`${t("map.directionsGoogle")}: ${b.name}`}>
-                  {t("map.directionsGoogle")}
-                </a>
+                <div>
+                  <strong>{b.name}</strong>
+                  {b.address
+                    ? <LocalizedBranchAddress branchId={b.id} address={b.address} languageCode={languageCode} />
+                    : <span>{dt("noAddress")}</span>}
+                </div>
+                <div className="bd-branch-actions">
+                  <a className="bd-branch-map-link" href={branchMapsUrl(b)} target="_blank" rel="noopener noreferrer" aria-label={`${t("map.directionsGoogle")}: ${b.name}`}>
+                    {t("map.directionsGoogle")}
+                  </a>
+                  <button className="bd-branch-map-link bd-branch-app-link" type="button" onClick={() => onOpenBranch?.(b)} aria-label={`${t("map.directionsInApp")}: ${b.name}`}>
+                    {t("map.directionsInApp")}
+                  </button>
+                </div>
               </li>)}
             </ul> : <p className="bd-muted">{dt("noFeatured")}</p>}
           </section>
@@ -532,6 +543,8 @@ const css = `
 .bd-br div span{display:block;margin-top:2px;color:var(--muted);font-size:12px}
 .bd-branch-map-link{flex:none;padding:7px 12px;border:0;border-radius:8px;background:var(--brown-3);color:#fff;font-size:11.5px;text-decoration:none;white-space:nowrap}
 .bd-branch-map-link:hover{background:var(--brown)}
+.bd-branch-actions{display:flex;flex:0 0 auto;flex-direction:column;align-items:stretch;gap:6px}
+.bd-branch-app-link{font:inherit;font-size:11.5px;cursor:pointer}
 .bd-muted{margin:0;color:var(--muted);font-size:13px}
 
 .bd-lb{position:fixed;inset:0;z-index:50;display:grid;place-items:center;padding:24px;background:rgba(30,14,6,.88)}

@@ -68,6 +68,10 @@ app.MapPost("/brands/{brandId:long}/translations/{languageCode}", async (
     long brandId, string languageCode, NpgsqlDataSource db, ITranslationProvider translator, ILogger<Program> logger, CancellationToken ct) =>
     await TranslateBrandAsync(brandId, languageCode, db, translator, logger, ct));
 
+app.MapPost("/branches/{branchId:long}/translations/{languageCode}", async (
+    long branchId, string languageCode, NpgsqlDataSource db, ITranslationProvider translator, ILogger<Program> logger, CancellationToken ct) =>
+    await TranslateBranchAddressAsync(branchId, languageCode, db, translator, logger, ct));
+
 // Admin can also explicitly generate or refresh a brand translation.
 app.MapPost("/admin/brands/{brandId:long}/translations/{languageCode}", async (
     long brandId, string languageCode, NpgsqlDataSource db, ITranslationProvider translator, ILogger<Program> logger, CancellationToken ct) =>
@@ -147,6 +151,70 @@ static async Task<IResult> TranslateBrandAsync(long brandId, string languageCode
         translated = Regex.Replace(translated, @"\bStarbucks?\b", _ => brandName, RegexOptions.IgnoreCase);
 
     return Results.Ok(new { brandId, brandName, languageCode, description = translated, isTranslated = true });
+}
+
+static async Task<IResult> TranslateBranchAddressAsync(long branchId, string languageCode, NpgsqlDataSource db, ITranslationProvider translator, ILogger logger, CancellationToken ct)
+{
+    languageCode = languageCode.Trim().ToLowerInvariant();
+    if (languageCode.Length is < 2 or > 10)
+        return Results.BadRequest(new { error = "Invalid language code." });
+
+    string address;
+    string branchName;
+    await using (var cmd = db.CreateCommand("""
+        SELECT COALESCE(branch_name, ''), COALESCE(address, '')
+        FROM public.branch WHERE branch_id = @branchId AND is_active
+        """))
+    {
+        cmd.Parameters.AddWithValue("branchId", branchId);
+        await using var reader = await cmd.ExecuteReaderAsync(ct);
+        if (!await reader.ReadAsync(ct)) return Results.NotFound(new { error = "Branch not found." });
+        branchName = reader.GetString(0);
+        address = reader.GetString(1);
+    }
+
+    if (string.IsNullOrWhiteSpace(address))
+        return Results.Conflict(new { error = "The branch has no address to translate." });
+    if (address.Length > 2000)
+        return Results.BadRequest(new { error = "Branch address cannot exceed 2000 characters." });
+
+    await using (var cmd = db.CreateCommand("""
+        SELECT EXISTS(SELECT 1 FROM public.language WHERE language_code = @language AND is_enabled)
+        """))
+    {
+        cmd.Parameters.AddWithValue("language", languageCode);
+        if (!(bool)(await cmd.ExecuteScalarAsync(ct) ?? false))
+            return Results.BadRequest(new { error = "Target language is not enabled." });
+    }
+
+    if (string.Equals(languageCode, "vi", StringComparison.OrdinalIgnoreCase))
+        return Results.Ok(new { branchId, branchName, languageCode, address, isTranslated = false });
+
+    string translated;
+    try
+    {
+        translated = await translator.TranslateAsync(address, "vi", languageCode, ct);
+    }
+    catch (HttpRequestException ex)
+    {
+        logger.LogWarning(ex, "Translation provider failed for branch {BranchId} and language {LanguageCode}", branchId, languageCode);
+        return Results.Problem("The unofficial translation endpoint is unavailable.", statusCode: StatusCodes.Status502BadGateway);
+    }
+    catch (JsonException ex)
+    {
+        logger.LogWarning(ex, "Translation provider returned an invalid response for branch {BranchId} and language {LanguageCode}", branchId, languageCode);
+        return Results.Problem("The translation endpoint returned an unexpected response.", statusCode: StatusCodes.Status502BadGateway);
+    }
+    catch (OperationCanceledException ex) when (!ct.IsCancellationRequested)
+    {
+        logger.LogWarning(ex, "Translation provider timed out for branch {BranchId} and language {LanguageCode}", branchId, languageCode);
+        return Results.Problem("The translation request timed out.", statusCode: StatusCodes.Status504GatewayTimeout);
+    }
+
+    if (string.IsNullOrWhiteSpace(translated))
+        return Results.Problem("The translation endpoint returned empty text.", statusCode: StatusCodes.Status502BadGateway);
+
+    return Results.Ok(new { branchId, branchName, languageCode, address = translated, isTranslated = true });
 }
 
 public interface ITranslationProvider

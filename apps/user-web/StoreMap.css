@@ -180,6 +180,8 @@
 .store-map__audio-note { color: #536c54 !important; font-weight: 700; }
 .store-map__table-select { padding: 0; border: 0; background: transparent; color: #273b2e; font: inherit; font-weight: 700; text-align: left; cursor: pointer; }
 .store-map__table-select:hover { color: #a15b32; }
+.store-map__localized-address { display: block; margin-top: 3px; color: #75675d; font-size: 11.5px; line-height: 1.4; overflow-wrap: anywhere; }
+.store-map__localized-address small { display: block; margin-top: 2px; font-size: 10px; }
 .store-map__table-directions { display: inline-block; margin-top: 8px; color: #8a4f2d; font-size: 11px; font-weight: 700; text-decoration: none; }
 .store-map__table-directions:hover { color: #273b2e; text-decoration: underline; }
 .store-map__table-empty { color: #75675d; }

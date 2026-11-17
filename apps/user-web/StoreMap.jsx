@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { divIcon } from "leaflet";
 import { MapContainer, Marker, Polyline, Popup, TileLayer, Tooltip, useMap, useMapEvents } from "react-leaflet";
 import { useLanguage } from "./LanguageContext.jsx";
+import LocalizedBranchAddress from "./LocalizedBranchAddress.jsx";
 import { brandDescriptionLanguage, getUserApi } from "./api.js";
 import { trackAudio } from "../analytics/tracking.js";
 import { getSpeechVoice, speechLanguageTag } from "./speechVoice.js";
@@ -152,7 +153,7 @@ function MapControls({ onLocate, t }) {
   );
 }
 
-export default function StoreMap({ fullScreen = false, enableDistanceMeasure = false }) {
+export default function StoreMap({ fullScreen = false, enableDistanceMeasure = false, routeDestination = null, initialSearch = "" }) {
   const { t, languageCode } = useLanguage();
   const voiceTargetLanguage = languageCode;
   const [searchTerm, setSearchTerm] = useState("");
@@ -181,6 +182,10 @@ export default function StoreMap({ fullScreen = false, enableDistanceMeasure = f
   const [routeState, setRouteState] = useState({ status: "idle" });
   const [routeAttempt, setRouteAttempt] = useState(0);
   const routeCache = useRef(new Map());
+  const handledRouteDestination = useRef("");
+  useEffect(() => {
+    if (initialSearch) setSearchTerm(initialSearch);
+  }, [initialSearch]);
   useEffect(() => {
     if (!measurement) { setRouteState({ status: "idle" }); return; }
     const controller = new AbortController();
@@ -793,6 +798,7 @@ export default function StoreMap({ fullScreen = false, enableDistanceMeasure = f
       setPendingGpsStart(false);
       setPendingGpsDestination(null);
     };
+
     gpsAcquisition.current.watchId = navigator.geolocation.watchPosition(
       ({ coords }) => updateUserPosition(coords),
       handleLocationError,
@@ -804,6 +810,22 @@ export default function StoreMap({ fullScreen = false, enableDistanceMeasure = f
       { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 },
     );
   };
+
+  useEffect(() => {
+    if (!enableDistanceMeasure || !routeDestination) return;
+    const latitude = Number(routeDestination.latitude);
+    const longitude = Number(routeDestination.longitude);
+    if (!Number.isFinite(latitude) || latitude < -90 || latitude > 90 ||
+        !Number.isFinite(longitude) || longitude < -180 || longitude > 180) return;
+    const requestKey = `${routeDestination.name || ""}:${latitude},${longitude}`;
+    if (handledRouteDestination.current === requestKey) return;
+    handledRouteDestination.current = requestKey;
+    setMapCenter([latitude, longitude]);
+    setMapZoom(16);
+    setShowAllLocations(false);
+    showAllLocationsRef.current = false;
+    measureFromMeTo([latitude, longitude]);
+  }, [enableDistanceMeasure, routeDestination, userPosition]);
 
   const locateAndEnableNearbyAudio = () => {
     if (!navigator.geolocation || !("speechSynthesis" in window)) {
@@ -852,7 +874,7 @@ export default function StoreMap({ fullScreen = false, enableDistanceMeasure = f
                     <td>{userPosition && !fullScreen && !showAllLocations ? nearbyRankById.get(item.id) : index + 1}</td>
                     <td>
                       <button className="store-map__table-select" onClick={() => selectLocation(item)} type="button">{item.name}</button>
-                      <small>{item.address}</small>
+                      <LocalizedBranchAddress branchId={item.id} address={item.address} languageCode={languageCode} className="store-map__localized-address" />
                       {userPosition && nearbyAudioEnabled && (fullScreen ? String(item.id) === String(nearestAudioBranch?.id) : item.id === nearestBranchId) && <small className="store-map__audio-note">{t("map.autoPlayAudio")}</small>}
                       <a className="store-map__table-directions" href={googleDirectionsUrl(item, userPosition)} target="_blank" rel="noopener noreferrer">{t("map.directions")}</a>
                     </td>
@@ -1008,7 +1030,7 @@ export default function StoreMap({ fullScreen = false, enableDistanceMeasure = f
                 <strong>{item.brand || item.name}</strong>
                 <div className="store-map__popup-details">
                   <strong>{item.name}</strong>
-                  <span>{item.address}</span>
+                  <LocalizedBranchAddress branchId={item.id} address={item.address} languageCode={languageCode} className="store-map__localized-address" />
                   {item.phone && <a href={`tel:${item.phone}`}>{item.phone}</a>}
                   {item.lat != null && item.lng != null && <span>{item.lat.toFixed(6)}, {item.lng.toFixed(6)}</span>}
                   {brandInfo?.description && <>
