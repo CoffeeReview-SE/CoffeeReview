@@ -54,9 +54,9 @@ const translations = {
 export function getOfflineBrandTranslation(brandOrName, languageCode) {
   const name = typeof brandOrName === "string"
     ? brandOrName
-    : `${brandOrName?.name || ""} ${brandOrName?.brand || ""}`;
-  const normalize = value => value.toLocaleLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "").trim();
+    : `${brandOrName?.name || ""} ${brandOrName?.brand || ""} ${brandOrName?.slug || ""} ${brandOrName?.id || ""}`;
+  const normalize = value => value.toLocaleLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "").replaceAll("?", "d").replace(/[^a-z0-9]+/g, " ").trim();
   const normalizedName = normalize(name);
-  const entry = Object.entries(translations).find(([key]) => normalizedName.includes(normalize(key)));
+  const entry = Object.entries(translations).find(([key]) => (` ${normalizedName} `).includes(` ${normalize(key)} `));
   return entry?.[1]?.[languageCode] || null;
 }

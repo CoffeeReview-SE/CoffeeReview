@@ -53,6 +53,12 @@ const screenLabels = {
 };
 
 const categories = {
+  "do uong": { en: "Beverages", ja: "????", zh: "??" },
+  "tra sua": { en: "Milk tea", ja: "??????", zh: "??" },
+  "sach": { en: "Books", ja: "?", zh: "??" },
+  "ca phe nang luong": { en: "Energy coffee", ja: "????????", zh: "????" },
+  "ca phe specialty": { en: "Specialty coffee", ja: "???????????", zh: "????" },
+  "banh pastry": { en: "Pastries", ja: "?????", zh: "??" },
   "tra": { en: "Tea", ja: "お茶", zh: "茶" },
   "ca phe": { en: "Coffee", ja: "コーヒー", zh: "咖啡" },
   "banh": { en: "Pastries", ja: "ペストリー", zh: "糕点" },
@@ -85,5 +91,5 @@ export function localizedCategory(value, languageCode) {
   if (!value || languageCode === "vi") return value;
   const normalized = normalize(value);
   if (categories[normalized]?.[languageCode]) return categories[normalized][languageCode];
-  return String(value).split(/\s*[,;]\s*/).map(part => categories[normalize(part)]?.[languageCode] ?? part).join(", ");
+  return String(value).split(/\s*[,;&/]+\s*/).map(part => categories[normalize(part)]?.[languageCode] ?? part).join(", ");
 }

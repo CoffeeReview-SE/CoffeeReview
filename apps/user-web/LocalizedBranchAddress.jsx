@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useLanguage } from "./LanguageContext.jsx";
+import { getOfflineAddressTranslation } from "./offlineAddressTranslations.js";
 import { getUserApi } from "./api.js";
 
 const translations = new Map();
@@ -8,6 +9,8 @@ const pendingTranslations = new Map();
 async function translateBranchAddress(branchId, address, languageCode) {
   const key = `${branchId}:${languageCode}:${address}`;
   if (translations.has(key)) return translations.get(key);
+  const offline = getOfflineAddressTranslation(address, languageCode);
+  if (offline) return offline;
 
   let request = pendingTranslations.get(key);
   if (!request) {

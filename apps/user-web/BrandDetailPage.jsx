@@ -335,6 +335,7 @@ export default function BrandDetailPage({ brandId, brand, onBack, onNavigate, on
       })
       .then(data => {
         if (!active) return;
+        if (typeof data.description !== "string" || !data.description.trim()) throw new Error("Empty translation");
         translationCache.current.set(cacheKey, data.description);
         setTranslation({ languageCode, description: data.description, isTranslated: data.isTranslated === true });
         setTranslationStatus({ languageCode, status: "idle" });
