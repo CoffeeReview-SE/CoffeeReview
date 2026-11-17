@@ -7,6 +7,7 @@ import { trackAudio } from "../analytics/tracking.js";
 import { getSpeechVoice, speechLanguageTag } from "./speechVoice.js";
 import { getOfflineBrandTranslation } from "./offlineBrandTranslations.js";
 import "./StoreMap.css";
+import { distanceToRoute, shouldReroute } from "./routeTracking.mjs";
 
 const currentLocationIcon = divIcon({
   className: "current-location-icon",
@@ -92,6 +93,22 @@ function MapPointPicker({ enabled, onPick }) {
   return null;
 }
 
+function FitRoute({ route }) {
+  const map = useMap();
+  useEffect(() => {
+    if (route) map.fitBounds(route.paths.flat(), { padding: [45, 65], maxZoom: 17 });
+  }, [map, route]);
+  return null;
+}
+
+function FollowPosition({ enabled, position, onPause }) {
+  const map = useMapEvents({ dragstart: onPause });
+  useEffect(() => {
+    if (enabled && position) map.setView(position, Math.max(16, map.getZoom()), { animate: true, duration: 0.5 });
+  }, [enabled, position, map]);
+  return null;
+}
+
 function FitLocations({ locations, active, resetCenter }) {
   const map = useMap();
   const wasActive = useRef(active);
@@ -138,6 +155,43 @@ export default function StoreMap({ fullScreen = false, enableDistanceMeasure = f
   const [isLocating, setIsLocating] = useState(false);
   const [measureActive, setMeasureActive] = useState(false);
   const [measurement, setMeasurement] = useState(null);
+  const [navigationActive, setNavigationActive] = useState(false);
+  const [following, setFollowing] = useState(false);
+  const [navigationStatus, setNavigationStatus] = useState("");
+  const navigationFix = useRef(null);
+  const offRouteSince = useRef(null);
+  const lastRouteRequest = useRef(0);
+  const [travelMode, setTravelMode] = useState("motorcycle");
+  const [routeState, setRouteState] = useState({ status: "idle" });
+  const [routeAttempt, setRouteAttempt] = useState(0);
+  const routeCache = useRef(new Map());
+  useEffect(() => {
+    if (!measurement) { setRouteState({ status: "idle" }); return; }
+    const controller = new AbortController();
+    const params = new URLSearchParams({ startLat: measurement.start[0], startLng: measurement.start[1], endLat: measurement.end[0], endLng: measurement.end[1], mode: travelMode });
+    const key = params.toString();
+    const cached = routeCache.current.get(key);
+    if (cached && Date.now() - cached.time < 600000) {
+      setRouteState({ status: "ready", route: cached.route });
+      return;
+    }
+    setRouteState({ status: "loading" });
+    // Delay avoids duplicate requests during React StrictMode and rapid mode changes.
+    const timer = window.setTimeout(() => {
+      lastRouteRequest.current = Date.now();
+      getUserApi(`/api/routes?${params}`, { signal: controller.signal })
+        .then(route => {
+          if (controller.signal.aborted) return;
+          if (routeCache.current.size >= 20) routeCache.current.clear();
+          routeCache.current.set(key, { time: Date.now(), route });
+          setRouteState({ status: "ready", route });
+        })
+        .catch(error => {
+          if (!controller.signal.aborted) setRouteState({ status: "error", error: error.message });
+        });
+    }, 250);
+    return () => { window.clearTimeout(timer); controller.abort(); };
+  }, [measurement, travelMode, routeAttempt]);
   const [draftStart, setDraftStart] = useState(null);
   const [pendingGpsStart, setPendingGpsStart] = useState(false);
   const [pendingGpsDestination, setPendingGpsDestination] = useState(null);
@@ -161,6 +215,55 @@ export default function StoreMap({ fullScreen = false, enableDistanceMeasure = f
   const enableAudioAfterGps = useRef(false);
   const mapToastTimer = useRef(null);
   const notificationsSuppressed = useRef(false);
+  useEffect(() => {
+    if (!navigationActive) return;
+    if (!navigator.geolocation) {
+      setNavigationStatus("gps");
+      setNavigationActive(false);
+      setFollowing(false);
+      return;
+    }
+    const id = navigator.geolocation.watchPosition(({ coords, timestamp }) => {
+      const fix = { position: [coords.latitude, coords.longitude], accuracy: coords.accuracy, timestamp };
+      navigationFix.current = fix;
+      setUserPosition(fix);
+      savePosition(fix);
+      setNavigationStatus(coords.accuracy > 50 ? "weak" : "active");
+    }, () => {
+      navigationFix.current = null;
+      offRouteSince.current = null;
+      setNavigationStatus("gps");
+    }, { enableHighAccuracy: true, maximumAge: 0, timeout: 15000 });
+    return () => { navigator.geolocation.clearWatch(id); navigationFix.current = null; offRouteSince.current = null; };
+  }, [navigationActive]);
+
+  useEffect(() => {
+    if (!navigationActive || !measurement || routeState.status !== "ready") return;
+    const fix = navigationFix.current;
+    if (!fix || Date.now() - fix.timestamp > 15000 || fix.accuracy > 50) {
+      offRouteSince.current = null;
+      return;
+    }
+    const now = Date.now();
+    const threshold = Math.max(travelMode === "walk" ? 35 : 60, fix.accuracy * 2);
+    if (distanceToRoute(fix.position, routeState.route.paths) <= threshold) {
+      offRouteSince.current = null;
+      return;
+    }
+    if (offRouteSince.current == null) offRouteSince.current = now;
+    if (shouldReroute({ ...fix, paths: routeState.route.paths, now, lastRequest: lastRouteRequest.current, offRouteSince: offRouteSince.current, mode: travelMode })) {
+      lastRouteRequest.current = now;
+      offRouteSince.current = null;
+      setMeasurement(previous => ({ ...previous, start: fix.position }));
+    }
+  }, [navigationActive, measurement, routeState, travelMode, userPosition]);
+
+  useEffect(() => {
+    if (!measurement || measureActive || showAllLocations) {
+      setNavigationActive(false);
+      setFollowing(false);
+    }
+  }, [measurement, measureActive, showAllLocations]);
   proximityAudioActive.current = nearbyAudioEnabled;
   showAllLocationsRef.current = showAllLocations;
 
@@ -520,6 +623,8 @@ export default function StoreMap({ fullScreen = false, enableDistanceMeasure = f
     ? { start: "Điểm đầu", next: "Điểm đến", pin: "Đo khoảng cách", button: "Chọn hai điểm trên bản đồ", stop: "Chạm bản đồ để chọn điểm tiếp theo", clear: "Xóa", useGps: "Từ vị trí của tôi", toPlace: "Đo từ vị trí của tôi đến đây" }
     : { start: "Start", next: "End", pin: "Measure distance", button: "Pick two points on map", stop: "Tap map to pick the next point", clear: "Clear", useGps: "From my location", toPlace: "Measure from my location to here" };
   const onMeasureMapPick = point => {
+    setNavigationActive(false);
+    setFollowing(false);
     if (!draftStart) {
       setDraftStart(point);
     } else {
@@ -529,6 +634,8 @@ export default function StoreMap({ fullScreen = false, enableDistanceMeasure = f
     }
   };
   const beginMeasureFromGps = () => {
+    setNavigationActive(false);
+    setFollowing(false);
     if (userPosition) {
       setDraftStart(userPosition.position);
       setMeasureActive(true);
@@ -538,6 +645,8 @@ export default function StoreMap({ fullScreen = false, enableDistanceMeasure = f
     locateMe();
   };
   const measureFromMeTo = destination => {
+    setNavigationActive(false);
+    setFollowing(false);
     if (userPosition) {
       setMeasurement({ start: userPosition.position, end: destination });
       setMeasureActive(false);
@@ -698,6 +807,37 @@ export default function StoreMap({ fullScreen = false, enableDistanceMeasure = f
         }}>×</button>
       </div>}
 
+      {enableDistanceMeasure && <section className="store-map__routing" aria-label={languageCode === "vi" ? "Chỉ đường" : "Directions"}>
+        <div className="store-map__travel-modes">
+          <button type="button" aria-pressed={travelMode === "motorcycle"} onClick={() => setTravelMode("motorcycle")}>{languageCode === "vi" ? "Xe máy" : "Motorcycle"}</button>
+          <button type="button" aria-pressed={travelMode === "walk"} onClick={() => setTravelMode("walk")}>{languageCode === "vi" ? "Đi bộ" : "Walking"}</button>
+        </div>
+        {measurement && <div>
+          <button type="button" disabled={!navigationActive && routeState.status !== "ready"} aria-pressed={navigationActive} onClick={() => {
+            setNavigationActive(active => !active);
+            setFollowing(!navigationActive);
+            setNavigationStatus("waiting");
+            offRouteSince.current = null;
+            setShowAllLocations(false);
+          }}>{navigationActive ? (languageCode === "vi" ? "Dừng theo dõi" : "Stop navigation") : (languageCode === "vi" ? "Bắt đầu di chuyển" : "Start navigation")}</button>
+          {navigationActive && !following && <button type="button" onClick={() => setFollowing(true)}>{languageCode === "vi" ? "Bám vị trí" : "Follow location"}</button>}
+          {navigationActive && <small>{languageCode === "vi"
+            ? ({ waiting: "Đang lấy GPS…", active: "Đang theo dõi · tự tìm lại đường khi lệch tuyến", weak: "GPS chưa chính xác · tạm ngừng tìm lại đường", gps: "Không lấy được GPS. Kiểm tra quyền vị trí." })[navigationStatus]
+            : ({ waiting: "Waiting for GPS…", active: "Tracking · automatic rerouting", weak: "Weak GPS · rerouting paused", gps: "GPS unavailable. Check location permission." })[navigationStatus]}</small>}
+        </div>}
+        <div role="status" aria-live="polite">
+          {!measurement && (languageCode === "vi" ? "Chọn quán → Chỉ đường từ vị trí của tôi, hoặc chọn hai điểm trên bản đồ." : "Select a store for directions, or pick two map points.")}
+          {measurement && routeState.status === "loading" && (languageCode === "vi" ? "Đang tìm đường…" : "Finding route…")}
+          {measurement && routeState.status === "ready" && <strong>{navigationActive && (languageCode === "vi" ? "Tuyến đã tính: " : "Calculated route: ")}{formatDistance(routeState.route.distanceMeters)} · {Math.max(1, Math.ceil(routeState.route.durationSeconds / 60))} {languageCode === "vi" ? "phút (ước tính)" : "min (estimated)"}</strong>}
+          {measurement && routeState.status === "error" && <>
+            {routeState.error === "routing_not_configured"
+              ? (languageCode === "vi" ? "Tính năng chỉ đường chưa được cấu hình." : "Routing is not configured yet.")
+              : (languageCode === "vi" ? "Chưa tìm được đường. Dịch vụ có thể đang bận hoặc hết hạn mức." : "Route unavailable. The service may be busy or out of quota.")}
+            <button type="button" onClick={() => setRouteAttempt(value => value + 1)}>{languageCode === "vi" ? "Thử lại" : "Retry"}</button>
+          </>}
+        </div>
+        {measurement && routeState.status === "ready" && <small>Routing © <a href="https://www.geoapify.com/" target="_blank" rel="noopener noreferrer">Geoapify</a> · © OpenStreetMap contributors</small>}
+      </section>}
       <div className="store-map__layout">
         <aside className="store-map__results" aria-label={t("map.results")}>
           <div className="store-map__table-wrap">
@@ -739,6 +879,8 @@ export default function StoreMap({ fullScreen = false, enableDistanceMeasure = f
         >
           {enableDistanceMeasure && <MapPointPicker enabled={measureActive} onPick={onMeasureMapPick} />}
           <ChangeView center={mapCenter} zoom={mapZoom} />
+          <FitRoute route={!navigationActive && measurement && routeState.status === "ready" ? routeState.route : null} />
+          <FollowPosition enabled={navigationActive && following && navigationStatus === "active"} position={navigationFix.current?.position} onPause={() => setFollowing(false)} />
           <FitLocations locations={locations} active={showAllLocations} resetCenter={userPosition?.position} />
           <MapControls onLocate={locateAndEnableNearbyAudio} t={t} />
           <TileLayer
@@ -764,14 +906,14 @@ export default function StoreMap({ fullScreen = false, enableDistanceMeasure = f
                 <a className="store-map__directions" href={googleDirectionsUrl(item, userPosition)} target="_blank" rel="noopener noreferrer">
                   {t("map.directionsGoogle")}
                 </a>
-                {enableDistanceMeasure && <button type="button" className="store-map__popup-route" onClick={() => measureFromMeTo([item.lat, item.lng])}>{measureUi.toPlace}</button>}
+                {enableDistanceMeasure && <button type="button" className="store-map__popup-route" onClick={() => measureFromMeTo([item.lat, item.lng])}>{languageCode === "vi" ? "Chỉ đường từ vị trí của tôi" : "Route from my location"}</button>}
               </Popup>
             </Marker>;
           })}
           {enableDistanceMeasure && measurement && <>
             <Marker position={measurement.start} icon={measurementStartIcon}><Popup>{measureUi.start}</Popup></Marker>
             <Marker position={measurement.end} icon={measurementEndIcon}><Popup>{measureUi.next}</Popup></Marker>
-            <Polyline positions={[measurement.start, measurement.end]} pathOptions={{ color: "#d97706", weight: 4, dashArray: "8 8" }} />
+            {routeState.status === "ready" && <Polyline positions={routeState.route.paths} pathOptions={{ color: travelMode === "walk" ? "#315746" : "#d97706", weight: 5 }} />}
             <Marker
               position={[(measurement.start[0] + measurement.end[0]) / 2, (measurement.start[1] + measurement.end[1]) / 2]}
               icon={distanceLabelAnchorIcon}
@@ -779,7 +921,7 @@ export default function StoreMap({ fullScreen = false, enableDistanceMeasure = f
               keyboard={false}
             >
               <Tooltip permanent direction="center" offset={[0, 0]} className="store-map__measure-tooltip">
-                ↔ {formatKilometers(distanceMeters(measurement.start[0], measurement.start[1], measurement.end[0], measurement.end[1]))}
+                {routeState.status === "ready" ? formatKilometers(routeState.route.distanceMeters) : (languageCode === "vi" ? "Chưa có tuyến đường" : "No route yet")}
               </Tooltip>
             </Marker>
           </>}

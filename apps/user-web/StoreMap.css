@@ -326,3 +326,13 @@
 @media (max-width: 380px) {
   .store-map--full-screen .store-map__radius-form { max-width: calc(100vw - 24px); }
 }
+/* Routing stays in document flow above the map on desktop and mobile. */
+.store-map__routing { flex: 0 0 auto; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; padding: 10px 16px; background: #fffaf0; color: #273b2e; font-size: 13px; z-index: 2; }
+.store-map__travel-modes { display: flex; gap: 6px; }
+.store-map__routing button { border: 1px solid #315746; border-radius: 8px; background: white; color: #315746; padding: 8px 12px; cursor: pointer; margin-right: 6px; }
+.store-map__routing button[aria-pressed="true"] { background: #315746; color: white; }
+.store-map__routing small { font-size: 11px; }
+.store-map--full-screen .store-map__routing { position: absolute; z-index: 1001; top: 200px; left: 16px; width: min(330px, calc(100% - 32px)); box-sizing: border-box; border-radius: 12px; box-shadow: 0 3px 14px #24150c22; }
+@media (max-width: 760px) {
+  .store-map--full-screen .store-map__routing { top: 195px; left: 12px; width: min(300px, calc(100% - 76px)); max-height: 140px; overflow-y: auto; padding: 8px; font-size: 12px; }
+}

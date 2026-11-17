@@ -37,6 +37,9 @@ static string ClientKey(HttpContext c) =>
 
 builder.Services.AddRateLimiter(o =>
 {
+    o.AddPolicy("routing", c => RateLimitPartition.GetFixedWindowLimiter(
+        "route:" + ClientKey(c),
+        _ => new FixedWindowRateLimiterOptions { PermitLimit = 12, Window = TimeSpan.FromMinutes(1) }));
     o.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
     o.AddPolicy("public-write", c => RateLimitPartition.GetFixedWindowLimiter(
         "w:" + ClientKey(c),
@@ -77,7 +80,12 @@ builder.Services
         return ValueTask.CompletedTask;
     }));
 
+// Geoapify keys are query parameters: suppress HttpClient URL logging for this client.
+builder.Services.AddHttpClient("routing").RemoveAllLoggers();
+
 var app = builder.Build();
+
+app.MapCoffeeRoutes();
 
 app.UseForwardedHeaders();
 
