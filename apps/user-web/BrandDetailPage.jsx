@@ -536,15 +536,17 @@ const css = `
 .bd-info li:first-child{color:var(--brown-3)}
 .bd-info a{color:var(--brown-3);text-decoration:none}
 .bd-info a:hover{text-decoration:underline}
-.bd-br li{display:flex;align-items:center;gap:12px;padding:14px 0;border-bottom:1px solid #F3ECE3}
+.bd-br li{display:grid;grid-template-columns:36px minmax(0,1fr);align-items:start;gap:10px 12px;padding:18px 0;border-bottom:1px solid #F3ECE3}
 .bd-br li:last-child{padding-bottom:0;border:0}
 .bd-br div{flex:1;min-width:0}
 .bd-br strong{display:block;font-size:13px;font-weight:600}
 .bd-br div span{display:block;margin-top:2px;color:var(--muted);font-size:12px}
-.bd-branch-map-link{flex:none;padding:7px 12px;border:0;border-radius:8px;background:var(--brown-3);color:#fff;font-size:11.5px;text-decoration:none;white-space:nowrap}
-.bd-branch-map-link:hover{background:var(--brown)}
-.bd-branch-actions{display:flex;flex:0 0 auto;flex-direction:column;align-items:stretch;gap:6px}
-.bd-branch-app-link{font:inherit;font-size:11.5px;cursor:pointer}
+.bd-branch-map-link{box-sizing:border-box;display:flex;align-items:center;justify-content:center;min-width:0;min-height:44px;padding:10px 12px;border:1px solid #dfcdbd;border-radius:10px;background:#fffaf5;color:var(--brown-3);font:inherit;font-size:12px;font-weight:600;line-height:1.45;text-align:center;text-decoration:none;white-space:normal;overflow-wrap:anywhere;transition:background .15s,border-color .15s}
+.bd-branch-map-link:hover{background:#f4e8dc;border-color:var(--brown-3)}
+.bd-br .bd-branch-actions{display:grid;grid-column:1 / -1;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:2px}
+.bd-branch-app-link{border-color:#315746;background:#315746;color:#fff;cursor:pointer}
+.bd-branch-app-link:hover{background:#254535;border-color:#254535}
+.bd-branch-map-link:focus-visible{outline:2px solid #b87942;outline-offset:3px}
 .bd-muted{margin:0;color:var(--muted);font-size:13px}
 
 .bd-lb{position:fixed;inset:0;z-index:50;display:grid;place-items:center;padding:24px;background:rgba(30,14,6,.88)}

@@ -107,7 +107,10 @@ function ResizeMap() {
 function FitRoute({ route }) {
   const map = useMap();
   useEffect(() => {
-    if (route) map.fitBounds(route.paths.flat(), { padding: [45, 65], maxZoom: 17 });
+    if (route) {
+      map.closePopup();
+      map.fitBounds(route.paths.flat(), { padding: [45, 65], maxZoom: 17 });
+    }
   }, [map, route]);
   return null;
 }
@@ -154,6 +157,8 @@ function MapControls({ onLocate, t }) {
 }
 
 export default function StoreMap({ fullScreen = false, enableDistanceMeasure = false, routeDestination = null, initialSearch = "" }) {
+  const mapRef = useRef(null);
+  const routingPanelRef = useRef(null);
   const { t, languageCode } = useLanguage();
   const voiceTargetLanguage = languageCode;
   const [searchTerm, setSearchTerm] = useState("");
@@ -308,7 +313,7 @@ export default function StoreMap({ fullScreen = false, enableDistanceMeasure = f
     mapToastTimer.current = window.setTimeout(() => {
       setMapToast(null);
       mapToastTimer.current = null;
-    }, 6000);
+    }, 1500);
   }, []);
 
   const clearMapToast = useCallback(() => {
@@ -402,7 +407,7 @@ export default function StoreMap({ fullScreen = false, enableDistanceMeasure = f
           setMapZoom(16);
         }
       }
-      if (isFirstFix) showMapToast(t("map.waitingForBetterFix", { accuracy: Math.round(acquisition.best.accuracy) }));
+      if (isFirstFix) showMapToast(t("map.located", { accuracy: Math.round(acquisition.best.accuracy) }));
       if (!acquisition.timer) acquisition.timer = window.setTimeout(finishGpsAcquisition, 3000);
       return acquisition.best;
     }
@@ -745,6 +750,12 @@ export default function StoreMap({ fullScreen = false, enableDistanceMeasure = f
     locateMe();
   };
   const measureFromMeTo = destination => {
+    mapRef.current?.closePopup();
+    clearMapToast();
+    setActiveDescriptionBrand(null);
+    setShowAllLocations(false);
+    showAllLocationsRef.current = false;
+    routingPanelRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" });
     setNavigationActive(false);
     setFollowing(false);
     if (userPosition) {
@@ -876,7 +887,9 @@ export default function StoreMap({ fullScreen = false, enableDistanceMeasure = f
                       <button className="store-map__table-select" onClick={() => selectLocation(item)} type="button">{item.name}</button>
                       <LocalizedBranchAddress branchId={item.id} address={item.address} languageCode={languageCode} className="store-map__localized-address" />
                       {userPosition && nearbyAudioEnabled && (fullScreen ? String(item.id) === String(nearestAudioBranch?.id) : item.id === nearestBranchId) && <small className="store-map__audio-note">{t("map.autoPlayAudio")}</small>}
-                      <a className="store-map__table-directions" href={googleDirectionsUrl(item, userPosition)} target="_blank" rel="noopener noreferrer">{t("map.directions")}</a>
+                      {enableDistanceMeasure
+                        ? <button className="store-map__table-directions" type="button" onClick={() => measureFromMeTo([item.lat, item.lng])}>{t("map.directions")}</button>
+                        : <a className="store-map__table-directions" href={googleDirectionsUrl(item, userPosition)} target="_blank" rel="noopener noreferrer">{t("map.directions")}</a>}
                     </td>
                     <td>{userPosition && Number.isFinite(item.distanceFromUser) ? formatDistance(item.distanceFromUser) : "—"}</td>
                   </tr>
@@ -959,7 +972,7 @@ export default function StoreMap({ fullScreen = false, enableDistanceMeasure = f
         }}>×</button>
       </div>}
 
-      {enableDistanceMeasure && <section className="store-map__routing" aria-label={t("map.directionsHeading")}>
+      {enableDistanceMeasure && <section ref={routingPanelRef} className="store-map__routing" aria-label={t("map.directionsHeading")}>
         <div className="store-map__travel-modes">
           <button type="button" aria-pressed={travelMode === "motorcycle"} onClick={() => setTravelMode("motorcycle")}>{t("map.motorcycle")}</button>
           <button type="button" aria-pressed={travelMode === "walk"} onClick={() => setTravelMode("walk")}>{t("map.walking")}</button>
@@ -995,6 +1008,7 @@ export default function StoreMap({ fullScreen = false, enableDistanceMeasure = f
 
 
         <MapContainer
+          ref={mapRef}
           className={`store-map__canvas${measureActive ? " store-map__canvas--measuring" : ""}`}
           center={mapCenter}
           zoom={mapZoom}
