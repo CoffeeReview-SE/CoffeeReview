@@ -2,6 +2,16 @@
 
 The `/map` page supports Geoapify routes from GPS to a store or between two map points.
 Choose Motorcycle or Walking, then select a store marker and use the route button.
+The map suggests up to three distinct routes, ordered by distance, and selects the
+shortest returned route. Select a route card or a gray route on the map to switch.
+Each card shows distance and estimated duration. Navigation and off-route detection
+use the selected route. Changing endpoints, travel mode, or rerouting selects the
+shortest new suggestion. A single-route message appears when suggestions coincide.
+The Gateway requests distance-optimized and balanced routes, plus a route avoiding
+an interior point of the first route when possible. Geoapify can return the same
+road geometry for these requests, so the number of suggestions depends on the road
+network. Duplicate geometries are removed. Successful optional suggestions are kept
+when another optional request fails.
 Distances are meters from the routing service; times are estimated, not live traffic.
 Nearby filtering still uses straight-line distance.
 
@@ -28,6 +38,8 @@ deviation from route segments of more than 60 meters (motorcycle) or 35 meters
 (walking), increased to twice GPS accuracy when larger. Deviation must persist at
 least eight seconds; route requests are spaced at least 30 seconds apart. A failed
 route request requires Retry. Camera following does not consume API credits.
+Each uncached route calculation makes up to three provider requests, including
+an avoidance request that can cost additional credits under Geoapify pricing.
 Each uncached reroute can consume additional provider credits. Displayed distance
 and duration describe the last calculated route, not a live remaining-distance ETA.
 These controls reduce usage but do not enforce a shared daily credit budget across

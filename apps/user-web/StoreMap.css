@@ -363,6 +363,11 @@
 .store-map__travel-modes { display: grid; grid-template-columns: 1fr 1fr; }
 .store-map__routing > .store-map__navigation-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 .store-map__navigation-actions small { flex-basis: 100%; }
+.store-map__route-options { display: grid; flex-basis: 100%; gap: 8px; }
+.store-map__route-options button { display: grid; gap: 6px; width: 100%; text-align: left; }
+.store-map__route-options button > strong { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.store-map__route-options button > span { font-size: 12px; }
+.store-map__shortest { padding: 2px 7px; border-radius: 999px; background: #e4efdf; color: #274632; font-size: 11px; }
 .store-map__sidebar button, .store-map__sidebar input { max-width: 100%; }
 .store-map__table-select { overflow-wrap: anywhere; }
 .store-map__sidebar input:focus-visible, .store-map__sidebar button:focus-visible { outline: 2px solid #b87942; outline-offset: 2px; }

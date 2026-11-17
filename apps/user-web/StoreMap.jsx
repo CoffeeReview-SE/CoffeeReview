@@ -185,6 +185,15 @@ export default function StoreMap({ fullScreen = false, enableDistanceMeasure = f
   const lastRouteRequest = useRef(0);
   const [travelMode, setTravelMode] = useState("motorcycle");
   const [routeState, setRouteState] = useState({ status: "idle" });
+  const [selectedRouteIndex, setSelectedRouteIndex] = useState(0);
+  const routeOptions = routeState.status === "ready"
+    ? (routeState.route.routes?.length ? routeState.route.routes : [routeState.route])
+    : [];
+  const selectedRoute = routeOptions[selectedRouteIndex] || routeOptions[0];
+  const selectRoute = index => {
+    setSelectedRouteIndex(index);
+    offRouteSince.current = null;
+  };
   const [routeAttempt, setRouteAttempt] = useState(0);
   const routeCache = useRef(new Map());
   const handledRouteDestination = useRef("");
@@ -193,6 +202,7 @@ export default function StoreMap({ fullScreen = false, enableDistanceMeasure = f
   }, [initialSearch]);
   useEffect(() => {
     if (!measurement) { setRouteState({ status: "idle" }); return; }
+    setSelectedRouteIndex(0);
     const controller = new AbortController();
     const params = new URLSearchParams({ startLat: measurement.start[0], startLng: measurement.start[1], endLat: measurement.end[0], endLng: measurement.end[1], mode: travelMode });
     const key = params.toString();
@@ -272,17 +282,17 @@ export default function StoreMap({ fullScreen = false, enableDistanceMeasure = f
     }
     const now = Date.now();
     const threshold = Math.max(travelMode === "walk" ? 35 : 60, fix.accuracy * 2);
-    if (distanceToRoute(fix.position, routeState.route.paths) <= threshold) {
+    if (distanceToRoute(fix.position, selectedRoute.paths) <= threshold) {
       offRouteSince.current = null;
       return;
     }
     if (offRouteSince.current == null) offRouteSince.current = now;
-    if (shouldReroute({ ...fix, paths: routeState.route.paths, now, lastRequest: lastRouteRequest.current, offRouteSince: offRouteSince.current, mode: travelMode })) {
+    if (shouldReroute({ ...fix, paths: selectedRoute.paths, now, lastRequest: lastRouteRequest.current, offRouteSince: offRouteSince.current, mode: travelMode })) {
       lastRouteRequest.current = now;
       offRouteSince.current = null;
       setMeasurement(previous => ({ ...previous, start: fix.position }));
     }
-  }, [navigationActive, measurement, routeState, travelMode, userPosition]);
+  }, [navigationActive, measurement, routeState, selectedRoute, travelMode, userPosition]);
 
   useEffect(() => {
     if (!measurement || measureActive || showAllLocations) {
@@ -991,7 +1001,7 @@ export default function StoreMap({ fullScreen = false, enableDistanceMeasure = f
         <div role="status" aria-live="polite">
           {!measurement && (measureActive ? (!draftStart ? t("map.measureChoosePoints") : t("map.measureNextPoint")) : t("map.directionsHint"))}
           {measurement && routeState.status === "loading" && t("map.routeSearching")}
-          {measurement && routeState.status === "ready" && <strong>{navigationActive && t("map.calculatedRoute")}{formatDistance(routeState.route.distanceMeters)} · {Math.max(1, Math.ceil(routeState.route.durationSeconds / 60))} {t("map.estimatedMinutes")}</strong>}
+          {measurement && routeState.status === "ready" && <strong>{navigationActive && t("map.calculatedRoute")}{formatDistance(selectedRoute.distanceMeters)} · {Math.max(1, Math.ceil(selectedRoute.durationSeconds / 60))} {t("map.estimatedMinutes")}</strong>}
           {measurement && routeState.status === "error" && <>
             {routeState.error === "routing_not_configured"
               ? t("map.routingNotConfigured")
@@ -999,6 +1009,13 @@ export default function StoreMap({ fullScreen = false, enableDistanceMeasure = f
             <button type="button" onClick={() => setRouteAttempt(value => value + 1)}>{t("map.retry")}</button>
           </>}
         </div>
+        {measurement && routeState.status === "ready" && <div className="store-map__route-options" role="group" aria-label={t("map.chooseRoute")}>
+          {routeOptions.map((route, index) => <button key={index} type="button" aria-pressed={route === selectedRoute} onClick={() => selectRoute(index)}>
+            <strong>{t("map.routeOption", { number: index + 1 })}{index === 0 && <span className="store-map__shortest">{t("map.shortestRoute")}</span>}</strong>
+            <span>{formatDistance(route.distanceMeters)} · {Math.max(1, Math.ceil(route.durationSeconds / 60))} {t("map.estimatedMinutes")}</span>
+          </button>)}
+          {routeOptions.length === 1 && <small>{t("map.onlyOneRoute")}</small>}
+        </div>}
         {measurement && routeState.status === "ready" && <small>Routing © <a href="https://www.geoapify.com/" target="_blank" rel="noopener noreferrer">Geoapify</a> · © OpenStreetMap contributors</small>}
       </section>}
         {fullScreen && resultsPanel}
@@ -1018,7 +1035,7 @@ export default function StoreMap({ fullScreen = false, enableDistanceMeasure = f
           {enableDistanceMeasure && <MapPointPicker enabled={measureActive} onPick={onMeasureMapPick} />}
           <ChangeView center={mapCenter} zoom={mapZoom} />
           <ResizeMap />
-          <FitRoute route={!navigationActive && measurement && routeState.status === "ready" ? routeState.route : null} />
+          <FitRoute route={!navigationActive && measurement ? selectedRoute : null} />
           <FollowPosition enabled={navigationActive && following && navigationStatus === "active"} position={navigationFix.current?.position} onPause={() => setFollowing(false)} />
           <FitLocations locations={locations} active={showAllLocations} resetCenter={userPosition?.position} />
           <MapControls onLocate={locateAndEnableNearbyAudio} t={t} />
@@ -1064,7 +1081,10 @@ export default function StoreMap({ fullScreen = false, enableDistanceMeasure = f
           {enableDistanceMeasure && measurement && <>
             <Marker position={measurement.start} icon={measurementStartIcon}><Popup>{measureUi.start}</Popup></Marker>
             <Marker position={measurement.end} icon={measurementEndIcon}><Popup>{measureUi.next}</Popup></Marker>
-            {routeState.status === "ready" && <Polyline positions={routeState.route.paths} pathOptions={{ color: travelMode === "walk" ? "#315746" : "#d97706", weight: 5 }} />}
+            {routeOptions.map((route, index) => route !== selectedRoute && <Polyline key={`alternative-${index}`} positions={route.paths} pathOptions={{ color: "#738396", weight: 6, opacity: 0.7 }} eventHandlers={{ click: () => selectRoute(index) }}>
+              <Tooltip sticky>{t("map.routeOption", { number: index + 1 })} · {formatDistance(route.distanceMeters)}</Tooltip>
+            </Polyline>)}
+            {selectedRoute && <Polyline key={`selected-${selectedRouteIndex}`} positions={selectedRoute.paths} pathOptions={{ color: travelMode === "walk" ? "#315746" : "#d97706", weight: 6, opacity: 1 }} />}
             <Marker
               position={[(measurement.start[0] + measurement.end[0]) / 2, (measurement.start[1] + measurement.end[1]) / 2]}
               icon={distanceLabelAnchorIcon}
@@ -1072,7 +1092,7 @@ export default function StoreMap({ fullScreen = false, enableDistanceMeasure = f
               keyboard={false}
             >
               <Tooltip permanent direction="center" offset={[0, 0]} className="store-map__measure-tooltip">
-                {routeState.status === "ready" ? formatKilometers(routeState.route.distanceMeters) : t("map.noRoute")}
+                {routeState.status === "ready" ? formatKilometers(selectedRoute.distanceMeters) : t("map.noRoute")}
               </Tooltip>
             </Marker>
           </>}
