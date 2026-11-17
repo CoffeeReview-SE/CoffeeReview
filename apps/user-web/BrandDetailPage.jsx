@@ -554,4 +554,30 @@ const css = `
   .bd-tools{margin-left:auto}
   .bd-audio{flex-wrap:wrap}
   .bd-track{flex-basis:calc(100% - 70px)}
-}`;
+}
+/* Keep navigation usable at tablet widths and with translated labels. */
+.bd-bar { min-width: 0; }
+.bd-logo { flex-shrink: 0; }
+.bd-nav { min-width: 0; }
+.bd-nav button { flex-shrink: 0; white-space: nowrap; }
+@media (max-width: 1024px) {
+  .bd-bar { height: auto; flex-wrap: wrap; gap: 12px; padding: 10px 5vw 0; }
+  .bd-tools { margin-left: auto; }
+  .bd-nav { order: 3; flex-basis: 100%; gap: 18px; overflow-x: auto; }
+  .bd-nav button { min-height: 44px; padding: 10px 0; }
+}
+@media (max-width: 760px) {
+  .bd-bar input, .bd-bar select { font-size: 16px; }
+}
+
+.bd-cols > *, .bd-info li { min-width: 0; }
+.bd-info a, .bd-left h1, .bd-br strong { overflow-wrap: anywhere; }
+.bd-where, .bd-card-h { flex-wrap: wrap; }
+.bd-lb { z-index: 2000; }
+.bd-lb-in { max-height: 85dvh; }
+@media (max-width: 760px) {
+  .bd-single-img-btn { height: clamp(220px, 65vw, 360px); }
+  .bd-br li { flex-wrap: wrap; }
+  .bd-branch-map-link { min-height: 44px; display: inline-flex; align-items: center; }
+}
+`;

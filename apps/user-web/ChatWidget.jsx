@@ -15,7 +15,7 @@ const styles = `
 .sc-chat-toggle[aria-expanded="true"] { background: #b87942; }
 .sc-chat-dot { position: absolute; right: 1px; bottom: 1px; width: 14px; height: 14px; border: 2px solid #fff; border-radius: 50%; background: #dc3545; }
 .sc-chat-dot.connected { background: #24a148; }
-.sc-chat-panel { position: absolute; z-index: 1000; right: 0; bottom: calc(100% + 12px); width: min(344px, calc(100vw - 24px)); height: min(430px, calc(100dvh - 110px)); min-height: 280px; display: flex; flex-direction: column; overflow: hidden; border: 1px solid #e8dfd4; border-radius: 16px; color: #30271f; background: #fffdf9; box-shadow: 0 18px 48px rgba(23,16,10,.24); text-align: left; }
+.sc-chat-panel { position: absolute; z-index: 1000; right: 0; bottom: calc(100% + 12px); width: min(344px, calc(100vw - 24px)); height: min(430px, calc(100dvh - 110px)); min-height: 0; display: flex; flex-direction: column; overflow: hidden; border: 1px solid #e8dfd4; border-radius: 16px; color: #30271f; background: #fffdf9; box-shadow: 0 18px 48px rgba(23,16,10,.24); text-align: left; }
 .sc-chat-head { display: flex; align-items: center; gap: 10px; padding: 13px 14px; color: #fff; background: #273b2e; }
 .sc-chat-avatar { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 50%; color: #273b2e; background: #e6c7a4; }
 .sc-chat-title { flex: 1; min-width: 0; }
@@ -35,6 +35,12 @@ const styles = `
 .sc-chat-send { width: 38px; height: 38px; display: grid; place-items: center; border: 0; border-radius: 10px; color: #fff; background: #536c54; cursor: pointer; }
 .sc-chat-send:disabled { opacity: .5; cursor: not-allowed; }
 @media (max-width: 640px) { .sc-chat { right: 16px; bottom: 16px; } .sc-chat-panel { position: fixed; top: auto; right: 12px; bottom: 84px; width: min(344px, calc(100vw - 24px)); height: min(430px, calc(100dvh - 110px)); } }
+.sc-chat-head, .sc-chat-form { flex-shrink: 0; }
+.sc-chat-messages { min-height: 0; overscroll-behavior: contain; }
+@media (max-width: 640px) {
+  .sc-chat { bottom: max(16px, env(safe-area-inset-bottom)); }
+  .sc-chat-input { font-size: 16px; }
+}
 `;
 
 export default function ChatWidget() {

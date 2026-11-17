@@ -349,4 +349,25 @@ const css = `
   .hp-tools{margin-left:auto}
   .hp-cup{display:none}
   .hp-hero{min-height:0;padding:36px 5vw}
-}`;
+}
+/* Keep navigation usable at tablet widths and with translated labels. */
+.hp-bar { min-width: 0; }
+.hp-logo { flex-shrink: 0; }
+.hp-nav { min-width: 0; }
+.hp-nav button { flex-shrink: 0; white-space: nowrap; }
+@media (max-width: 1024px) {
+  .hp-bar { height: auto; flex-wrap: wrap; gap: 12px; padding: 10px 5vw 0; }
+  .hp-tools { margin-left: auto; }
+  .hp-nav { order: 3; flex-basis: 100%; gap: 18px; overflow-x: auto; }
+  .hp-nav button { min-height: 44px; padding: 10px 0; }
+}
+@media (max-width: 760px) {
+  .hp-bar input, .hp-bar select { font-size: 16px; }
+}
+
+.hp-head { flex-wrap: wrap; gap: 12px; }
+.hp-grid > *, .hp-hero-in { min-width: 0; }
+.hp-body h3, .hp-body p { overflow-wrap: anywhere; }
+.hp-search:focus-within { outline: 2px solid #b87942; outline-offset: 3px; }
+@media (max-width: 760px) { .hp-search input { font-size: 16px; } }
+`;

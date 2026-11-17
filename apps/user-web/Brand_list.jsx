@@ -662,4 +662,26 @@ const styles = `
   .bl-section-header { flex-direction: column; align-items: flex-start; gap: 12px; }
 }
 @media (max-width: 480px) { .bl-grid { grid-template-columns: 1fr; } }
+
+/* Keep navigation usable at tablet widths and with translated labels. */
+.hp-bar { min-width: 0; }
+.hp-logo { flex-shrink: 0; }
+.hp-nav { min-width: 0; }
+.hp-nav button { flex-shrink: 0; white-space: nowrap; }
+@media (max-width: 1024px) {
+  .hp-bar { height: auto; flex-wrap: wrap; gap: 12px; padding: 10px 5vw 0; }
+  .hp-tools { margin-left: auto; }
+  .hp-nav { order: 3; flex-basis: 100%; gap: 18px; overflow-x: auto; }
+  .hp-nav button { min-height: 44px; padding: 10px 0; }
+}
+@media (max-width: 760px) {
+  .hp-bar input, .hp-bar select { font-size: 16px; }
+}
+
+.bl-filter-tabs { flex-wrap: wrap; }
+.bl-filter-tabs button { min-height: 44px; }
+.bl-grid > * { min-width: 0; }
+.bl-card-info h3, .bl-card-type { overflow-wrap: anywhere; }
+.bl-play-btn { width: 44px; height: 44px; }
+@media (max-width: 760px) { .hp-search input { font-size: 16px; } }
 `;

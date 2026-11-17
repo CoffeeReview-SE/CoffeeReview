@@ -856,7 +856,7 @@ export default function StoreMap({ fullScreen = false, enableDistanceMeasure = f
           <button type="button" aria-pressed={travelMode === "motorcycle"} onClick={() => setTravelMode("motorcycle")}>{languageCode === "vi" ? "Xe máy" : "Motorcycle"}</button>
           <button type="button" aria-pressed={travelMode === "walk"} onClick={() => setTravelMode("walk")}>{languageCode === "vi" ? "Đi bộ" : "Walking"}</button>
         </div>
-        {measurement && <div>
+        {measurement && <div className="store-map__navigation-actions">
           <button type="button" disabled={!navigationActive && routeState.status !== "ready"} aria-pressed={navigationActive} onClick={() => {
             setNavigationActive(active => !active);
             setFollowing(!navigationActive);

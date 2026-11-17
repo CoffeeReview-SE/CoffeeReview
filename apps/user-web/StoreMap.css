@@ -338,9 +338,13 @@
 }
 .store-map__sidebar { min-width: 0; }
 .store-map:not(.store-map--full-screen) .store-map__sidebar { display: contents; }
+.store-map:not(.store-map--full-screen) .store-map__layout { grid-template-columns: minmax(0, .95fr) minmax(0, 1.3fr); }
+@media (max-width: 980px) {
+  .store-map:not(.store-map--full-screen) .store-map__layout { grid-template-columns: minmax(0, 1fr); }
+}
 
 /* A scrolling sidebar reserves real space for every control and result. */
-.store-map.store-map--full-screen { display: grid; grid-template-columns: minmax(300px, 370px) minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); }
+.store-map.store-map--full-screen { display: grid; grid-template-columns: minmax(300px, 370px) minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); padding: 0; }
 .store-map--full-screen .store-map__sidebar { min-height: 0; overflow-y: auto; overscroll-behavior: contain; display: flex; flex-direction: column; gap: 12px; padding: 16px; background: #faf8f4; border-right: 1px solid #e5ddd3; }
 .store-map--full-screen .store-map__sidebar > * { flex-shrink: 0; }
 .store-map--full-screen .store-map__sidebar .store-map__search-label { position: static; display: block; margin: 0 0 -6px; color: #6c5a4d; }
@@ -355,11 +359,32 @@
 .store-map__routing button:focus-visible { outline: 3px solid #c18b48; outline-offset: 2px; }
 .store-map__routing [role="status"] button { display: block; margin-top: 10px; }
 .store-map__travel-modes { display: grid; grid-template-columns: 1fr 1fr; }
+.store-map__routing > .store-map__navigation-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.store-map__navigation-actions small { flex-basis: 100%; }
+.store-map__sidebar button, .store-map__sidebar input { max-width: 100%; }
+.store-map__table-select { overflow-wrap: anywhere; }
+.store-map__sidebar input:focus-visible, .store-map__sidebar button:focus-visible { outline: 2px solid #b87942; outline-offset: 2px; }
+.store-map__canvas .leaflet-popup-content { max-width: calc(100vw - 90px); overflow-wrap: anywhere; }
+@media (max-width: 1024px) {
+  .store-map-page__bar { flex-wrap: wrap; gap: 12px; padding: 10px 4vw 0; }
+  .store-map-page__nav { order: 3; flex-basis: 100%; min-width: 0; overflow-x: auto; }
+  .store-map-page__nav button { flex-shrink: 0; white-space: nowrap; min-height: 44px; padding: 10px 0; }
+  .store-map-page .hp-lang-dropdown { margin-left: auto; }
+}
 .store-map--full-screen .store-map__sidebar .store-map__results { position: static; box-sizing: border-box; width: 100%; height: auto; max-height: none; overflow: visible; padding: 10px; box-shadow: none; border: 1px solid #e5ddd3; }
 .store-map--full-screen .store-map__layout { position: relative; inset: auto; min-width: 0; min-height: 0; height: 100%; }
 @media (max-width: 760px) {
-  .store-map.store-map--full-screen { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 42%) minmax(0, 1fr); }
-  .store-map--full-screen .store-map__sidebar { padding: 12px; gap: 10px; border-right: 0; border-bottom: 1px solid #e5ddd3; }
+  .store-map-page__bar { gap: 8px; padding: 6px 16px 0; }
+  .store-map-page__nav { gap: clamp(12px, 4vw, 20px); scrollbar-width: none; }
+  .store-map-page__nav::-webkit-scrollbar { display: none; }
+  .store-map-page__nav button { min-height: 40px; padding: 8px 0 7px; }
+  .store-map.store-map--full-screen { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(210px, 34dvh) minmax(0, 1fr); }
+  .store-map--full-screen .store-map__sidebar { padding: 10px 12px; gap: 8px; border-right: 0; border-bottom: 1px solid #e5ddd3; }
   .store-map--full-screen .store-map__sidebar .store-map__search-label { display: none; }
   .store-map--full-screen .store-map__sidebar .store-map__routing { padding: 12px; }
+  .store-map--full-screen .store-map__sidebar input { font-size: 16px; }
+  .store-map__map-controls button { width: 44px; height: 44px; }
+}
+@media (max-height: 500px) and (min-width: 600px) {
+  .store-map.store-map--full-screen { grid-template-columns: minmax(260px, 38%) minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); }
 }

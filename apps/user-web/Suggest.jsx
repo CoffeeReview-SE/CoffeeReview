@@ -709,4 +709,25 @@ const styles = `
   .sg-tools { margin-left: auto; }
   .sg-form-card { padding: 24px 20px; }
 }
+
+/* Keep navigation usable at tablet widths and with translated labels. */
+.sg-bar { min-width: 0; }
+.sg-logo { flex-shrink: 0; }
+.sg-nav { min-width: 0; }
+.sg-nav button { flex-shrink: 0; white-space: nowrap; }
+@media (max-width: 1024px) {
+  .sg-bar { height: auto; flex-wrap: wrap; gap: 12px; padding: 10px 5vw 0; }
+  .sg-tools { margin-left: auto; }
+  .sg-nav { order: 3; flex-basis: 100%; gap: 18px; overflow-x: auto; }
+  .sg-nav button { min-height: 44px; padding: 10px 0; }
+}
+@media (max-width: 760px) {
+  .sg-bar input, .sg-bar select { font-size: 16px; }
+}
+
+.sg-form-card, .sg-field-group { min-width: 0; }
+.sg-field-group label { flex-wrap: wrap; }
+@media (max-width: 760px) {
+  .sg-field-group input, .sg-field-group textarea { font-size: 16px; }
+}
 `;
