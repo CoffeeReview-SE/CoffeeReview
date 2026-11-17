@@ -113,7 +113,7 @@ function Header({ active, go }) {
     <button className="hp-logo" onClick={() => go("home")}>
       <Icon n="cup" size={30} /><span><b>SaigonCoffee</b><small>{t("brand.tagline")}</small></span>
     </button>
-    <nav className="hp-nav" aria-label="Điều hướng chính">
+    <nav className="hp-nav" aria-label={t("a11y.mainNavigation")}>
       {items.map(([k, label]) => (
         <button 
           key={k} 
@@ -131,7 +131,7 @@ function Header({ active, go }) {
           className="hp-lang-btn" 
           onClick={() => setIsOpen(!isOpen)} 
           aria-expanded={isOpen}
-          aria-label="Chọn ngôn ngữ"
+          aria-label={t("a11y.chooseLanguage")}
         >
           <span>{lang}</span>
           <span className={`hp-chevron-icon ${isOpen ? "open" : ""}`}>
@@ -174,6 +174,7 @@ function Cup() {
 }
 
 function Mark({ b }) {
+  const { t } = useLanguage();
   const dbBrandImgs = getDatabaseBrandImages(b.id, b.name);
   const resolvedLogo = b.logo || b.image || dbBrandImgs?.image;
 
@@ -188,7 +189,7 @@ function Mark({ b }) {
       ? { width: "84px", height: "84px", borderRadius: "50%", objectFit: "contain", background: "#fff", padding: "4px", boxShadow: "0 0 0 3px rgba(255,255,255,.9),0 6px 16px rgba(0,0,0,.35)" }
       : { width: "84px", height: "84px", borderRadius: "50%", objectFit: "cover", boxShadow: "0 0 0 3px rgba(255,255,255,.9),0 6px 16px rgba(0,0,0,.35)" };
 
-    return <img src={resolvedLogo} alt={`Logo ${b.name}`} style={logoStyle} />;
+    return <img src={resolvedLogo} alt={t("home.brandLogo", { name: b.name })} style={logoStyle} />;
   }
 
   const lines = b.mark ? b.mark.map(l => <span key={l}>{l}</span>) : [b.name];
@@ -270,7 +271,7 @@ export default function HomePage({ onOpenBrand, onNavigate }) {
             </div>
           </article>;
         })}
-      </div> : <p className="hp-empty">{loadError ? "Không tải được danh sách từ máy chủ. Vui lòng thử tải lại trang." : t("home.noResults")}</p>}
+      </div> : <p className="hp-empty">{loadError ? t("map.loadBrandsError") : t("home.noResults")}</p>}
     </main>
   </div>;
 }

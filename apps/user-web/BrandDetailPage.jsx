@@ -145,7 +145,7 @@ function Header({ go, goBrands }) {
     <button className="bd-logo" onClick={() => go("home")}>
       <Icon n="cup" size={30} /><span><b>SaigonCoffee</b><small>{t("brand.tagline")}</small></span>
     </button>
-    <nav className="bd-nav" aria-label="Điều hướng chính">
+    <nav className="bd-nav" aria-label={t("a11y.mainNavigation")}>
       {items.map(([k, label, fn]) => (
         <button 
           key={k} 
@@ -162,7 +162,7 @@ function Header({ go, goBrands }) {
           className="bd-lang-btn" 
           onClick={() => setIsOpen(!isOpen)} 
           aria-expanded={isOpen}
-          aria-label="Chọn ngôn ngữ"
+          aria-label={t("a11y.chooseLanguage")}
         >
           <span>{lang}</span>
           <span className={`bd-chevron-icon ${isOpen ? "open" : ""}`}>
@@ -192,6 +192,7 @@ function Header({ go, goBrands }) {
 }
 
 function Logo({ item, size }) {
+  const { languageCode } = useLanguage();
   const dbBrandImgs = getDatabaseBrandImages(item.id, item.name);
   const resolvedLogo = item.logo || item.image || dbBrandImgs?.image;
 
@@ -205,7 +206,7 @@ function Logo({ item, size }) {
       ? { width: size, height: size, borderRadius: "50%", objectFit: "contain", background: "#fff", padding: "4px" }
       : { width: size, height: size, borderRadius: "50%", objectFit: "cover" };
 
-    return <img src={resolvedLogo} alt={`Logo ${item.name}`} style={extraLogoStyle} />;
+    return <img src={resolvedLogo} alt={detailText(languageCode, "brandLogo", { name: item.name })} style={extraLogoStyle} />;
   }
 
   const big = size > 60;
@@ -216,6 +217,7 @@ function Logo({ item, size }) {
 }
 
 function AudioCard({ audio, brandId, languageCode, preferredLanguage }) {
+  const audioText = key => detailText(languageCode, key);
   const ref = useRef(null);
   const [playing, setPlaying] = useState(false);
   const [loop, setLoop] = useState(false);
@@ -257,16 +259,16 @@ function AudioCard({ audio, brandId, languageCode, preferredLanguage }) {
       onError={() => { setPlaying(false); requested.current = false; }}
       onTimeUpdate={e => setT(x => ({ ...x, cur: e.target.currentTime }))}
       onLoadedMetadata={e => setT({ cur: 0, dur: e.target.duration })} />
-    <button className="bd-play" disabled={!src || !code} onClick={toggle} title={src ? undefined : "Chưa có file audio"} aria-label={playing ? "Tạm dừng" : "Nghe giới thiệu thương hiệu"}>
+    <button className="bd-play" disabled={!src || !code} onClick={toggle} title={src ? undefined : audioText("noAudioFile")} aria-label={playing ? audioText("pauseBrandAudio") : audioText("playBrandAudio")}>
       <Icon n={playing ? "pause" : "play"} size={20} />
     </button>
     <div className="bd-track">
-      <span>Nghe giới thiệu thương hiệu</span>
-      <input className="bd-range" type="range" min="0" max={t.dur || 1} step="0.1" value={t.cur} disabled={!src} onChange={seek} aria-label="Tua audio" style={{ "--p": `${pct}%` }} />
+      <span>{audioText("playBrandAudio")}</span>
+      <input className="bd-range" type="range" min="0" max={t.dur || 1} step="0.1" value={t.cur} disabled={!src} onChange={seek} aria-label={audioText("seekAudio")} style={{ "--p": `${pct}%` }} />
     </div>
     <div className="bd-audio-r">
-      {!src && <span>Chưa có audio</span>}
-      <button onClick={() => setLoop(v => !v)} aria-pressed={loop} aria-label="Lặp lại" className={loop ? "on" : ""}><Icon n="repeat" size={16} /></button>
+      {!src && <span>{audioText("noAudio")}</span>}
+      <button onClick={() => setLoop(v => !v)} aria-pressed={loop} aria-label={audioText("repeatAudio")} className={loop ? "on" : ""}><Icon n="repeat" size={16} /></button>
     </div>
   </div>;
 }
@@ -277,22 +279,21 @@ const Tile = ({ src, i, alt }) => src
 
 export default function BrandDetailPage({ brandId, brand, onBack, onNavigate, onOpenBranch }) {
   const [loaded, setLoaded] = useState(null);
-  const [loadError, setLoadError] = useState('');
+  const [loadError, setLoadError] = useState(false);
   const { languageCode, t } = useLanguage();
   const dt = (key, values) => detailText(languageCode, key, values);
   const [translation, setTranslation] = useState(null);
   const [translationStatus, setTranslationStatus] = useState({ languageCode: "", status: "idle" });
-  const [translationError, setTranslationError] = useState("");
   const translationCache = useRef(new Map());
   useEffect(() => {
     const controller = new AbortController();
-    setLoaded(null); setLoadError('');
+    setLoaded(null); setLoadError(false);
     fetch(`/api/catalog/brands/${brandId}`, { signal: controller.signal })
       .then(response => { if (!response.ok) throw new Error(`API ${response.status}`); return response.json(); })
       .then(result => { if (!controller.signal.aborted) setLoaded(result); })
       .catch(() => {
         if (controller.signal.aborted) return;
-        setLoadError('Backend unavailable. Please retry.');
+        setLoadError(true);
         setLoaded(brand || null);
       });
     return () => controller.abort();
@@ -306,7 +307,6 @@ export default function BrandDetailPage({ brandId, brand, onBack, onNavigate, on
     const offlineTranslation = getOfflineBrandTranslation(sourceBrand, languageCode);
     if (offlineTranslation) {
       setTranslation({ languageCode, description: offlineTranslation, isTranslated: true });
-      setTranslationError("");
       setTranslationStatus({ languageCode, status: "idle" });
       return () => { active = false; };
     }
@@ -326,7 +326,6 @@ export default function BrandDetailPage({ brandId, brand, onBack, onNavigate, on
     }
 
     setTranslationStatus({ languageCode, status: "loading" });
-    setTranslationError("");
     fetch(`/api/localization/brands/${brandId}/translations/${languageCode}`, { method: "POST" })
       .then(async response => {
         const data = await response.json().catch(() => ({}));
@@ -337,13 +336,11 @@ export default function BrandDetailPage({ brandId, brand, onBack, onNavigate, on
         if (!active) return;
         translationCache.current.set(cacheKey, data.description);
         setTranslation({ languageCode, description: data.description, isTranslated: data.isTranslated === true });
-        setTranslationError("");
         setTranslationStatus({ languageCode, status: "idle" });
       })
-      .catch(error => {
+      .catch(() => {
         if (!active) return;
         setTranslation(null);
-        setTranslationError(error?.message || "Translation request failed.");
         setTranslationStatus({ languageCode, status: "error" });
       });
     return () => { active = false; };
@@ -382,7 +379,7 @@ export default function BrandDetailPage({ brandId, brand, onBack, onNavigate, on
     return () => window.removeEventListener("keydown", k);
   }, [view, images.length]);
 
-  if (!brand && (!loaded || loaded.id !== brandId)) return <main className="bd"><style>{css}</style><div className="bd-wrap"><button onClick={goBrands}>{dt("back")}</button><p role={loadError ? 'alert' : 'status'}>{loadError || dt("loading")}</p></div></main>;
+  if (!brand && (!loaded || loaded.id !== brandId)) return <main className="bd"><style>{css}</style><div className="bd-wrap"><button onClick={goBrands}>{dt("back")}</button><p role={loadError ? 'alert' : 'status'}>{loadError ? dt("backendFallback") : dt("loading")}</p></div></main>;
 
   const info = [
     ["pin", dt("branchesAt", { count })],
@@ -394,7 +391,7 @@ export default function BrandDetailPage({ brandId, brand, onBack, onNavigate, on
   return <div className="bd">
     <style>{css}</style>
     <Header go={go} goBrands={goBrands} />
-    {loadError && <div className="bd-data-notice" role="status">{loadError}</div>}
+    {loadError && <div className="bd-data-notice" role="status">{dt("backendFallback")}</div>}
     <div className="bd-wrap">
       
       <div className="bd-cover" style={resolvedCover ? { backgroundImage: `url(${resolvedCover})` } : undefined}>
@@ -403,7 +400,7 @@ export default function BrandDetailPage({ brandId, brand, onBack, onNavigate, on
 
       <div className="bd-cols">
         <div className="bd-left">
-          <h1>{item.name || `Thương hiệu #${item.id}`}</h1>
+          <h1>{item.name || dt("unnamedBrand", { id: item.id })}</h1>
           <p className="bd-type">{displayType}</p>
           <p className="bd-where"><Icon n="pin" size={15} /> {dt("branchesAt", { count })}</p>
 
@@ -412,7 +409,7 @@ export default function BrandDetailPage({ brandId, brand, onBack, onNavigate, on
             : <DescriptionSpeech key={item.id} brandId={Number(item.id)} brandName={item.name} description={currentDescription} sourceLanguageCode={descriptionLanguage} />}
 
           {isTranslating && <p className="bd-translation-status" role="status">{dt("translating")}</p>}
-          {translationFailed && <p className="bd-translation-status" role="status">{dt("translationFailed")} <small>({translationError})</small></p>}
+          {translationFailed && <p className="bd-translation-status" role="status">{dt("translationFailed")}</p>}
           <p className="bd-desc">{currentDescription || (loadError ? dt("noSampleDescription") : dt("loadingBrand"))}</p>
 
           <section className="bd-card">

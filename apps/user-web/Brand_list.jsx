@@ -119,7 +119,7 @@ function Header({ active = "brands", go }) {
         </span>
       </button>
 
-      <nav className="hp-nav" aria-label="Điều hướng chính">
+      <nav className="hp-nav" aria-label={t("a11y.mainNavigation")}>
         {items.map(([k, label]) => (
           <button 
             key={k} 
@@ -138,7 +138,7 @@ function Header({ active = "brands", go }) {
             className="hp-lang-btn" 
             onClick={() => setIsOpen(!isOpen)} 
             aria-expanded={isOpen}
-            aria-label="Chọn ngôn ngữ"
+            aria-label={t("a11y.chooseLanguage")}
           >
             <span>{lang}</span>
             <span className={`hp-chevron-icon ${isOpen ? "open" : ""}`}>
@@ -190,6 +190,7 @@ function Cup() {
 }
 
 function BrandBadge({ item }) {
+  const { languageCode } = useLanguage();
   const dbBrandImgs = getDatabaseBrandImages(item.id, item.name);
   const resolvedLogo = item.logo || item.image || dbBrandImgs?.image;
 
@@ -203,7 +204,7 @@ function BrandBadge({ item }) {
       ? { width: "78px", height: "78px", borderRadius: "50%", objectFit: "contain", background: "#fff", padding: "4px", border: "2px solid rgba(255, 255, 255, 0.85)" }
       : { width: "78px", height: "78px", borderRadius: "50%", objectFit: "cover", border: "2px solid rgba(255, 255, 255, 0.85)" };
 
-    return <img src={resolvedLogo} alt={`Logo ${item.name}`} style={logoStyle} />;
+    return <img src={resolvedLogo} alt={screenText(languageCode, "brandLogo", { name: item.name })} style={logoStyle} />;
   }
 
   const lines = item.mark || [item.name];
@@ -232,8 +233,8 @@ function BrandCard({ brand, onSelect, languageCode }) {
         <BrandDescriptionAudio
           brand={brand}
           className="bl-play-btn"
-          playLabel={`Nghe mô tả ${brand.name}`}
-          stopLabel={`Dừng mô tả ${brand.name}`}
+          playLabel={screenText(languageCode, "listenDescription", { name: brand.name })}
+          stopLabel={screenText(languageCode, "stopDescription", { name: brand.name })}
           renderIcon={speaking => <Icon n={speaking ? "pause" : "play"} size={14} />}
         />
       </div>
@@ -339,7 +340,7 @@ export default function BrandListPage({ onSelectBrand, onNavigate }) {
         ) : (
           <div className="bl-empty">
             <Icon n="cup" size={48} />
-            <p>{loadError ? "Không tải được danh sách từ máy chủ. Vui lòng thử tải lại trang." : st("noBrands", { query: searchTerm })}</p>
+            <p>{loadError ? st("loadBrandsError") : st("noBrands", { query: searchTerm })}</p>
           </div>
         )}
       </main>

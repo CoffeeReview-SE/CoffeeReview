@@ -38,7 +38,7 @@ export default function MapPage() {
           </svg>
           <span><b>SaigonCoffee</b><small>{t("brand.tagline")}</small></span>
         </button>
-        <nav className="store-map-page__nav" aria-label="Điều hướng chính">
+        <nav className="store-map-page__nav" aria-label={t("a11y.mainNavigation")}>
           {navItems.map(([key, label, path]) => (
             <button key={key} type="button" aria-current={key === "map" ? "page" : undefined} onClick={() => {
               if (key === "home") window.dispatchEvent(new Event("saigoncoffee:show-all-stores"));
@@ -49,7 +49,7 @@ export default function MapPage() {
           ))}
         </nav>
         <div className="hp-lang-dropdown" ref={languageMenuRef}>
-          <button type="button" className="hp-lang-btn" aria-label="Chọn ngôn ngữ" aria-haspopup="true" aria-expanded={languageMenuOpen} onClick={() => setLanguageMenuOpen(open => !open)}>
+          <button type="button" className="hp-lang-btn" aria-label={t("a11y.chooseLanguage")} aria-haspopup="true" aria-expanded={languageMenuOpen} onClick={() => setLanguageMenuOpen(open => !open)}>
             {languageCode.toUpperCase()}
             <span className={`hp-chevron-icon ${languageMenuOpen ? "open" : ""}`} aria-hidden="true">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6" /></svg>

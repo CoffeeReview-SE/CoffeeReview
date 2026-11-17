@@ -158,6 +158,12 @@ export default function StoreMap({ fullScreen = false, enableDistanceMeasure = f
   const [searchTerm, setSearchTerm] = useState("");
   const [locations, setLocations] = useState([]);
   const [brandCatalog, setBrandCatalog] = useState([]);
+  const [catalogLoadError, setCatalogLoadError] = useState(false);
+  const [activeDescriptionBrand, setActiveDescriptionBrand] = useState(null);
+  const [descriptionTranslations, setDescriptionTranslations] = useState({});
+  const descriptionTranslationCache = useRef(new Map());
+  const descriptionTranslationRequests = useRef(new Set());
+  const descriptionTranslationControllers = useRef(new Set());
   const [userPosition, setUserPosition] = useState(() => readSavedPosition());
   const [mapCenter, setMapCenter] = useState(() => readSavedPosition()?.position || [10.7769, 106.7009]);
   const [mapZoom, setMapZoom] = useState(() => readSavedPosition() ? 16 : 12);
@@ -412,16 +418,85 @@ export default function StoreMap({ fullScreen = false, enableDistanceMeasure = f
     const controller = new AbortController();
     getUserApi("/api/catalog/branches", { signal: controller.signal })
       .then(rows => { if (Array.isArray(rows)) setLocations(rows); })
-      .catch(() => { if (!controller.signal.aborted) setLocations([]); });
+      .catch(() => {
+        if (controller.signal.aborted) return;
+        setLocations([]);
+        setCatalogLoadError(true);
+      });
     return () => controller.abort();
   }, []);
   useEffect(() => {
     const controller = new AbortController();
     getUserApi("/api/catalog/brands", { signal: controller.signal })
       .then(rows => { if (Array.isArray(rows)) setBrandCatalog(rows); })
-      .catch(() => { if (!controller.signal.aborted) setBrandCatalog([]); });
+      .catch(() => {
+        if (controller.signal.aborted) return;
+        setBrandCatalog([]);
+        setCatalogLoadError(true);
+      });
     return () => controller.abort();
   }, []);
+
+  useEffect(() => () => {
+    descriptionTranslationControllers.current.forEach(controller => controller.abort());
+  }, []);
+
+  const translateBrandDescription = useCallback(brand => {
+    if (!brand?.description?.trim() || !brand.id) return;
+    const cacheKey = `${brand.id}:${languageCode}:${brand.description}`;
+    const cached = descriptionTranslationCache.current.get(cacheKey);
+    if (cached) {
+      setDescriptionTranslations(previous => ({ ...previous, [cacheKey]: cached }));
+      return;
+    }
+
+    const offlineTranslation = getOfflineBrandTranslation(brand, languageCode);
+    if (offlineTranslation) {
+      const translation = { description: offlineTranslation, status: "ready" };
+      descriptionTranslationCache.current.set(cacheKey, translation);
+      setDescriptionTranslations(previous => ({ ...previous, [cacheKey]: translation }));
+      return;
+    }
+    if (brandDescriptionLanguage(brand) === languageCode || descriptionTranslationRequests.current.has(cacheKey)) return;
+
+    const controller = new AbortController();
+    descriptionTranslationControllers.current.add(controller);
+    descriptionTranslationRequests.current.add(cacheKey);
+    setDescriptionTranslations(previous => ({
+      ...previous,
+      [cacheKey]: { description: brand.description, status: "loading" },
+    }));
+
+    getUserApi(`/api/localization/brands/${encodeURIComponent(String(brand.id))}/translations/${languageCode}`, {
+      method: "POST",
+      signal: controller.signal,
+    })
+      .then(data => {
+        if (controller.signal.aborted) return;
+        if (typeof data.description !== "string" || !data.description.trim()) {
+          throw new Error("Translation response did not include a description.");
+        }
+        const translation = { description: data.description, status: "ready" };
+        descriptionTranslationCache.current.set(cacheKey, translation);
+        setDescriptionTranslations(previous => ({ ...previous, [cacheKey]: translation }));
+      })
+      .catch(error => {
+        if (controller.signal.aborted) return;
+        setDescriptionTranslations(previous => ({
+          ...previous,
+          [cacheKey]: { description: brand.description, status: "error" },
+        }));
+        console.error("Could not translate map brand description:", error);
+      })
+      .finally(() => {
+        descriptionTranslationControllers.current.delete(controller);
+        descriptionTranslationRequests.current.delete(cacheKey);
+      });
+  }, [languageCode]);
+
+  useEffect(() => {
+    if (activeDescriptionBrand) translateBrandDescription(activeDescriptionBrand);
+  }, [activeDescriptionBrand, translateBrandDescription]);
 
   const proximityText = {
     vi: { enable: "Lấy GPS & tự phát audio", disable: "Tắt audio gần bạn", enabled: "Đã bật. Đang tìm thương hiệu trong bán kính 2 km…", found: names => `Đang đọc mô tả: ${names.join(", ")}`, none: "Chưa có thương hiệu có mô tả trong bán kính 2 km.", gps: "Cho phép GPS để tự phát audio thương hiệu gần bạn.", denied: "Không lấy được GPS. Hãy kiểm tra quyền vị trí của trình duyệt." },
@@ -629,9 +704,19 @@ export default function StoreMap({ fullScreen = false, enableDistanceMeasure = f
   const mappedLocations = locationsByDistance.filter(item => Number.isFinite(item.lat) && Number.isFinite(item.lng));
   const formatDistance = distance => distance < 1000 ? `${Math.round(distance)} m` : `${(distance / 1000).toFixed(1)} km`;
   const formatKilometers = distance => `${(distance / 1000).toFixed(distance < 1000 ? 3 : 2)} km`;
-  const measureUi = languageCode === "vi"
-    ? { start: "Điểm đầu", next: "Điểm đến", pin: "Đo khoảng cách", button: "Chọn hai điểm trên bản đồ", stop: "Chạm bản đồ để chọn điểm tiếp theo", clear: "Xóa", useGps: "Từ vị trí của tôi", toPlace: "Đo từ vị trí của tôi đến đây" }
-    : { start: "Start", next: "End", pin: "Measure distance", button: "Pick two points on map", stop: "Tap map to pick the next point", clear: "Clear", useGps: "From my location", toPlace: "Measure from my location to here" };
+  const measureUi = {
+    start: t("map.measureStart"),
+    next: t("map.measureEnd"),
+    pin: t("map.measureDistance"),
+    clear: t("map.clear"),
+    useGps: t("map.measureUseGps"),
+  };
+  const navigationStatusText = {
+    waiting: t("map.navigationWaiting"),
+    active: t("map.navigationActive"),
+    weak: t("map.navigationWeakGps"),
+    gps: t("map.navigationGpsError"),
+  }[navigationStatus] || t("map.navigationWaiting");
   const onMeasureMapPick = point => {
     setNavigationActive(false);
     setFollowing(false);
@@ -789,6 +874,7 @@ export default function StoreMap({ fullScreen = false, enableDistanceMeasure = f
         <p className="store-map__eyebrow">{t("map.eyebrow")}</p>
         <h1 id="store-map-title">{t("map.title")}</h1>
       </div>
+      {catalogLoadError && <p role="alert">{t("map.loadBrandsError")}</p>}
 
       <label className="store-map__search-label" htmlFor="store-map-search">
         {t("map.searchLabel")}
@@ -851,10 +937,10 @@ export default function StoreMap({ fullScreen = false, enableDistanceMeasure = f
         }}>×</button>
       </div>}
 
-      {enableDistanceMeasure && <section className="store-map__routing" aria-label={languageCode === "vi" ? "Chỉ đường" : "Directions"}>
+      {enableDistanceMeasure && <section className="store-map__routing" aria-label={t("map.directionsHeading")}>
         <div className="store-map__travel-modes">
-          <button type="button" aria-pressed={travelMode === "motorcycle"} onClick={() => setTravelMode("motorcycle")}>{languageCode === "vi" ? "Xe máy" : "Motorcycle"}</button>
-          <button type="button" aria-pressed={travelMode === "walk"} onClick={() => setTravelMode("walk")}>{languageCode === "vi" ? "Đi bộ" : "Walking"}</button>
+          <button type="button" aria-pressed={travelMode === "motorcycle"} onClick={() => setTravelMode("motorcycle")}>{t("map.motorcycle")}</button>
+          <button type="button" aria-pressed={travelMode === "walk"} onClick={() => setTravelMode("walk")}>{t("map.walking")}</button>
         </div>
         {measurement && <div className="store-map__navigation-actions">
           <button type="button" disabled={!navigationActive && routeState.status !== "ready"} aria-pressed={navigationActive} onClick={() => {
@@ -863,21 +949,19 @@ export default function StoreMap({ fullScreen = false, enableDistanceMeasure = f
             setNavigationStatus("waiting");
             offRouteSince.current = null;
             setShowAllLocations(false);
-          }}>{navigationActive ? (languageCode === "vi" ? "Dừng theo dõi" : "Stop navigation") : (languageCode === "vi" ? "Bắt đầu di chuyển" : "Start navigation")}</button>
-          {navigationActive && !following && <button type="button" onClick={() => setFollowing(true)}>{languageCode === "vi" ? "Bám vị trí" : "Follow location"}</button>}
-          {navigationActive && <small>{languageCode === "vi"
-            ? ({ waiting: "Đang lấy GPS…", active: "Đang theo dõi · tự tìm lại đường khi lệch tuyến", weak: "GPS chưa chính xác · tạm ngừng tìm lại đường", gps: "Không lấy được GPS. Kiểm tra quyền vị trí." })[navigationStatus]
-            : ({ waiting: "Waiting for GPS…", active: "Tracking · automatic rerouting", weak: "Weak GPS · rerouting paused", gps: "GPS unavailable. Check location permission." })[navigationStatus]}</small>}
+          }}>{navigationActive ? t("map.stopNavigation") : t("map.startNavigation")}</button>
+          {navigationActive && !following && <button type="button" onClick={() => setFollowing(true)}>{t("map.followLocation")}</button>}
+          {navigationActive && <small>{navigationStatusText}</small>}
         </div>}
         <div role="status" aria-live="polite">
-          {!measurement && (languageCode === "vi" ? "Chọn quán → Chỉ đường từ vị trí của tôi, hoặc chọn hai điểm trên bản đồ." : "Select a store for directions, or pick two map points.")}
-          {measurement && routeState.status === "loading" && (languageCode === "vi" ? "Đang tìm đường…" : "Finding route…")}
-          {measurement && routeState.status === "ready" && <strong>{navigationActive && (languageCode === "vi" ? "Tuyến đã tính: " : "Calculated route: ")}{formatDistance(routeState.route.distanceMeters)} · {Math.max(1, Math.ceil(routeState.route.durationSeconds / 60))} {languageCode === "vi" ? "phút (ước tính)" : "min (estimated)"}</strong>}
+          {!measurement && (measureActive ? (!draftStart ? t("map.measureChoosePoints") : t("map.measureNextPoint")) : t("map.directionsHint"))}
+          {measurement && routeState.status === "loading" && t("map.routeSearching")}
+          {measurement && routeState.status === "ready" && <strong>{navigationActive && t("map.calculatedRoute")}{formatDistance(routeState.route.distanceMeters)} · {Math.max(1, Math.ceil(routeState.route.durationSeconds / 60))} {t("map.estimatedMinutes")}</strong>}
           {measurement && routeState.status === "error" && <>
             {routeState.error === "routing_not_configured"
-              ? (languageCode === "vi" ? "Tính năng chỉ đường chưa được cấu hình." : "Routing is not configured yet.")
-              : (languageCode === "vi" ? "Chưa tìm được đường. Dịch vụ có thể đang bận hoặc hết hạn mức." : "Route unavailable. The service may be busy or out of quota.")}
-            <button type="button" onClick={() => setRouteAttempt(value => value + 1)}>{languageCode === "vi" ? "Thử lại" : "Retry"}</button>
+              ? t("map.routingNotConfigured")
+              : t("map.routeUnavailable")}
+            <button type="button" onClick={() => setRouteAttempt(value => value + 1)}>{t("map.retry")}</button>
           </>}
         </div>
         {measurement && routeState.status === "ready" && <small>Routing © <a href="https://www.geoapify.com/" target="_blank" rel="noopener noreferrer">Geoapify</a> · © OpenStreetMap contributors</small>}
@@ -908,7 +992,15 @@ export default function StoreMap({ fullScreen = false, enableDistanceMeasure = f
           />
           {mappedLocations.map((item) => {
             const brandInfo = brandCatalog.find(brand => String(brand.id) === String(item.brandId));
-            return <Marker key={item.id} position={[item.lat, item.lng]} icon={coffeeMarkerIcon(item.brandId)} riseOnHover>
+            const descriptionKey = brandInfo ? `${brandInfo.id}:${languageCode}:${brandInfo.description}` : "";
+            const descriptionTranslation = descriptionKey ? descriptionTranslations[descriptionKey] : null;
+            return <Marker
+              key={item.id}
+              position={[item.lat, item.lng]}
+              icon={coffeeMarkerIcon(item.brandId)}
+              riseOnHover
+              eventHandlers={{ click: () => setActiveDescriptionBrand(brandInfo) }}
+            >
               <Tooltip direction="top" sticky className="coffee-map-tooltip">
                 {item.brand || item.name}
               </Tooltip>
@@ -919,13 +1011,17 @@ export default function StoreMap({ fullScreen = false, enableDistanceMeasure = f
                   <span>{item.address}</span>
                   {item.phone && <a href={`tel:${item.phone}`}>{item.phone}</a>}
                   {item.lat != null && item.lng != null && <span>{item.lat.toFixed(6)}, {item.lng.toFixed(6)}</span>}
-                  {brandInfo?.description && <span>{brandInfo.description}</span>}
+                  {brandInfo?.description && <>
+                    <span>{descriptionTranslation?.description || brandInfo.description}</span>
+                    {descriptionTranslation?.status === "loading" && <small role="status">{t("map.translatingDescription")}</small>}
+                    {descriptionTranslation?.status === "error" && <small role="status">{t("map.descriptionTranslationUnavailable")}</small>}
+                  </>}
                   {brandInfo?.website && <a href={brandInfo.website} target="_blank" rel="noopener noreferrer">{brandInfo.website}</a>}
                 </div>
                 <a className="store-map__directions" href={googleDirectionsUrl(item, userPosition)} target="_blank" rel="noopener noreferrer">
                   {t("map.directionsGoogle")}
                 </a>
-                {enableDistanceMeasure && <button type="button" className="store-map__popup-route" onClick={() => measureFromMeTo([item.lat, item.lng])}>{languageCode === "vi" ? "Chỉ đường từ vị trí của tôi" : "Route from my location"}</button>}
+                {enableDistanceMeasure && <button type="button" className="store-map__popup-route" onClick={() => measureFromMeTo([item.lat, item.lng])}>{t("map.routeFromMyLocation")}</button>}
               </Popup>
             </Marker>;
           })}
@@ -940,7 +1036,7 @@ export default function StoreMap({ fullScreen = false, enableDistanceMeasure = f
               keyboard={false}
             >
               <Tooltip permanent direction="center" offset={[0, 0]} className="store-map__measure-tooltip">
-                {routeState.status === "ready" ? formatKilometers(routeState.route.distanceMeters) : (languageCode === "vi" ? "Chưa có tuyến đường" : "No route yet")}
+                {routeState.status === "ready" ? formatKilometers(routeState.route.distanceMeters) : t("map.noRoute")}
               </Tooltip>
             </Marker>
           </>}

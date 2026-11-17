@@ -108,7 +108,7 @@ function Header({ currentNav = "suggestions", onNavigate }) {
         </span>
       </button>
 
-      <nav className="sg-nav" aria-label="Điều hướng chính">
+      <nav className="sg-nav" aria-label={t("a11y.mainNavigation")}>
         {items.map(([k, label]) => (
           <button
             key={k}
@@ -127,7 +127,7 @@ function Header({ currentNav = "suggestions", onNavigate }) {
             className="sg-lang-btn" 
             onClick={() => setIsOpen(!isOpen)} 
             aria-expanded={isOpen}
-            aria-label="Chọn ngôn ngữ"
+            aria-label={t("a11y.chooseLanguage")}
           >
             <span>{lang}</span>
             <span className={`sg-chevron-icon ${isOpen ? "open" : ""}`}>
@@ -158,6 +158,7 @@ function Header({ currentNav = "suggestions", onNavigate }) {
 }
 
 function Logo({ item, size }) {
+  const { languageCode } = useLanguage();
   const dbBrandImgs = getDatabaseBrandImages(item.id, item.name);
   const resolvedLogo = item.logo || item.image || dbBrandImgs?.image;
 
@@ -171,7 +172,7 @@ function Logo({ item, size }) {
       ? { width: size, height: size, borderRadius: "50%", objectFit: "contain", background: "#fff", padding: "4px" }
       : { width: size, height: size, borderRadius: "50%", objectFit: "cover" };
 
-    return <img src={resolvedLogo} alt={`Logo ${item.name}`} style={extraLogoStyle} />;
+    return <img src={resolvedLogo} alt={screenText(languageCode, "brandLogo", { name: item.name })} style={extraLogoStyle} />;
   }
 
   const big = size > 60;
@@ -239,7 +240,7 @@ export default function SuggestionsPage({ recentBrands = [], onNavigate }) {
       });
       setSubmitted(true);
     } catch {
-      setSubmitError("Không gửi được đề xuất. Vui lòng kiểm tra kết nối và thử lại.");
+      setSubmitError("error");
     } finally {
       setSubmitting(false);
     }
@@ -386,9 +387,9 @@ export default function SuggestionsPage({ recentBrands = [], onNavigate }) {
                   ></textarea>
                 </div>
 
-                {submitError && <p role="alert" className="sg-submit-error">{submitError}</p>}
+                {submitError && <p role="alert" className="sg-submit-error">{st("submitError")}</p>}
                 <button type="submit" className="sg-btn-submit" disabled={submitting}>
-                  <Icon n="send" size={16} /> {submitting ? "Đang gửi…" : st("submit")}
+                  <Icon n="send" size={16} /> {submitting ? st("submitting") : st("submit")}
                 </button>
               </form>
             )}

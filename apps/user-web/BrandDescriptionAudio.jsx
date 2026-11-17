@@ -4,11 +4,13 @@ import { useLanguage } from "./LanguageContext.jsx";
 import { brandDescriptionLanguage, getUserApi } from "./api.js";
 import { getSpeechVoice, speechLanguageTag } from "./speechVoice.js";
 import { getOfflineBrandTranslation } from "./offlineBrandTranslations.js";
+import { detailText } from "./brandDetailTranslations.js";
 
 let latestSpeechRequest = 0;
 
 export default function BrandDescriptionAudio({ brand, className, playLabel, stopLabel, renderIcon }) {
   const { languageCode: voiceTargetLanguage } = useLanguage();
+  const dt = (key) => detailText(voiceTargetLanguage, key);
   const [speaking, setSpeaking] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -101,7 +103,7 @@ export default function BrandDescriptionAudio({ brand, className, playLabel, sto
       utterance.current = null;
       setLoading(false);
       setSpeaking(false);
-      if (!['canceled', 'interrupted'].includes(event.error)) setError("Không phát được giọng đọc trên thiết bị này.");
+      if (!["canceled", "interrupted"].includes(event.error)) setError(dt("speechError"));
     };
     window.speechSynthesis.cancel();
     utterance.current = speech;
@@ -111,11 +113,11 @@ export default function BrandDescriptionAudio({ brand, className, playLabel, sto
       utterance.current = null;
       setLoading(false);
       setSpeaking(false);
-      setError("Không phát được giọng đọc trên thiết bị này.");
+      setError(dt("speechError"));
     }
   };
 
-  const label = loading ? "Đang chuẩn bị giọng đọc" : speaking ? stopLabel : playLabel;
+  const label = loading ? dt("preparingSpeech") : speaking ? stopLabel : playLabel;
   return (
     <button
       className={className}
@@ -124,7 +126,7 @@ export default function BrandDescriptionAudio({ brand, className, playLabel, sto
       disabled={!description || !supported}
       aria-pressed={speaking || loading}
       aria-label={label}
-      title={error || (!description ? "Thương hiệu chưa có mô tả" : undefined)}
+      title={error || (!description ? dt("noDescription") : undefined)}
     >
       {renderIcon ? renderIcon(speaking || loading) : <span aria-hidden="true">{speaking || loading ? "■" : "▶"}</span>}
     </button>
