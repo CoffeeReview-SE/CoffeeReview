@@ -6,7 +6,11 @@ export async function getUserApi(path, options = {}) {
     headers: { Accept: "application/json", ...options.headers },
   });
   const payload = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(payload.detail || payload.error || `API ${response.status}`);
+  if (!response.ok) {
+    const error = new Error(payload.detail || payload.error || `API ${response.status}`);
+    error.errors = payload.errors;
+    throw error;
+  }
   return payload;
 }
 

@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { LANGUAGES, useLanguage } from "./LanguageContext.jsx";
 import { localizedCategory, screenText } from "./brandDetailTranslations.js";
 import { getUserApi, toBrandCard } from "./api.js";
+import { emptySuggestion, suggestionFields, suggestionText, validateSuggestion } from "./suggestionForm.mjs";
 
 // 2. Ảnh Logo (image logo/)
 import logoHighlands from "../../public/image/logo highlands coffee.jpg";
@@ -192,13 +193,14 @@ export default function SuggestionsPage({ recentBrands = [], onNavigate }) {
   const [catalogBrands, setCatalogBrands] = useState([]);
   const displayBrands = recentBrands.length > 0 ? recentBrands : catalogBrands;
 
-  const [formData, setFormData] = useState({
-    name: "",
-    phone: "",
-    brandName: "",
-    address: "",
-    note: ""
-  });
+  const [formData, setFormData] = useState({ ...emptySuggestion });
+  const [fieldErrors, setFieldErrors] = useState({});
+  const [catalogStatus, setCatalogStatus] = useState("loading");
+  const formRef = useRef(null);
+  const existingBrand = catalogBrands.find(brand => brand.name.trim().toLocaleLowerCase() === formData.brandName.trim().toLocaleLowerCase());
+  const isNewBrand = !existingBrand;
+  const fields = suggestionFields.filter(field => isNewBrand || !field.brandOnly);
+  const ft = key => suggestionText(languageCode, key);
 
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -207,12 +209,17 @@ export default function SuggestionsPage({ recentBrands = [], onNavigate }) {
   useEffect(() => {
     const controller = new AbortController();
     getUserApi("/api/catalog/brands", { signal: controller.signal })
-      .then(rows => { if (Array.isArray(rows)) setCatalogBrands(rows.map(toBrandCard)); })
-      .catch(() => {});
+      .then(rows => {
+        if (!Array.isArray(rows)) throw new Error("Invalid catalog");
+        setCatalogBrands(rows.map(toBrandCard));
+        setCatalogStatus("ready");
+      })
+      .catch(() => { if (!controller.signal.aborted) setCatalogStatus("error"); });
     return () => controller.abort();
   }, []);
 
   const handleSelectPreBrand = (brand) => {
+    setFieldErrors({});
     setFormData(prev => ({
       ...prev,
       brandName: prev.brandName === brand.name ? "" : brand.name
@@ -222,12 +229,17 @@ export default function SuggestionsPage({ recentBrands = [], onNavigate }) {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+    setFieldErrors(previous => ({ ...previous, [name]: undefined }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.name.trim() || !formData.phone.trim() || !formData.brandName.trim()) {
-      alert(st("validation"));
+    if (submitting) return;
+    const errors = validateSuggestion(formData, isNewBrand);
+    setFieldErrors(errors);
+    if (Object.keys(errors).length > 0) {
+      setSubmitError("incomplete");
+      formRef.current?.elements.namedItem(Object.keys(errors)[0])?.focus();
       return;
     }
     setSubmitting(true);
@@ -236,11 +248,16 @@ export default function SuggestionsPage({ recentBrands = [], onNavigate }) {
       await getUserApi("/api/submissions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          ...Object.fromEntries(Object.entries(formData).map(([key, value]) => [key, value.trim()])),
+          latitude: Number(formData.latitude),
+          longitude: Number(formData.longitude),
+        }),
       });
       setSubmitted(true);
-    } catch {
-      setSubmitError("error");
+    } catch (error) {
+      setFieldErrors(error.errors || {});
+      setSubmitError(error.errors ? "incomplete" : "error");
     } finally {
       setSubmitting(false);
     }
@@ -249,7 +266,8 @@ export default function SuggestionsPage({ recentBrands = [], onNavigate }) {
   const handleReset = () => {
     setSubmitted(false);
     setSubmitError("");
-    setFormData({ name: "", phone: "", brandName: "", address: "", note: "" });
+    setFieldErrors({});
+    setFormData({ ...emptySuggestion });
   };
 
   return (
@@ -310,70 +328,35 @@ export default function SuggestionsPage({ recentBrands = [], onNavigate }) {
                 </button>
               </div>
             ) : (
-              <form onSubmit={handleSubmit} className="sg-form">
+              <form ref={formRef} onSubmit={handleSubmit} className="sg-form" noValidate>
                 <div className="sg-form-header">
                   <h3>{st("formTitle")}</h3>
-                  <p>{st("formIntro")}</p>
+                  <p>{ft(isNewBrand ? "newBrand" : "existingBrand")}</p>
                 </div>
 
-                <div className="sg-field-group">
-                  <label htmlFor="name">
-                    <Icon n="user" size={15} /> {st("fullName")} <span className="req">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    id="name"
-                    name="name"
-                    placeholder={st("fullNamePlaceholder")}
-                    value={formData.name}
-                    onChange={handleChange}
-                    required
-                  />
-                </div>
-
-                <div className="sg-field-group">
-                  <label htmlFor="phone">
-                    <Icon n="phone" size={15} /> {st("phone")} <span className="req">*</span>
-                  </label>
-                  <input
-                    type="tel"
-                    id="phone"
-                    name="phone"
-                    placeholder={st("phonePlaceholder")}
-                    value={formData.phone}
-                    onChange={handleChange}
-                    required
-                  />
-                </div>
-
-                <div className="sg-field-group">
-                  <label htmlFor="brandName">
-                    <Icon n="store" size={15} /> {st("brandToSuggest")} <span className="req">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    id="brandName"
-                    name="brandName"
-                    placeholder={st("brandPlaceholder")}
-                    value={formData.brandName}
-                    onChange={handleChange}
-                    required
-                  />
-                </div>
-
-                <div className="sg-field-group">
-                  <label htmlFor="address">
-                    <Icon n="pin" size={15} /> {st("address")}
-                  </label>
-                  <input
-                    type="text"
-                    id="address"
-                    name="address"
-                    placeholder={st("addressPlaceholder")}
-                    value={formData.address}
-                    onChange={handleChange}
-                  />
-                </div>
+                {fields.map(field => {
+                  const Field = field.multiline ? "textarea" : "input";
+                  return <div className="sg-field-group" key={field.name}>
+                    <label htmlFor={field.name}>{ft(field.name)} <span className="req">*</span></label>
+                    <Field
+                      id={field.name}
+                      name={field.name}
+                      type={field.multiline ? undefined : field.type || "text"}
+                      rows={field.multiline ? 4 : undefined}
+                      step={field.type === "number" ? "any" : undefined}
+                      min={field.min}
+                      max={field.max}
+                      maxLength={field.maxLength}
+                      placeholder={field.type === "url" ? "https://..." : undefined}
+                      value={formData[field.name]}
+                      onChange={handleChange}
+                      required
+                      aria-invalid={Boolean(fieldErrors[field.name])}
+                      aria-describedby={fieldErrors[field.name] ? `${field.name}-error` : undefined}
+                    />
+                    {fieldErrors[field.name] && <small id={`${field.name}-error`} className="sg-field-error">{ft(fieldErrors[field.name])}</small>}
+                  </div>;
+                })}
 
                 <div className="sg-field-group">
                   <label htmlFor="note">{st("notes")}</label>
@@ -381,13 +364,18 @@ export default function SuggestionsPage({ recentBrands = [], onNavigate }) {
                     id="note"
                     name="note"
                     rows="3"
+                    maxLength={2000}
+                    aria-invalid={Boolean(fieldErrors.note)}
+                    aria-describedby={fieldErrors.note ? "note-error" : undefined}
                     placeholder={st("notesPlaceholder")}
                     value={formData.note}
                     onChange={handleChange}
                   ></textarea>
+                  {fieldErrors.note && <small id="note-error" className="sg-field-error">{ft(fieldErrors.note)}</small>}
                 </div>
 
-                {submitError && <p role="alert" className="sg-submit-error">{st("submitError")}</p>}
+                {catalogStatus === "error" && <p role="alert" className="sg-submit-error">{ft("catalogError")}</p>}
+                {submitError && <p role="alert" className="sg-submit-error">{submitError === "incomplete" ? ft("incomplete") : st("submitError")}</p>}
                 <button type="submit" className="sg-btn-submit" disabled={submitting}>
                   <Icon n="send" size={16} /> {submitting ? st("submitting") : st("submit")}
                 </button>
@@ -676,6 +664,9 @@ const styles = `
   cursor: pointer;
   transition: background 0.2s ease;
 }
+.sg-field-error, .sg-submit-error { color: #a12424; font-size: 13px; }
+.sg-field-group [aria-invalid="true"] { border-color: #a12424; }
+.sg-btn-submit:disabled { opacity: .6; cursor: not-allowed; }
 .sg-btn-submit:hover { background: var(--brown-dark); }
 
 .sg-success-state { text-align: center; padding: 20px 10px; }

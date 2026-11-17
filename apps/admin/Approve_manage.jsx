@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { adminRequest, adminJson } from './adminApi';
+import SubmissionDetails, { readSubmissionData } from './SubmissionDetails.jsx';
 
 /* Danh mục điều hướng liên kết đồng bộ với AdminDashboard */
 const NAV = [
@@ -146,6 +147,9 @@ const Icon = ({ n, size = 18 }) => (
 
 export default function ApprovalsManagement({ onNavigate }) {
   const [approvals, setApprovals] = useState([]);
+  const [selectedId, setSelectedId] = useState(null);
+  const [processingId, setProcessingId] = useState(null);
+  const selectedItem = approvals.find(item => item.id === selectedId);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('Tất cả');
   const [typeFilter, setTypeFilter] = useState('Tất cả');
@@ -156,7 +160,8 @@ export default function ApprovalsManagement({ onNavigate }) {
   const reload = async () => {
     try { const rows = await adminRequest('submissions');
       setApprovals(rows.map(x => ({ id:x.id, title:x.name || `Đề xuất #${x.id}`,
-        brand:x.targetType, type:x.targetType, sender:x.author || 'Khách',
+        brand:x.name || '—', type:({ BRAND: 'Thương hiệu mới', BRANCH: 'Chi nhánh mới' })[x.targetType] || x.targetType,
+        sender:readSubmissionData(x.dataJson).contactName || readSubmissionData(x.dataJson).name || x.author || 'Khách',
         date:new Date(x.createdAt).toLocaleDateString('vi-VN'), priority:'Trung bình',
         status:({PENDING:'Chờ duyệt',APPROVED:'Đã duyệt',REJECTED:'Từ chối'})[x.status] || x.status,
         dataJson:x.dataJson, address:x.address
@@ -166,9 +171,13 @@ export default function ApprovalsManagement({ onNavigate }) {
   };
   useEffect(() => { reload(); }, []);
   const handleStatusChange = async (id, newStatus) => {
+    if (processingId !== null) return;
     if (!window.confirm(`Xác nhận ${newStatus.toLowerCase()} đề xuất #${id}? Thao tác này chỉ cập nhật trạng thái, chưa tự thêm dữ liệu vào danh mục.`)) return;
+    setProcessingId(id);
+    setApiError('');
     try { await adminRequest(`submissions/${id}/decision`, adminJson('POST', { status: newStatus === 'Đã duyệt' ? 'APPROVED' : 'REJECTED' })); await reload(); }
     catch(e) { setApiError(e.message); }
+    finally { setProcessingId(null); }
   };
   const filteredList = approvals.filter((item) => {
     const matchSearch =
@@ -279,7 +288,7 @@ export default function ApprovalsManagement({ onNavigate }) {
                 <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)}>
                   <option value="Tất cả">Tất cả loại đề xuất</option>
                   <option value="Chi nhánh mới">Chi nhánh mới</option>
-                  <option value="Thực đơn mới">Thực đơn mới</option>
+                  <option value="Thương hiệu mới">Thương hiệu mới</option>
                   <option value="Audio & Ngôn ngữ">Audio & Ngôn ngữ</option>
                   <option value="Cập nhật thông tin">Cập nhật thông tin</option>
                 </select>
@@ -334,7 +343,7 @@ export default function ApprovalsManagement({ onNavigate }) {
                           <button
                             className="ad-btn-icon"
                             title="Xem chi tiết"
-                            onClick={() => window.alert(`Chi tiết đề xuất #${item.id}:\n${item.dataJson}`)}
+                            onClick={() => setSelectedId(item.id)}
                           >
                             <Icon n="eye" size={15} />
                           </button>
@@ -342,7 +351,8 @@ export default function ApprovalsManagement({ onNavigate }) {
                             <>
                               <button
                                 className="ad-btn-icon ok"
-                                title="Phe duyệt"
+                                title="Phê duyệt"
+                                disabled={processingId !== null}
                                 onClick={() => handleStatusChange(item.id, 'Đã duyệt')}
                               >
                                 <Icon n="check" size={15} />
@@ -350,6 +360,7 @@ export default function ApprovalsManagement({ onNavigate }) {
                               <button
                                 className="ad-btn-icon no"
                                 title="Từ chối"
+                                disabled={processingId !== null}
                                 onClick={() => handleStatusChange(item.id, 'Từ chối')}
                               >
                                 <Icon n="xCircle" size={15} />
@@ -375,6 +386,15 @@ export default function ApprovalsManagement({ onNavigate }) {
           </div>
         </div>
       </main>
+      {selectedItem && <SubmissionDetails
+        key={selectedItem.id}
+        item={selectedItem}
+        onClose={() => setSelectedId(null)}
+        busy={processingId !== null}
+        error={apiError}
+        onApprove={selectedItem.status === 'Chờ duyệt' ? () => handleStatusChange(selectedItem.id, 'Đã duyệt') : undefined}
+        onReject={selectedItem.status === 'Chờ duyệt' ? () => handleStatusChange(selectedItem.id, 'Từ chối') : undefined}
+      />}
     </div>
   );
 }

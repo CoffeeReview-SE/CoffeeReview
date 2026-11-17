@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { adminRequest } from './adminApi';
+import SubmissionDetails, { readSubmissionData } from './SubmissionDetails.jsx';
 
 const INITIAL_SUGGESTIONS = [
   {
@@ -152,6 +153,8 @@ const Icon = ({ n, size = 18 }) => (
 
 export default function SuggestionsManagement({ onNavigate }) {
   const [items, setItems] = useState([]);
+  const [selectedId, setSelectedId] = useState(null);
+  const selectedItem = items.find(item => item.id === selectedId);
   const [filterStatus, setFilterStatus] = useState('Tất cả');
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -166,8 +169,10 @@ export default function SuggestionsManagement({ onNavigate }) {
   const [apiError, setApiError] = useState('');
   useEffect(() => {
     adminRequest('submissions').then(rows => setItems(rows.map(x => ({
-      id: x.id, title: x.name || `Đề xuất #${x.id}`, brand: x.targetType,
-      branch: x.address || '—', type: x.targetType, author: x.author || 'Khách',
+      id: x.id, title: x.name || `Đề xuất #${x.id}`, brand: x.name || '—',
+      branch: x.address || '—', address: x.address, dataJson: x.dataJson,
+      type: ({ BRAND: 'Thương hiệu mới', BRANCH: 'Chi nhánh mới' })[x.targetType] || x.targetType,
+      author: readSubmissionData(x.dataJson).contactName || readSubmissionData(x.dataJson).name || x.author || 'Khách',
       date: new Date(x.createdAt).toLocaleDateString('vi-VN'),
       status: ({PENDING:'Chờ duyệt', APPROVED:'Đã duyệt', REJECTED:'Từ chối'})[x.status] || x.status,
     })))).catch(e => setApiError(e.message));
@@ -326,8 +331,8 @@ export default function SuggestionsManagement({ onNavigate }) {
                         <div className="ad-actions">
                           <button
                             className="ad-icon-btn"
-                            title="Xem chi tiết / Duyệt"
-                            onClick={() => go('approvals')}
+                            title="Xem chi tiết"
+                            onClick={() => setSelectedId(item.id)}
                           >
                             <Icon n="eye" size={16} />
                           </button>
@@ -357,6 +362,12 @@ export default function SuggestionsManagement({ onNavigate }) {
           </div>
         </section>
       </main>
+      {selectedItem && <SubmissionDetails
+        key={selectedItem.id}
+        item={selectedItem}
+        onClose={() => setSelectedId(null)}
+        onReview={selectedItem.status === 'Chờ duyệt' ? () => go('approvals') : undefined}
+      />}
     </div>
   );
 }
