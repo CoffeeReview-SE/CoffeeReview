@@ -93,6 +93,16 @@ function MapPointPicker({ enabled, onPick }) {
   return null;
 }
 
+function ResizeMap() {
+  const map = useMap();
+  useEffect(() => {
+    const observer = new ResizeObserver(() => map.invalidateSize({ pan: false }));
+    observer.observe(map.getContainer());
+    return () => observer.disconnect();
+  }, [map]);
+  return null;
+}
+
 function FitRoute({ route }) {
   const map = useMap();
   useEffect(() => {
@@ -739,8 +749,42 @@ export default function StoreMap({ fullScreen = false, enableDistanceMeasure = f
     locateMe();
   };
 
+  const resultsPanel = (
+        <aside className="store-map__results" aria-label={t("map.results")}>
+          <div className="store-map__table-wrap">
+            <table className="store-map__table store-map__summary-table">
+              <caption>{t("map.totalBranches")}</caption>
+              <tbody><tr><th scope="row">{t("map.allLocations")}</th><td>{locations.length}</td></tr></tbody>
+            </table>
+          </div>
+          <div className="store-map__table-wrap">
+            <table className="store-map__table store-map__nearby-table">
+              <caption>{userPosition && !showAllLocations ? t("map.nearbyBranches", { radius: proximityRadiusKm, count: locationsByDistance.length }) : t("map.allBranches", { count: locationsByDistance.length })}</caption>
+              <thead><tr><th scope="col">#</th><th scope="col">{t("map.branch")}</th><th scope="col">{t("map.distance")}</th></tr></thead>
+              <tbody>
+                {locationsByDistance.length ? locationsByDistance.map((item, index) => (
+                  <tr key={item.id} className={userPosition && item.id === nearestBranchId ? "store-map__nearest-row" : undefined}>
+                    <td>{userPosition && !fullScreen && !showAllLocations ? nearbyRankById.get(item.id) : index + 1}</td>
+                    <td>
+                      <button className="store-map__table-select" onClick={() => selectLocation(item)} type="button">{item.name}</button>
+                      <small>{item.address}</small>
+                      {userPosition && nearbyAudioEnabled && (fullScreen ? String(item.id) === String(nearestAudioBranch?.id) : item.id === nearestBranchId) && <small className="store-map__audio-note">{t("map.autoPlayAudio")}</small>}
+                      <a className="store-map__table-directions" href={googleDirectionsUrl(item, userPosition)} target="_blank" rel="noopener noreferrer">{t("map.directions")}</a>
+                    </td>
+                    <td>{userPosition && Number.isFinite(item.distanceFromUser) ? formatDistance(item.distanceFromUser) : "—"}</td>
+                  </tr>
+                )) : (
+                  <tr><td colSpan={3} className="store-map__table-empty">{userPosition && !showAllLocations ? t("map.noBranchesWithinRadius", { radius: proximityRadiusKm }) : t("map.empty")}</td></tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </aside>
+  );
+
   return (
     <section className={`store-map${fullScreen ? " store-map--full-screen" : ""}`} id="store-map" aria-labelledby="store-map-title">
+      <div className="store-map__sidebar">
       <div className="store-map__intro">
         <p className="store-map__eyebrow">{t("map.eyebrow")}</p>
         <h1 id="store-map-title">{t("map.title")}</h1>
@@ -838,37 +882,11 @@ export default function StoreMap({ fullScreen = false, enableDistanceMeasure = f
         </div>
         {measurement && routeState.status === "ready" && <small>Routing © <a href="https://www.geoapify.com/" target="_blank" rel="noopener noreferrer">Geoapify</a> · © OpenStreetMap contributors</small>}
       </section>}
+        {fullScreen && resultsPanel}
+      </div>
       <div className="store-map__layout">
-        <aside className="store-map__results" aria-label={t("map.results")}>
-          <div className="store-map__table-wrap">
-            <table className="store-map__table store-map__summary-table">
-              <caption>{t("map.totalBranches")}</caption>
-              <tbody><tr><th scope="row">{t("map.allLocations")}</th><td>{locations.length}</td></tr></tbody>
-            </table>
-          </div>
-          <div className="store-map__table-wrap">
-            <table className="store-map__table store-map__nearby-table">
-              <caption>{userPosition && !showAllLocations ? t("map.nearbyBranches", { radius: proximityRadiusKm, count: locationsByDistance.length }) : t("map.allBranches", { count: locationsByDistance.length })}</caption>
-              <thead><tr><th scope="col">#</th><th scope="col">{t("map.branch")}</th><th scope="col">{t("map.distance")}</th></tr></thead>
-              <tbody>
-                {locationsByDistance.length ? locationsByDistance.map((item, index) => (
-                  <tr key={item.id} className={userPosition && item.id === nearestBranchId ? "store-map__nearest-row" : undefined}>
-                    <td>{userPosition && !fullScreen && !showAllLocations ? nearbyRankById.get(item.id) : index + 1}</td>
-                    <td>
-                      <button className="store-map__table-select" onClick={() => selectLocation(item)} type="button">{item.name}</button>
-                      <small>{item.address}</small>
-                      {userPosition && nearbyAudioEnabled && (fullScreen ? String(item.id) === String(nearestAudioBranch?.id) : item.id === nearestBranchId) && <small className="store-map__audio-note">{t("map.autoPlayAudio")}</small>}
-                      <a className="store-map__table-directions" href={googleDirectionsUrl(item, userPosition)} target="_blank" rel="noopener noreferrer">{t("map.directions")}</a>
-                    </td>
-                    <td>{userPosition && Number.isFinite(item.distanceFromUser) ? formatDistance(item.distanceFromUser) : "—"}</td>
-                  </tr>
-                )) : (
-                  <tr><td colSpan={3} className="store-map__table-empty">{userPosition && !showAllLocations ? t("map.noBranchesWithinRadius", { radius: proximityRadiusKm }) : t("map.empty")}</td></tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </aside>
+        {!fullScreen && resultsPanel}
+
 
         <MapContainer
           className={`store-map__canvas${measureActive ? " store-map__canvas--measuring" : ""}`}
@@ -879,6 +897,7 @@ export default function StoreMap({ fullScreen = false, enableDistanceMeasure = f
         >
           {enableDistanceMeasure && <MapPointPicker enabled={measureActive} onPick={onMeasureMapPick} />}
           <ChangeView center={mapCenter} zoom={mapZoom} />
+          <ResizeMap />
           <FitRoute route={!navigationActive && measurement && routeState.status === "ready" ? routeState.route : null} />
           <FollowPosition enabled={navigationActive && following && navigationStatus === "active"} position={navigationFix.current?.position} onPause={() => setFollowing(false)} />
           <FitLocations locations={locations} active={showAllLocations} resetCenter={userPosition?.position} />
