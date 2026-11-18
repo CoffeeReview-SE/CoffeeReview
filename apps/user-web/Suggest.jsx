@@ -230,7 +230,7 @@ export default function SuggestionsPage({ recentBrands = [], onNavigate }) {
       const selectedBrand = prev.brandName === brand.name ? null : brand;
       const clearedBrandFields = Object.fromEntries(
         suggestionFields
-          .filter(field => field.brandOnly || field.name === "brandName")
+          .filter(field => field.brandOnly || field.name === "brandName" || field.name === "branchName")
           .map(field => [field.name, ""])
       );
       return { ...prev, ...clearedBrandFields, ...getBrandSuggestionValues(selectedBrand) };

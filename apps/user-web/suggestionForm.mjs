@@ -24,6 +24,7 @@ export function getBrandSuggestionValues(brand) {
   if (!brand) return {};
   return {
     brandName: brand.name || "",
+    branchName: brand.branchName || brand.branch || brand.name || "",
     type: brand.type || "",
     description: brand.description || "",
     websiteUrl: brand.websiteUrl || brand.website || "",
@@ -34,7 +35,9 @@ export function getBrandSuggestionValues(brand) {
 }
 
 export function isExistingBrandFieldReadOnly(field, brand) {
-  return Boolean(brand && (field.brandOnly || field.name === "brandName"));
+  if (!brand || (!field.brandOnly && field.name !== "brandName" && field.name !== "branchName")) return false;
+  const value = getBrandSuggestionValues(brand)[field.name];
+  return typeof value === "string" && value.trim() !== "";
 }
 
 const labels = {

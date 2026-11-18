@@ -32,6 +32,7 @@ test("existing brand details prefill only data available in the catalog", () => 
   };
   assert.deepEqual(getBrandSuggestionValues(brand), {
     brandName: "Cà phê X",
+    branchName: "Cà phê X",
     type: "Cà phê",
     description: "Mô tả",
     websiteUrl: "https://example.com",
@@ -41,11 +42,13 @@ test("existing brand details prefill only data available in the catalog", () => 
   });
   assert.deepEqual(getBrandSuggestionValues(null), {});
   assert.equal(isExistingBrandFieldReadOnly(suggestionFields.find(field => field.name === "description"), brand), true);
-  assert.equal(isExistingBrandFieldReadOnly(suggestionFields.find(field => field.name === "menuImageUrl"), brand), true);
-  assert.equal(isExistingBrandFieldReadOnly(suggestionFields.find(field => field.name === "coverUrl"), brand), true);
-  assert.equal(isExistingBrandFieldReadOnly(suggestionFields.find(field => field.name === "branchName"), brand), false);
+  assert.equal(isExistingBrandFieldReadOnly(suggestionFields.find(field => field.name === "logoUrl"), brand), true);
+  assert.equal(isExistingBrandFieldReadOnly(suggestionFields.find(field => field.name === "menuImageUrl"), brand), false);
+  assert.equal(isExistingBrandFieldReadOnly(suggestionFields.find(field => field.name === "coverUrl"), brand), false);
+  assert.equal(isExistingBrandFieldReadOnly(suggestionFields.find(field => field.name === "branchName"), brand), true);
   assert.equal(isExistingBrandFieldReadOnly(suggestionFields.find(field => field.name === "brandName"), brand), true);
   assert.equal(isExistingBrandFieldReadOnly(suggestionFields.find(field => field.name === "description"), null), false);
+  assert.deepEqual(getBrandSuggestionValues({ name: "Cà phê X", branchName: "Chi nhánh Quận 1" }).branchName, "Chi nhánh Quận 1");
 });
 
 test("existing brands still require all branch and contact details", () => {
