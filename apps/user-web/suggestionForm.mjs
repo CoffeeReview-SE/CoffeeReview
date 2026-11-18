@@ -1,3 +1,5 @@
+import { imageDataError, imageFields, imageText } from "./suggestionImages.mjs";
+
 export const suggestionFields = [
   { name: "name", maxLength: 160 },
   { name: "phone", type: "tel", maxLength: 30 },
@@ -5,9 +7,9 @@ export const suggestionFields = [
   { name: "type", maxLength: 160, brandOnly: true },
   { name: "description", multiline: true, maxLength: 10000, brandOnly: true },
   { name: "websiteUrl", type: "url", maxLength: 2000, brandOnly: true },
-  { name: "logoUrl", type: "url", maxLength: 2000, brandOnly: true },
-  { name: "coverUrl", type: "url", maxLength: 2000, brandOnly: true },
-  { name: "menuImageUrl", type: "url", maxLength: 2000, brandOnly: true },
+  { name: "logoUrl", type: "url", maxLength: 2000, brandOnly: true, optionalForExisting: true },
+  { name: "coverUrl", type: "url", maxLength: 2000, brandOnly: true, optionalForExisting: true },
+  { name: "menuImageUrl", type: "url", maxLength: 2000, brandOnly: true, optionalForExisting: true },
   { name: "branchName", maxLength: 180 },
   { name: "address", maxLength: 2000 },
   { name: "branchPhone", type: "tel", maxLength: 30 },
@@ -33,15 +35,21 @@ const messages = {
 };
 
 export function suggestionText(language, key) {
+  if (imageText(language, key)) return imageText(language, key);
   const index = suggestionFields.findIndex(field => field.name === key);
   return index >= 0 ? (labels[language] || labels.vi)[index] : (messages[language] || messages.vi)[key] || messages.vi.invalid;
 }
 
 export function validateSuggestion(data, isNewBrand) {
   const errors = {};
-  for (const field of suggestionFields.filter(field => isNewBrand || !field.brandOnly)) {
+  for (const field of suggestionFields.filter(field => isNewBrand || !field.brandOnly || field.optionalForExisting)) {
     const value = String(data[field.name] ?? "").trim();
+    if (!isNewBrand && field.optionalForExisting && !value) continue;
     if (!value) errors[field.name] = "required";
+    else if (imageFields.includes(field.name) && value.startsWith("data:")) {
+      const error = imageDataError(value);
+      if (error) errors[field.name] = error;
+    }
     else if (field.maxLength && value.length > field.maxLength) errors[field.name] = "tooLong";
     else if (field.type === "url") {
       try {

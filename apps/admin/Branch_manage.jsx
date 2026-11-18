@@ -1,5 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { adminRequest, adminJson } from './adminApi';
+import BranchEditor from './BranchEditor.jsx';
+import { branchStatuses, branchStatus, incompleteBranch, normalizeBranchText, recordBranchHistory, readEditorName } from './branchForm.mjs';
 
 /* Navigation links - identical to AdminDashboard */
 const NAV = [
@@ -14,8 +16,8 @@ const NAV = [
 const branchStats = [
   { icon: 'pin', label: 'Tổng số chi nhánh', value: '156', delta: 5 },
   { icon: 'store', label: 'Thương hiệu tham gia', value: '28', delta: 3 },
-  { icon: 'eye', label: 'Lượt ghé thăm tháng này', value: '84,320', delta: 14 },
-  { icon: 'audio', label: 'Lượt phát audio chi nhánh', value: '6,410', delta: 9 },
+  { icon: 'check', label: 'Đang hoạt động' },
+  { icon: 'edit', label: 'Cần bổ sung thông tin' },
 ];
 
 /* Sample branches list with details */
@@ -169,14 +171,22 @@ export default function BranchManagement({ onNavigate }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [brandFilter, setBrandFilter] = useState('All');
   const [statusFilter, setStatusFilter] = useState('All');
+  const [areaFilter, setAreaFilter] = useState('');
+  const [missingOnly, setMissingOnly] = useState(false);
+  const [editor, setEditor] = useState(null);
+  const [feedback, setFeedback] = useState('');
+  const [changingId, setChangingId] = useState(null);
+  const changingRef = useRef(false);
 
   const [apiError, setApiError] = useState('');
   const [brandOptions, setBrandOptions] = useState([]);
   const reload = async () => {
     try {
       const [rows, brands] = await Promise.all([adminRequest('catalog/branches'), adminRequest('catalog/brands')]);
+      const media = rows.length ? await adminRequest(`submissions/branch-media?ids=${rows.map(row => row.id).join(",")}`) : {};
       setBrandOptions(brands);
-      setBranches(rows.map(b => ({ ...b, code: String(b.id), brandColor: '#4A2C1E', views: 0, audio: 0, status: b.isActive ? 'Đang hoạt động' : 'Tạm dừng' })));
+      setBranches(rows.map(b => ({ ...b, code: String(b.id), brandColor: '#4A2C1E',
+        status: branchStatus(b.isActive), images: media[b.id]?.images || {}, mediaVersion: media[b.id]?.version })));
       setApiError('');
     } catch(e) { setApiError(e.message); }
   };
@@ -189,48 +199,38 @@ export default function BranchManagement({ onNavigate }) {
     }
   };
 
-  const filteredBranches = branches.filter((b) => {
-    const matchesSearch =
-      b.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      b.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      b.address.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesBrand = brandFilter === 'All' || b.brand === brandFilter;
-    const matchesStatus = statusFilter === 'All' || b.status === statusFilter;
-    return matchesSearch && matchesBrand && matchesStatus;
+  const filteredBranches = branches.filter(branch => {
+    const query = normalizeBranchText(searchQuery);
+    return (!query || [branch.name, branch.address, branch.brand, branch.phone, branch.id].some(value => normalizeBranchText(value).includes(query)))
+      && (brandFilter === 'All' || branch.brand === brandFilter)
+      && (statusFilter === 'All' || branch.status === statusFilter)
+      && normalizeBranchText(branch.address).includes(normalizeBranchText(areaFilter))
+      && (!missingOnly || incompleteBranch(branch));
   });
-
-  const handleAddBranch = async () => {
-    const brandId = Number(window.prompt(`ID thương hiệu (${brandOptions.map(b => `${b.id}: ${b.name}`).join(', ')}):`));
-    if (!brandOptions.some(b => b.id === brandId)) return;
-    const name = window.prompt('Tên chi nhánh:'); if (!name?.trim()) return;
-    const address = window.prompt('Địa chỉ:'); if (!address?.trim()) return;
-    try { await adminRequest('catalog/branches', adminJson('POST', { brandId, name: name.trim(), address: address.trim() })); await reload(); }
-    catch(e) { setApiError(e.message); }
-  };
-  const handleEditBranch = async (b) => {
-    const name = window.prompt('Tên chi nhánh:', b.name); if (!name?.trim()) return;
-    const address = window.prompt('Địa chỉ:', b.address); if (!address?.trim()) return;
-    try { await adminRequest(`catalog/branches/${b.id}`, adminJson('PUT', { brandId: b.brandId, name: name.trim(), address: address.trim(), phone: b.phone, isActive: b.isActive })); await reload(); }
-    catch(e) { setApiError(e.message); }
-  };
-  const handleDelete = async (id, name) => {
-    if (!window.confirm(`Tạm ngừng chi nhánh "${name}"?`)) return;
-    try { await adminRequest(`catalog/branches/${id}`, { method: 'DELETE' }); await reload(); }
-    catch(e) { setApiError(e.message); }
-  };
-
-  const getBadgeClass = (status) => {
-    switch (status) {
-      case 'Đang hoạt động':
-        return 'ok';
-      case 'Đang sửa chữa':
-        return 'wait';
-      case 'Tạm dừng':
-        return 'no';
-      default:
-        return '';
+  const handleAddBranch = () => setEditor({ row: null, readOnly: false });
+  const handleEditBranch = row => setEditor({ row, readOnly: false });
+  const handleActiveChange = async branch => {
+    if (changingRef.current) return;
+    const nextActive = !branch.isActive;
+    if (!window.confirm(`${nextActive ? "Bật lại" : "Tạm ngưng"} chi nhánh "${branch.name}"?`)) return;
+    changingRef.current = true;
+    setChangingId(branch.id); setApiError(""); setFeedback("");
+    try {
+      const saved = await adminRequest(`catalog/branches/${branch.id}/active`, adminJson("PATCH", { isActive: nextActive, expectedUpdatedAt: branch.updatedAt }));
+      const after = { ...branch, ...saved, status: branchStatus(saved.isActive) };
+      setBranches(previous => previous.map(item => item.id === branch.id ? after : item));
+      const historySaved = recordBranchHistory(branch.id, branch, after, readEditorName());
+      setFeedback(`${saved.isActive ? "Đã bật lại chi nhánh." : "Đã tạm ngưng chi nhánh."}${historySaved ? "" : " Trình duyệt chưa lưu được lịch sử."}`);
+    } catch (error) {
+      await reload();
+      setApiError(error.message);
+    } finally {
+      changingRef.current = false;
+      setChangingId(null);
     }
   };
+
+  const getBadgeClass = status => ({ ACTIVE: 'ok', TEMPORARILY_CLOSED: 'wait', CLOSED: 'no' })[status] || '';
 
   return (
     <div className="ad">
@@ -259,7 +259,8 @@ export default function BranchManagement({ onNavigate }) {
       </aside>
 
       <main className="ad-main">
-        {apiError && <p role="alert" style={{color:"#a22"}}>Lỗi API: {apiError}</p>}
+        {feedback && <p role="status">{feedback}</p>}
+        {apiError && <div role="alert" style={{color:"#a22"}}><p>Lỗi API: {apiError}</p><button type="button" onClick={reload}>Tải lại danh sách</button></div>}
         <header className="ad-head">
           <div>
             <h1>Quản lý chi nhánh</h1>
@@ -280,7 +281,7 @@ export default function BranchManagement({ onNavigate }) {
               </span>
               <div>
                 <p>{s.label}</p>
-                <strong>{i === 0 ? branches.length : i === 1 ? new Set(branches.map(b => b.brandId)).size : "—"}</strong>
+                <strong>{i === 0 ? branches.length : i === 1 ? new Set(branches.map(b => b.brandId)).size : i === 2 ? branches.filter(b => b.isActive).length : branches.filter(incompleteBranch).length}</strong>
                 <small style={{display:"none"}} className={s.delta >= 0 ? 'up' : 'down'}>
                   {s.delta >= 0 ? '↑' : '↓'} {Math.abs(s.delta)}% <em>so với tháng trước</em>
                 </small>
@@ -306,10 +307,10 @@ export default function BranchManagement({ onNavigate }) {
             </select>
             <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
               <option value="All">Tất cả trạng thái</option>
-              <option value="Đang hoạt động">Đang hoạt động</option>
-              <option value="Đang sửa chữa">Đang sửa chữa</option>
-              <option value="Tạm dừng">Tạm dừng</option>
+              {Object.entries(branchStatuses).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
             </select>
+            <input aria-label="Lọc theo khu vực" placeholder="Khu vực, quận/huyện…" value={areaFilter} onChange={event => setAreaFilter(event.target.value)} />
+            <label><input type="checkbox" checked={missingOnly} onChange={event => setMissingOnly(event.target.checked)} /> Thiếu thông tin</label>
           </div>
         </section>
 
@@ -323,8 +324,8 @@ export default function BranchManagement({ onNavigate }) {
                   <th>Thương hiệu</th>
                   <th>Mã CN</th>
                   <th>Địa chỉ</th>
-                  <th>Lượt xem</th>
-                  <th>Audio</th>
+                  <th>Điện thoại</th>
+                  <th>Thông tin</th>
                   <th>Trạng thái</th>
                   <th style={{ textAlign: 'right' }}>Thao tác</th>
                 </tr>
@@ -351,16 +352,16 @@ export default function BranchManagement({ onNavigate }) {
                           <Icon n="mapPin" size={13} /> {b.address}
                         </span>
                       </td>
-                      <td>—</td>
-                      <td>—</td>
+                      <td>{b.phone || 'Chưa cung cấp'}</td>
+                      <td>{incompleteBranch(b) ? 'Cần bổ sung' : 'Đầy đủ'}</td>
                       <td>
-                        <span className={`ad-badge ${getBadgeClass(b.status)}`}>{b.status}</span>
+                        <span className={`ad-badge ${getBadgeClass(b.status)}`}>{branchStatuses[b.status] || b.status}</span>
                       </td>
                       <td style={{ textAlign: 'right' }}>
                         <div className="ad-actions">
                           <button
                             title="Xem chi tiết"
-                            onClick={() => window.alert(`Xem chi tiết: ${b.name}`)}
+                            onClick={() => setEditor({ row: b, readOnly: true })}
                           >
                             <Icon n="eye" size={15} />
                           </button>
@@ -371,11 +372,13 @@ export default function BranchManagement({ onNavigate }) {
                             <Icon n="edit" size={15} />
                           </button>
                           <button
-                            title="Xóa"
-                            className="danger"
-                            onClick={() => handleDelete(b.id, b.name)}
+                            title={b.isActive ? "Tạm ngưng hoạt động" : "Bật lại chi nhánh"}
+                            aria-label={`${b.isActive ? "Tạm ngưng" : "Bật lại"} ${b.name}`}
+                            disabled={changingId !== null}
+                            className={b.isActive ? "danger" : ""}
+                            onClick={() => handleActiveChange(b)}
                           >
-                            <Icon n="trash" size={15} />
+                            <span>{changingId === b.id ? "..." : b.isActive ? "⏸" : "▶"}</span>
                           </button>
                         </div>
                       </td>
@@ -396,6 +399,8 @@ export default function BranchManagement({ onNavigate }) {
           </div>
         </section>
       </main>
+      {editor && <BranchEditor key={editor.row?.id || "new"} row={editor.row} brands={brandOptions} readOnly={editor.readOnly}
+        onClose={() => setEditor(null)} onSaved={async message => { setFeedback(message); await reload(); }} />}
     </div>
   );
 }
@@ -437,6 +442,9 @@ const css = `
 .ad-search-box{display:flex;align-items:center;gap:8px;padding:0 12px;height:38px;border:1px solid var(--line);border-radius:8px;background:#FAF5EF;flex:1;min-width:220px}
 .ad-search-box input{border:0;background:transparent;outline:none;width:100%;font-size:13px;color:var(--ink)}
 .ad-filter-group{display:flex;gap:10px;flex-wrap:wrap}
+.ad-filter-group > input{height:38px;padding:0 12px;border:1px solid var(--line);border-radius:8px;background:#FAF5EF;color:var(--ink);font:inherit}
+.ad-filter-group > label{display:flex;align-items:center;gap:6px;font-size:13px}
+.ad-actions button:disabled{opacity:.45;cursor:default}
 .ad-filter-group select{height:38px;padding:0 12px;border:1px solid var(--line);border-radius:8px;background:#FAF5EF;color:var(--ink);font-size:13px;outline:none;cursor:pointer}
 
 .ad-scroll{overflow-x:auto}

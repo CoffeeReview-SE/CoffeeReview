@@ -7,7 +7,9 @@ var builder = WebApplication.CreateBuilder(args);
 builder.WebHost.UseUrls($"http://0.0.0.0:{Environment.GetEnvironmentVariable("PORT") ?? "5104"}");
 var cs = builder.Configuration.GetConnectionString("Supabase") ?? throw new InvalidOperationException("ConnectionStrings:Supabase missing");
 builder.Services.AddSingleton(NpgsqlDataSource.Create(cs));
+builder.Services.AddSingleton<ImageFileStore>();
 var app = builder.Build();
+app.MapBranchMedia();
 app.MapGet("/health", () => Results.Ok(new { status = "ok" }));
 app.Use(async (ctx, next) => {
     if (ctx.Request.Path == "/health") { await next(); return; }
@@ -21,10 +23,38 @@ app.Use(async (ctx, next) => {
 });
 
 app.MapGet("/admin/submissions",async(NpgsqlDataSource db)=>{
-    await using var cmd=db.CreateCommand("SELECT submission_id,target_type,COALESCE(suggested_name,''),COALESCE(suggested_address,''),status,created_at,COALESCE(created_by::text,''),data_json::text FROM submission ORDER BY created_at DESC LIMIT 500");
+    // Legacy embedded images use the compatibility endpoint; file-backed image URLs pass through.
+    await using var cmd=db.CreateCommand("""
+        SELECT submission_id,target_type,COALESCE(suggested_name,''),COALESCE(suggested_address,''),status,created_at,COALESCE(created_by::text,''),
+          ((data_json - 'logoUrl' - 'coverUrl' - 'menuImageUrl') || jsonb_build_object(
+            'logoUrl', CASE WHEN data_json->>'logoUrl' LIKE 'data:%' THEN '/api/admin/submissions/' || submission_id || '/images/logo' ELSE data_json->>'logoUrl' END,
+            'coverUrl', CASE WHEN data_json->>'coverUrl' LIKE 'data:%' THEN '/api/admin/submissions/' || submission_id || '/images/cover' ELSE data_json->>'coverUrl' END,
+            'menuImageUrl', CASE WHEN data_json->>'menuImageUrl' LIKE 'data:%' THEN '/api/admin/submissions/' || submission_id || '/images/menu' ELSE data_json->>'menuImageUrl' END
+          ))::text
+        FROM submission ORDER BY created_at DESC LIMIT 500
+        """);
     await using var r=await cmd.ExecuteReaderAsync();var list=new List<object>();while(await r.ReadAsync())list.Add(new{id=r.GetInt64(0),targetType=r.GetString(1),name=r.GetString(2),address=r.GetString(3),status=r.GetString(4),createdAt=r.GetDateTime(5),author=r.GetString(6),dataJson=r.GetString(7)});return Results.Ok(list);
 });
-app.MapPost("/", async (SuggestionInput input, NpgsqlDataSource db, CancellationToken ct) =>
+app.MapGet("/admin/submissions/{id:long}/images/{kind}", async (long id, string kind, NpgsqlDataSource db, HttpContext context, CancellationToken ct) => {
+    var field = kind switch { "logo" => "logoUrl", "cover" => "coverUrl", "menu" => "menuImageUrl", _ => null };
+    if (field is null) return Results.NotFound();
+    await using var cmd = db.CreateCommand("SELECT data_json->>@field FROM submission WHERE submission_id=@id");
+    cmd.Parameters.AddWithValue("field", field);
+    cmd.Parameters.AddWithValue("id", id);
+    var value = await cmd.ExecuteScalarAsync(ct) as string;
+    if (value is null || !SubmissionImages.TryDecode(value, out var bytes, out var contentType)) return Results.NotFound();
+    context.Response.Headers.CacheControl = "private, no-store";
+    context.Response.Headers.XContentTypeOptions = "nosniff";
+    return Results.File(bytes, contentType);
+});
+app.MapMethods("/images/{name}", new[] { "GET", "HEAD" }, async (string name, ImageFileStore images, HttpContext context, CancellationToken ct) => {
+    var image = await images.ReadAsync(name, ct);
+    if (image is null) return Results.NotFound();
+    context.Response.Headers.XContentTypeOptions = "nosniff";
+    context.Response.Headers.CacheControl = "public, max-age=31536000, immutable";
+    return Results.File(image.Value.Bytes, image.Value.Mime, entityTag: new Microsoft.Net.Http.Headers.EntityTagHeaderValue($"\"{name[..64]}\""));
+});
+app.MapPost("/", async (SuggestionInput input, NpgsqlDataSource db, ImageFileStore images, CancellationToken ct) =>
 {
     var name = input.Name?.Trim();
     var phone = input.Phone?.Trim();
@@ -36,6 +66,18 @@ app.MapPost("/", async (SuggestionInput input, NpgsqlDataSource db, Cancellation
     var isNewBrand = await IsNewBrand(brandName!, db, ct);
     errors = SuggestionValidation.Validate(input, isNewBrand);
     if (errors.Count > 0) return Results.BadRequest(new { error = "incomplete_submission", errors });
+
+    try
+    {
+        input = input with {
+            LogoUrl = await images.StoreAsync(input.LogoUrl, brandName!, "logo", ct),
+            CoverUrl = await images.StoreAsync(input.CoverUrl, brandName!, "cover", ct),
+            MenuImageUrl = await images.StoreAsync(input.MenuImageUrl, brandName!, "menu", ct)
+        };
+    }
+    catch (ArgumentException) { return Results.BadRequest(new { error = "Ảnh không hợp lệ hoặc không còn tồn tại. Vui lòng chọn lại ảnh." }); }
+    catch (Exception error) when (error is IOException or UnauthorizedAccessException)
+    { return Results.Json(new { error = "Chưa lưu được ảnh. Vui lòng thử lại." }, statusCode: 503); }
 
     var targetType = isNewBrand ? "BRAND" : "BRANCH";
     var details = JsonSerializer.Serialize(new {

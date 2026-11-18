@@ -1,0 +1,33 @@
+.branch-editor { box-sizing: border-box; width: min(1000px, calc(100vw - 28px)); max-height: 92dvh; padding: 24px; border: 1px solid #dfd1c3; border-radius: 16px; color: #2a1810; background: #fffdf9; font: 14px/1.5 Inter, system-ui, sans-serif; }
+.branch-editor::backdrop { background: #24160c99; }
+.branch-editor header { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.branch-editor h2 { margin: 0; font-size: 22px; }
+.branch-editor fieldset { min-width: 0; margin: 20px 0; padding: 0; border: 0; }
+.branch-editor legend, .branch-editor h3 { font-size: 16px; font-weight: 700; }
+.branch-editor__grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.branch-editor label { display: grid; gap: 5px; }
+.branch-editor input:not([type="checkbox"]), .branch-editor select, .branch-editor textarea { box-sizing: border-box; width: 100%; min-width: 0; padding: 10px; border: 1px solid #ddcfc0; border-radius: 8px; background: #fff; color: inherit; font: inherit; }
+.branch-editor small, .branch-editor__error { color: #a12424; }
+.branch-editor [aria-invalid="true"] { border-color: #a12424; }
+.branch-editor button { padding: 9px 14px; min-height: 40px; border: 1px solid #cbb9a8; border-radius: 8px; background: #fff; color: #54311d; font: inherit; cursor: pointer; }
+.branch-editor button:disabled { opacity: .6; cursor: default; }
+.branch-editor :focus-visible { outline: 3px solid #c18b48; outline-offset: 2px; }
+.branch-editor__map { height: 320px; border-radius: 12px; z-index: 0; }
+.branch-editor__pin { display: grid; place-items: center; border: 3px solid white; border-radius: 50%; background: #315746; color: white; box-shadow: 0 2px 8px #0006; }
+.branch-editor__images { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.branch-editor__images > div { min-width: 0; padding: 12px; border: 1px solid #e8ddd1; border-radius: 10px; }
+.branch-editor__images img { display: block; width: 100%; max-height: 190px; object-fit: contain; margin: 8px 0; }
+.branch-editor__images h4 { margin: 0 0 10px; }
+.branch-editor__images .sg-image-field { display: grid; gap: 8px; }
+.branch-editor__images small { display: block; }
+.branch-editor footer { display: flex; justify-content: flex-end; margin-top: 18px; }
+.branch-editor footer button { background: #315746; color: white; border-color: #315746; }
+.branch-editor__history { margin-top: 22px; padding-top: 12px; border-top: 1px solid #dfd1c3; }
+.branch-editor__history article { margin-top: 12px; padding: 12px; border: 1px solid #e8ddd1; border-radius: 8px; }
+.branch-editor__history p { margin: 5px 0; color: #796557; }
+.branch-editor__history dl { overflow-wrap: anywhere; }
+.branch-editor__history dt { font-weight: 600; }
+.branch-editor__history dd { margin: 0 0 8px; white-space: pre-wrap; }
+.branch-editor__duplicates { padding: 12px; border: 1px solid #dab176; background: #fff4df; border-radius: 10px; }
+.branch-editor__duplicates label { display: flex; align-items: center; gap: 8px; }
+@media (max-width: 650px) { .branch-editor { padding: 16px; } .branch-editor__grid, .branch-editor__images { grid-template-columns: 1fr; } .branch-editor__map { height: 260px; } }

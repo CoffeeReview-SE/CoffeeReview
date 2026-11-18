@@ -1,6 +1,8 @@
 using Npgsql;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json;
+using NpgsqlTypes;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.WebHost.UseUrls($"http://0.0.0.0:{Environment.GetEnvironmentVariable("PORT") ?? "5101"}");
@@ -41,20 +43,33 @@ app.MapDelete("/admin/brands/{id:long}",async(long id,NpgsqlDataSource db)=>{
     await using var cmd=db.CreateCommand("UPDATE brand SET is_active=false,updated_at=now() WHERE brand_id=@id");cmd.Parameters.AddWithValue("id",id);return await cmd.ExecuteNonQueryAsync()==0?Results.NotFound():Results.NoContent();
 });
 app.MapGet("/admin/branches",async(NpgsqlDataSource db)=>{
-    await using var cmd=db.CreateCommand("SELECT br.branch_id,br.brand_id,COALESCE(br.branch_name,''),br.address,br.is_active,b.brand_name,COALESCE(br.phone,'') FROM branch br JOIN brand b ON b.brand_id=br.brand_id ORDER BY br.branch_id DESC");
-    await using var r=await cmd.ExecuteReaderAsync();var list=new List<object>();while(await r.ReadAsync())list.Add(new{id=r.GetInt64(0),brandId=r.GetInt64(1),name=r.GetString(2),address=r.GetString(3),isActive=r.GetBoolean(4),brand=r.GetString(5),phone=r.GetString(6)});return Results.Ok(list);
+    await using var cmd=db.CreateCommand("SELECT br.branch_id,br.brand_id,COALESCE(br.branch_name,''),br.address,br.is_active,b.brand_name,COALESCE(br.phone,''),br.latitude,br.longitude,br.opening_hours::text,br.updated_at FROM branch br JOIN brand b ON b.brand_id=br.brand_id ORDER BY br.branch_id DESC");
+    await using var r=await cmd.ExecuteReaderAsync();var list=new List<object>();while(await r.ReadAsync())list.Add(new{id=r.GetInt64(0),brandId=r.GetInt64(1),name=r.GetString(2),address=r.GetString(3),isActive=r.GetBoolean(4),brand=r.GetString(5),phone=r.GetString(6),latitude=r.IsDBNull(7)?(double?)null:r.GetDouble(7),longitude=r.IsDBNull(8)?(double?)null:r.GetDouble(8),openingHours=r.IsDBNull(9)?(JsonElement?)null:JsonSerializer.Deserialize<JsonElement>(r.GetString(9)),updatedAt=r.GetDateTime(10)});return Results.Ok(list);
 });
 app.MapPost("/admin/branches",async(BranchInput input,NpgsqlDataSource db)=>{
-    if(input.BrandId<=0||string.IsNullOrWhiteSpace(input.Address)||input.Address.Length>2000||input.Name?.Length>180)return Results.BadRequest("Invalid branch data");
-    await using var cmd=db.CreateCommand("INSERT INTO branch(brand_id,branch_name,address,phone) VALUES (@brand,@name,@addr,@phone) RETURNING branch_id");
+    if(!BranchValidation.Valid(input))return Results.BadRequest(new { error = "Thông tin chi nhánh không hợp lệ. Kiểm tra tên, địa chỉ, điện thoại, tọa độ và giờ mở cửa." });
+    await using var cmd=db.CreateCommand("INSERT INTO branch(brand_id,branch_name,address,phone,latitude,longitude,opening_hours,is_active) VALUES (@brand,@name,@addr,@phone,@lat,@lng,@hours::jsonb,@active) RETURNING branch_id");
     cmd.Parameters.AddWithValue("brand",input.BrandId);cmd.Parameters.AddWithValue("name",(object?)input.Name??DBNull.Value);cmd.Parameters.AddWithValue("addr",input.Address.Trim());cmd.Parameters.AddWithValue("phone",(object?)input.Phone??DBNull.Value);
+    BranchValidation.AddLocationParameters(cmd, input);
+    cmd.Parameters.AddWithValue("active", input.IsActive);
     try{return Results.Created("/admin/branches",new{id=(long)(await cmd.ExecuteScalarAsync())!});}catch(PostgresException ex) when(ex.SqlState=="23503"){return Results.BadRequest("Brand does not exist");}
 });
 app.MapPut("/admin/branches/{id:long}",async(long id,BranchInput input,NpgsqlDataSource db)=>{
-    if(input.BrandId<=0||string.IsNullOrWhiteSpace(input.Address)||input.Address.Length>2000||input.Name?.Length>180)return Results.BadRequest("Invalid branch data");
-    await using var cmd=db.CreateCommand("UPDATE branch SET brand_id=@brand,branch_name=@name,address=@addr,phone=@phone,is_active=@active,updated_at=now() WHERE branch_id=@id");
+    if(!BranchValidation.Valid(input))return Results.BadRequest(new { error = "Thông tin chi nhánh không hợp lệ. Kiểm tra tên, địa chỉ, điện thoại, tọa độ và giờ mở cửa." });
+    await using var cmd=db.CreateCommand("UPDATE branch SET brand_id=@brand,branch_name=@name,address=@addr,phone=@phone,is_active=@active,latitude=COALESCE(@lat,latitude),longitude=COALESCE(@lng,longitude),opening_hours=COALESCE(@hours::jsonb,opening_hours),updated_at=clock_timestamp() WHERE branch_id=@id AND (@expected IS NULL OR updated_at=@expected)");
     cmd.Parameters.AddWithValue("id",id);cmd.Parameters.AddWithValue("brand",input.BrandId);cmd.Parameters.AddWithValue("name",(object?)input.Name??DBNull.Value);cmd.Parameters.AddWithValue("addr",input.Address.Trim());cmd.Parameters.AddWithValue("phone",(object?)input.Phone??DBNull.Value);cmd.Parameters.AddWithValue("active",input.IsActive);
-    try{return await cmd.ExecuteNonQueryAsync()==0?Results.NotFound():Results.NoContent();}catch(PostgresException ex) when(ex.SqlState=="23503"){return Results.BadRequest("Brand does not exist");}
+    BranchValidation.AddLocationParameters(cmd, input);
+    cmd.Parameters.AddWithValue("expected", NpgsqlDbType.TimestampTz, (object?)input.ExpectedUpdatedAt?.UtcDateTime ?? DBNull.Value);
+    try{return await cmd.ExecuteNonQueryAsync()==0?Results.Conflict(new { error = "Chi nhánh đã thay đổi hoặc đã bị xóa. Đóng biểu mẫu và tải lại danh sách để kiểm tra." }):Results.NoContent();}catch(PostgresException ex) when(ex.SqlState=="23503"){return Results.BadRequest("Brand does not exist");}
+});
+app.MapPatch("/admin/branches/{id:long}/active", async (long id, BranchActiveInput input, NpgsqlDataSource db, CancellationToken ct) => {
+    if (id <= 0 || !input.IsActive.HasValue) return Results.BadRequest(new { error = "Vui lòng chọn trạng thái hoạt động." });
+    await using var cmd = db.CreateCommand("UPDATE branch SET is_active=@active,updated_at=clock_timestamp() WHERE branch_id=@id AND (@expected IS NULL OR updated_at=@expected) RETURNING branch_id,is_active,updated_at");
+    cmd.Parameters.AddWithValue("id", id); cmd.Parameters.AddWithValue("active", input.IsActive.Value);
+    cmd.Parameters.AddWithValue("expected", NpgsqlDbType.TimestampTz, (object?)input.ExpectedUpdatedAt?.UtcDateTime ?? DBNull.Value);
+    await using var reader = await cmd.ExecuteReaderAsync(ct);
+    if (!await reader.ReadAsync(ct)) return Results.Conflict(new { error = "Chi nhánh đã thay đổi hoặc đã bị xóa. Tải lại danh sách rồi thử lại." });
+    return Results.Ok(new { id = reader.GetInt64(0), isActive = reader.GetBoolean(1), updatedAt = reader.GetDateTime(2) });
 });
 app.MapDelete("/admin/branches/{id:long}",async(long id,NpgsqlDataSource db)=>{
     await using var cmd=db.CreateCommand("UPDATE branch SET is_active=false,updated_at=now() WHERE branch_id=@id");cmd.Parameters.AddWithValue("id",id);return await cmd.ExecuteNonQueryAsync()==0?Results.NotFound():Results.NoContent();
@@ -158,4 +173,6 @@ app.MapGet("/brands/{id:long}", async (long id, NpgsqlDataSource db, Cancellatio
 });
 app.Run();
 record BrandInput(string Name,string? Description,string? LogoUrl,string? WebsiteUrl,bool IsActive=true);
-record BranchInput(long BrandId,string? Name,string Address,string? Phone,bool IsActive=true);
+record BranchInput(long BrandId,string? Name,string Address,string? Phone,bool IsActive=true,
+    double? Latitude=null,double? Longitude=null,JsonElement? OpeningHours=null,DateTimeOffset? ExpectedUpdatedAt=null);
+record BranchActiveInput(bool? IsActive, DateTimeOffset? ExpectedUpdatedAt = null);

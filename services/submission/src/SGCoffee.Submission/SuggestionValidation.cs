@@ -26,6 +26,16 @@ static class SuggestionValidation
             if (!Regex.IsMatch(text, @"^https?://", RegexOptions.IgnoreCase) || text.Any(char.IsWhiteSpace) || !Uri.TryCreate(text, UriKind.Absolute, out var uri) ||
                 uri.Scheme is not ("http" or "https") || string.IsNullOrEmpty(uri.Host)) errors[field] = "url";
         }
+        void Image(string field, string? value)
+        {
+            if (!isNewBrand && string.IsNullOrWhiteSpace(value)) return;
+            if (value is not null && ImageFileStore.IsImageUrl(value)) return;
+            if (value?.StartsWith("data:", StringComparison.Ordinal) == true)
+            {
+                if (!SubmissionImages.TryDecode(value, out _, out _)) errors[field] = "imageType";
+            }
+            else Url(field, value);
+        }
         Required("name", input.Name, 160);
         Phone("phone", input.Phone);
         Required("brandName", input.BrandName, 160);
@@ -38,14 +48,14 @@ static class SuggestionValidation
         if (input.Longitude is null) errors["longitude"] = "required";
         else if (!double.IsFinite(input.Longitude.Value) || input.Longitude < -180 || input.Longitude > 180) errors["longitude"] = "coordinates";
         if (input.Note?.Trim().Length > 2000) errors["note"] = "tooLong";
+        Image("logoUrl", input.LogoUrl);
+        Image("coverUrl", input.CoverUrl);
+        Image("menuImageUrl", input.MenuImageUrl);
         if (isNewBrand)
         {
             Required("type", input.Type, 160);
             Required("description", input.Description, 10000);
             Url("websiteUrl", input.WebsiteUrl);
-            Url("logoUrl", input.LogoUrl);
-            Url("coverUrl", input.CoverUrl);
-            Url("menuImageUrl", input.MenuImageUrl);
         }
         return errors;
     }

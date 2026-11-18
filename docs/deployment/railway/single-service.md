@@ -60,6 +60,24 @@ docker build -t sgcoffee-all .
 
 Các dịch vụ dùng chung RAM/CPU và cùng restart/deploy. Bản gộp xử lý giới hạn số service, không làm mất chi phí tài nguyên của các tiến trình backend.
 
+## Lưu ảnh tải lên
+
+Ảnh tải lên được lưu thẳng dưới `public/image/<thuong-hieu>/` khi chạy local.
+Ví dụ `public/image/thuong-hieu-moi/logo.png`, `cover.jpg`, `menu.jpg`.
+`Images__UploadDirectory` chỉ đến thư mục gốc chứa các thương hiệu.
+Với Docker trên Render, gắn Persistent Disk tại `/app/public/image` và đặt
+`Images__UploadDirectory=/app/public/image` để ảnh tồn tại qua các lần deploy.
+Dịch vụ Submission cần quyền đọc/ghi thư mục này.
+
+Khi gửi đề xuất, tên thư mục thương hiệu được chuẩn hóa thành chữ thường, bỏ dấu
+và dùng dấu gạch ngang. Ảnh trùng nội dung được tái sử dụng theo SHA-256.
+Ảnh đầu tiên của mỗi loại có tên `logo`, `cover` hoặc `menu` cùng phần mở rộng.
+Khi tên này đã chứa ảnh khác, ảnh mới có thêm mã hash để giữ các ảnh đang sử dụng.
+Thông tin ánh xạ chi nhánh được lưu trong `public/image/.metadata/branches`.
+Dữ liệu đề xuất lưu URL `/api/submission-images/{hash}.{extension}` trong các trường
+ảnh hiện có. Gateway chuyển yêu cầu đọc ảnh đến Submission. Link ảnh bên ngoài tiếp
+tục được dùng theo URL người gửi nhập.
+
 ## Kết quả kiểm tra trong phiên triển khai source
 
 - Build React và publish Release của cả bốn project .NET thành công.

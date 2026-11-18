@@ -13,4 +13,6 @@ coverage/
 Thumbs.db
 bin/
 obj/
+public/image/uploads/
+public/image/.metadata/
 .tmp/

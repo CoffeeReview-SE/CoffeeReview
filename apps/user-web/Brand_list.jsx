@@ -10,28 +10,28 @@ import BrandDescriptionAudio from "./BrandDescriptionAudio.jsx";
    ========================================================================== */
 
 // 1. Ảnh Không gian (image coffee shop/)
-import coverHighlands from "../../public/image/High land coffee.jpg";
-import coverKatinat from "../../public/image/katinat.jpg";
-import coverKoi from "../../public/image/KOI the.jpg";
-import coverMilano from "../../public/image/milano.jpg";
-import coverPheLa from "../../public/image/Phe la.jpg";
-import coverPhucLong from "../../public/image/Phuc long.jpg";
-import coverStarbucks from "../../public/image/Starbuck.jpg";
-import coverTheCoffeeHouse from "../../public/image/The coffe house.jpg";
-import coverTrungNguyen from "../../public/image/Trung nguyen.jpg";
-import coverVivaStar from "../../public/image/viva star.jpg";
+import coverHighlands from "../../public/image/highlands-coffee/cover.jpg";
+import coverKatinat from "../../public/image/katinat/cover.jpg";
+import coverKoi from "../../public/image/koi-the/cover.jpg";
+import coverMilano from "../../public/image/milano-coffee/cover.jpg";
+import coverPheLa from "../../public/image/phe-la/cover.jpg";
+import coverPhucLong from "../../public/image/phuc-long/cover.jpg";
+import coverStarbucks from "../../public/image/starbucks/cover.jpg";
+import coverTheCoffeeHouse from "../../public/image/the-coffee-house/cover.jpg";
+import coverTrungNguyen from "../../public/image/trung-nguyen/cover.jpg";
+import coverVivaStar from "../../public/image/viva-star-coffee/cover.jpg";
 
 // 2. Ảnh Logo (image logo/)
-import logoHighlands from "../../public/image/logo highlands coffee.jpg";
-import logoKatinat from "../../public/image/logo katinat.png";
-import logoKoi from "../../public/image/logo koi the.jpg";
-import logoMilano from "../../public/image/logo milano.png";
-import logoPheLa from "../../public/image/logo phe la.jpg";
-import logoPhucLong from "../../public/image/logo phuc long.jpg";
-import logoStarbucks from "../../public/image/logo starbuck.png";
-import logoTheCoffeeHouse from "../../public/image/logo the coffee house.jpg";
-import logoTrungNguyen from "../../public/image/logo Trung nguyen.png";
-import logoVivaStar from "../../public/image/logo viva.png";
+import logoHighlands from "../../public/image/highlands-coffee/logo.jpg";
+import logoKatinat from "../../public/image/katinat/logo.png";
+import logoKoi from "../../public/image/koi-the/logo.jpg";
+import logoMilano from "../../public/image/milano-coffee/logo.png";
+import logoPheLa from "../../public/image/phe-la/logo.jpg";
+import logoPhucLong from "../../public/image/phuc-long/logo.jpg";
+import logoStarbucks from "../../public/image/starbucks/logo.png";
+import logoTheCoffeeHouse from "../../public/image/the-coffee-house/logo.jpg";
+import logoTrungNguyen from "../../public/image/trung-nguyen/logo.png";
+import logoVivaStar from "../../public/image/viva-star-coffee/logo.png";
 
 const DATABASE_BRANDS_IMAGES = {
   "phuc-long": { cover: coverPhucLong, image: logoPhucLong },

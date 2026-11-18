@@ -3,18 +3,20 @@ import { LANGUAGES, useLanguage } from "./LanguageContext.jsx";
 import { localizedCategory, screenText } from "./brandDetailTranslations.js";
 import { getUserApi, toBrandCard } from "./api.js";
 import { emptySuggestion, suggestionFields, suggestionText, validateSuggestion } from "./suggestionForm.mjs";
+import SuggestionImageField from "./SuggestionImageField.jsx";
+import { imageFields } from "./suggestionImages.mjs";
 
 // 2. Ảnh Logo (image logo/)
-import logoHighlands from "../../public/image/logo highlands coffee.jpg";
-import logoKatinat from "../../public/image/logo katinat.png";
-import logoKoi from "../../public/image/logo koi the.jpg";
-import logoMilano from "../../public/image/logo milano.png";
-import logoPheLa from "../../public/image/logo phe la.jpg";
-import logoPhucLong from "../../public/image/logo phuc long.jpg";
-import logoStarbucks from "../../public/image/logo starbuck.png";
-import logoTheCoffeeHouse from "../../public/image/logo the coffee house.jpg";
-import logoTrungNguyen from "../../public/image/logo Trung nguyen.png";
-import logoVivaStar from "../../public/image/logo viva.png";
+import logoHighlands from "../../public/image/highlands-coffee/logo.jpg";
+import logoKatinat from "../../public/image/katinat/logo.png";
+import logoKoi from "../../public/image/koi-the/logo.jpg";
+import logoMilano from "../../public/image/milano-coffee/logo.png";
+import logoPheLa from "../../public/image/phe-la/logo.jpg";
+import logoPhucLong from "../../public/image/phuc-long/logo.jpg";
+import logoStarbucks from "../../public/image/starbucks/logo.png";
+import logoTheCoffeeHouse from "../../public/image/the-coffee-house/logo.jpg";
+import logoTrungNguyen from "../../public/image/trung-nguyen/logo.png";
+import logoVivaStar from "../../public/image/viva-star-coffee/logo.png";
 
 const DATABASE_BRANDS_IMAGES = {
   "phuc-long": { image: logoPhucLong },
@@ -195,11 +197,13 @@ export default function SuggestionsPage({ recentBrands = [], onNavigate }) {
 
   const [formData, setFormData] = useState({ ...emptySuggestion });
   const [fieldErrors, setFieldErrors] = useState({});
+  const [readingImages, setReadingImages] = useState({});
+  const imagesPending = Object.values(readingImages).some(Boolean);
   const [catalogStatus, setCatalogStatus] = useState("loading");
   const formRef = useRef(null);
   const existingBrand = catalogBrands.find(brand => brand.name.trim().toLocaleLowerCase() === formData.brandName.trim().toLocaleLowerCase());
   const isNewBrand = !existingBrand;
-  const fields = suggestionFields.filter(field => isNewBrand || !field.brandOnly);
+  const fields = suggestionFields.filter(field => isNewBrand || !field.brandOnly || field.optionalForExisting);
   const ft = key => suggestionText(languageCode, key);
 
   const [submitted, setSubmitted] = useState(false);
@@ -234,7 +238,7 @@ export default function SuggestionsPage({ recentBrands = [], onNavigate }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (submitting) return;
+    if (submitting || imagesPending) return;
     const errors = validateSuggestion(formData, isNewBrand);
     setFieldErrors(errors);
     if (Object.keys(errors).length > 0) {
@@ -249,7 +253,8 @@ export default function SuggestionsPage({ recentBrands = [], onNavigate }) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          ...Object.fromEntries(Object.entries(formData).map(([key, value]) => [key, value.trim()])),
+          ...Object.fromEntries(Object.entries(formData)
+            .map(([key, value]) => [key, value.trim()])),
           latitude: Number(formData.latitude),
           longitude: Number(formData.longitude),
         }),
@@ -337,8 +342,16 @@ export default function SuggestionsPage({ recentBrands = [], onNavigate }) {
                 {fields.map(field => {
                   const Field = field.multiline ? "textarea" : "input";
                   return <div className="sg-field-group" key={field.name}>
-                    <label htmlFor={field.name}>{ft(field.name)} <span className="req">*</span></label>
-                    <Field
+                    <label htmlFor={imageFields.includes(field.name) ? `${field.name}-file` : field.name}>{ft(field.name)} {(isNewBrand || !field.optionalForExisting) && <span className="req">*</span>}</label>
+                    {imageFields.includes(field.name) ? <SuggestionImageField
+                      name={field.name}
+                      value={formData[field.name]}
+                      language={languageCode}
+                      invalid={Boolean(fieldErrors[field.name])}
+                      onChange={value => handleChange({ target: { name: field.name, value } })}
+                      onError={error => setFieldErrors(previous => ({ ...previous, [field.name]: error }))}
+                      onReadingChange={reading => setReadingImages(previous => ({ ...previous, [field.name]: reading }))}
+                    /> : <Field
                       id={field.name}
                       name={field.name}
                       type={field.multiline ? undefined : field.type || "text"}
@@ -353,7 +366,7 @@ export default function SuggestionsPage({ recentBrands = [], onNavigate }) {
                       required
                       aria-invalid={Boolean(fieldErrors[field.name])}
                       aria-describedby={fieldErrors[field.name] ? `${field.name}-error` : undefined}
-                    />
+                    />}
                     {fieldErrors[field.name] && <small id={`${field.name}-error`} className="sg-field-error">{ft(fieldErrors[field.name])}</small>}
                   </div>;
                 })}
@@ -376,7 +389,7 @@ export default function SuggestionsPage({ recentBrands = [], onNavigate }) {
 
                 {catalogStatus === "error" && <p role="alert" className="sg-submit-error">{ft("catalogError")}</p>}
                 {submitError && <p role="alert" className="sg-submit-error">{submitError === "incomplete" ? ft("incomplete") : st("submitError")}</p>}
-                <button type="submit" className="sg-btn-submit" disabled={submitting}>
+                <button type="submit" className="sg-btn-submit" disabled={submitting || imagesPending}>
                   <Icon n="send" size={16} /> {submitting ? st("submitting") : st("submit")}
                 </button>
               </form>
@@ -665,6 +678,12 @@ const styles = `
   transition: background 0.2s ease;
 }
 .sg-field-error, .sg-submit-error { color: #a12424; font-size: 13px; }
+.sg-image-field { display: grid; gap: 8px; min-width: 0; }
+.sg-image-field small { color: var(--text-muted); }
+.sg-image-field .sg-image-choose { color: var(--brown-mid); }
+.sg-image-field input[type="file"] { background: #fff; padding: 10px; }
+.sg-image-preview { width: 100%; max-height: 220px; object-fit: contain; border: 1px solid var(--border-color); border-radius: 8px; }
+.sg-image-field button { justify-self: start; padding: 7px 12px; border: 1px solid var(--border-color); border-radius: 8px; background: #fff; color: var(--brown-mid); cursor: pointer; }
 .sg-field-group [aria-invalid="true"] { border-color: #a12424; }
 .sg-btn-submit:disabled { opacity: .6; cursor: not-allowed; }
 .sg-btn-submit:hover { background: var(--brown-dark); }

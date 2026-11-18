@@ -8,40 +8,40 @@ import { brandDescriptionLanguage } from "./api.js";
 import { getOfflineBrandTranslation } from "./offlineBrandTranslations.js";
 
 // 1. Ảnh Không gian (image coffee shop/)
-import coverHighlands from "../../public/image/High land coffee.jpg";
-import coverKatinat from "../../public/image/katinat.jpg";
-import coverKoi from "../../public/image/KOI the.jpg";
-import coverMilano from "../../public/image/milano.jpg";
-import coverPheLa from "../../public/image/Phe la.jpg";
-import coverPhucLong from "../../public/image/Phuc long.jpg";
-import coverStarbucks from "../../public/image/Starbuck.jpg";
-import coverTheCoffeeHouse from "../../public/image/The coffe house.jpg";
-import coverTrungNguyen from "../../public/image/Trung nguyen.jpg";
-import coverVivaStar from "../../public/image/viva star.jpg";
+import coverHighlands from "../../public/image/highlands-coffee/cover.jpg";
+import coverKatinat from "../../public/image/katinat/cover.jpg";
+import coverKoi from "../../public/image/koi-the/cover.jpg";
+import coverMilano from "../../public/image/milano-coffee/cover.jpg";
+import coverPheLa from "../../public/image/phe-la/cover.jpg";
+import coverPhucLong from "../../public/image/phuc-long/cover.jpg";
+import coverStarbucks from "../../public/image/starbucks/cover.jpg";
+import coverTheCoffeeHouse from "../../public/image/the-coffee-house/cover.jpg";
+import coverTrungNguyen from "../../public/image/trung-nguyen/cover.jpg";
+import coverVivaStar from "../../public/image/viva-star-coffee/cover.jpg";
 
 // 2. Ảnh Logo (image logo/)
-import logoHighlands from "../../public/image/logo highlands coffee.jpg";
-import logoKatinat from "../../public/image/logo katinat.png";
-import logoKoi from "../../public/image/logo koi the.jpg";
-import logoMilano from "../../public/image/logo milano.png";
-import logoPheLa from "../../public/image/logo phe la.jpg";
-import logoPhucLong from "../../public/image/logo phuc long.jpg";
-import logoStarbucks from "../../public/image/logo starbuck.png";
-import logoTheCoffeeHouse from "../../public/image/logo the coffee house.jpg";
-import logoTrungNguyen from "../../public/image/logo Trung nguyen.png";
-import logoVivaStar from "../../public/image/logo viva.png";
+import logoHighlands from "../../public/image/highlands-coffee/logo.jpg";
+import logoKatinat from "../../public/image/katinat/logo.png";
+import logoKoi from "../../public/image/koi-the/logo.jpg";
+import logoMilano from "../../public/image/milano-coffee/logo.png";
+import logoPheLa from "../../public/image/phe-la/logo.jpg";
+import logoPhucLong from "../../public/image/phuc-long/logo.jpg";
+import logoStarbucks from "../../public/image/starbucks/logo.png";
+import logoTheCoffeeHouse from "../../public/image/the-coffee-house/logo.jpg";
+import logoTrungNguyen from "../../public/image/trung-nguyen/logo.png";
+import logoVivaStar from "../../public/image/viva-star-coffee/logo.png";
 
 // 3. menu
-import menuHighlands from "../../public/image/menu highland coffee.jpg";
-import menuKatinat from "../../public/image/menu katinat.jpg";
-import menuKoi from "../../public/image/menu koi the.jpg";
-import menuMilano from "../../public/image/menu milano.png";
-import menuPheLa from "../../public/image/menu phe la.jpg";
-import menuPhucLong from "../../public/image/menu phuc long.jpg";
-import menuStarbucks from "../../public/image/menu startbuck.jpg";
-import menuTheCoffeeHouse from "../../public/image/menu the coffee house.jpg";
-import menuTrungNguyen from "../../public/image/menu trung nguyen.jpg";
-import menuViva from "../../public/image/menu viva.jpg"; 
+import menuHighlands from "../../public/image/highlands-coffee/menu.jpg";
+import menuKatinat from "../../public/image/katinat/menu.jpg";
+import menuKoi from "../../public/image/koi-the/menu.jpg";
+import menuMilano from "../../public/image/milano-coffee/menu.png";
+import menuPheLa from "../../public/image/phe-la/menu.jpg";
+import menuPhucLong from "../../public/image/phuc-long/menu.jpg";
+import menuStarbucks from "../../public/image/starbucks/menu.jpg";
+import menuTheCoffeeHouse from "../../public/image/the-coffee-house/menu.jpg";
+import menuTrungNguyen from "../../public/image/trung-nguyen/menu.jpg";
+import menuViva from "../../public/image/viva-star-coffee/menu.jpg";
 
 const DATABASE_BRANDS_IMAGES = {
   "phuc-long": { cover: coverPhucLong, image: logoPhucLong, menu: [menuPhucLong] },
@@ -291,7 +291,19 @@ export default function BrandDetailPage({ brandId, brand, onBack, onNavigate, on
     setLoaded(null); setLoadError(false);
     fetch(`/api/catalog/brands/${brandId}`, { signal: controller.signal })
       .then(response => { if (!response.ok) throw new Error(`API ${response.status}`); return response.json(); })
-      .then(result => { if (!controller.signal.aborted) setLoaded(result); })
+      .then(async result => {
+        if (controller.signal.aborted) return;
+        setLoaded(result);
+        const branches = await Promise.all((result.branches || []).map(async branch => {
+          try {
+            const response = await fetch(`/api/submission-images/branches/${branch.id}`, { signal: controller.signal });
+            if (!response.ok) return branch;
+            const media = await response.json();
+            return { ...branch, images: media.images };
+          } catch { return branch; }
+        }));
+        if (!controller.signal.aborted) setLoaded({ ...result, branches });
+      })
       .catch(() => {
         if (controller.signal.aborted) return;
         setLoadError(true);
@@ -435,7 +447,7 @@ export default function BrandDetailPage({ brandId, brand, onBack, onNavigate, on
             <h2>{dt("featured")}</h2>
             {branches.length ? <ul className="bd-br">
               {branches.map((b, i) => <li key={b.id || b.name || i}>
-                <Logo item={item} size={36} />
+                <Logo item={b.images?.logoUrl ? { ...item, logo: b.images.logoUrl } : item} size={36} />
                 <div>
                   <strong>{b.name}</strong>
                   {b.address
@@ -443,6 +455,8 @@ export default function BrandDetailPage({ brandId, brand, onBack, onNavigate, on
                     : <span>{dt("noAddress")}</span>}
                 </div>
                 <div className="bd-branch-actions">
+                  {b.images?.coverUrl && <a href={b.images.coverUrl} target="_blank" rel="noopener noreferrer"><img src={b.images.coverUrl} alt={b.name} loading="lazy" style={{ width: "100%", maxHeight: 140, objectFit: "cover", borderRadius: 8 }} /></a>}
+                  {b.images?.menuImageUrl && <a className="bd-branch-map-link" href={b.images.menuImageUrl} target="_blank" rel="noopener noreferrer">{dt("menu")}</a>}
                   <a className="bd-branch-map-link" href={branchMapsUrl(b)} target="_blank" rel="noopener noreferrer" aria-label={`${t("map.directionsGoogle")}: ${b.name}`}>
                     {t("map.directionsGoogle")}
                   </a>

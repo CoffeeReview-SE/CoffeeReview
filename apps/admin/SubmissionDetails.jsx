@@ -9,6 +9,8 @@ export function readSubmissionData(value) {
 }
 
 function safeUrl(value) {
+  if (typeof value === "string" && /^\/api\/submission-images\/[a-f0-9]{64}\.(png|jpg|webp)$/.test(value)) return value;
+  if (typeof value === "string" && /^\/api\/admin\/submissions\/\d+\/images\/(logo|cover|menu)$/.test(value)) return value;
   if (typeof value !== "string" || !/^https?:\/\//i.test(value.trim())) return null;
   try {
     const url = new URL(value);

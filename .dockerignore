@@ -20,3 +20,5 @@ dist
 **/*.log
 docs
 infrastructure
+public/image/uploads
+public/image/.metadata
