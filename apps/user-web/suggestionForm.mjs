@@ -34,9 +34,7 @@ export function getBrandSuggestionValues(brand) {
 }
 
 export function isExistingBrandFieldReadOnly(field, brand) {
-  if (!brand || (!field.brandOnly && field.name !== "brandName")) return false;
-  const value = getBrandSuggestionValues(brand)[field.name];
-  return typeof value === "string" && value.trim() !== "";
+  return Boolean(brand && (field.brandOnly || field.name === "brandName"));
 }
 
 const labels = {

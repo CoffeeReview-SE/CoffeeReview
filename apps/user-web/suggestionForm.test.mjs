@@ -41,8 +41,11 @@ test("existing brand details prefill only data available in the catalog", () => 
   });
   assert.deepEqual(getBrandSuggestionValues(null), {});
   assert.equal(isExistingBrandFieldReadOnly(suggestionFields.find(field => field.name === "description"), brand), true);
-  assert.equal(isExistingBrandFieldReadOnly(suggestionFields.find(field => field.name === "menuImageUrl"), brand), false);
+  assert.equal(isExistingBrandFieldReadOnly(suggestionFields.find(field => field.name === "menuImageUrl"), brand), true);
+  assert.equal(isExistingBrandFieldReadOnly(suggestionFields.find(field => field.name === "coverUrl"), brand), true);
   assert.equal(isExistingBrandFieldReadOnly(suggestionFields.find(field => field.name === "branchName"), brand), false);
+  assert.equal(isExistingBrandFieldReadOnly(suggestionFields.find(field => field.name === "brandName"), brand), true);
+  assert.equal(isExistingBrandFieldReadOnly(suggestionFields.find(field => field.name === "description"), null), false);
 });
 
 test("existing brands still require all branch and contact details", () => {
