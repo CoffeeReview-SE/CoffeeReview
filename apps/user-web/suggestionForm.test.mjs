@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { emptySuggestion, getBrandSuggestionValues, suggestionFields, validateSuggestion } from "./suggestionForm.mjs";
+import { emptySuggestion, getBrandSuggestionValues, isExistingBrandFieldReadOnly, suggestionFields, validateSuggestion } from "./suggestionForm.mjs";
 
 const complete = {
   name: "Nguyễn An", phone: "+84 901 234 567", brandName: "Thương hiệu mới",
@@ -23,13 +23,14 @@ test("each mandatory field blocks a new brand when absent or whitespace", () => 
 });
 
 test("existing brand details prefill only data available in the catalog", () => {
-  assert.deepEqual(getBrandSuggestionValues({
+  const brand = {
     name: "Cà phê X",
     type: "Cà phê",
     description: "Mô tả",
     website: "https://example.com",
     logo: "https://example.com/logo.png",
-  }), {
+  };
+  assert.deepEqual(getBrandSuggestionValues(brand), {
     brandName: "Cà phê X",
     type: "Cà phê",
     description: "Mô tả",
@@ -39,6 +40,9 @@ test("existing brand details prefill only data available in the catalog", () => 
     menuImageUrl: "",
   });
   assert.deepEqual(getBrandSuggestionValues(null), {});
+  assert.equal(isExistingBrandFieldReadOnly(suggestionFields.find(field => field.name === "description"), brand), true);
+  assert.equal(isExistingBrandFieldReadOnly(suggestionFields.find(field => field.name === "menuImageUrl"), brand), false);
+  assert.equal(isExistingBrandFieldReadOnly(suggestionFields.find(field => field.name === "branchName"), brand), false);
 });
 
 test("existing brands still require all branch and contact details", () => {

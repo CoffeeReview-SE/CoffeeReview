@@ -33,6 +33,12 @@ export function getBrandSuggestionValues(brand) {
   };
 }
 
+export function isExistingBrandFieldReadOnly(field, brand) {
+  if (!brand || (!field.brandOnly && field.name !== "brandName")) return false;
+  const value = getBrandSuggestionValues(brand)[field.name];
+  return typeof value === "string" && value.trim() !== "";
+}
+
 const labels = {
   vi: ["Họ và tên", "Số điện thoại liên hệ", "Thương hiệu muốn đề xuất", "Loại hình (ví dụ Cà phê, Trà, Bánh)", "Mô tả thương hiệu", "Website thương hiệu", "Đường dẫn ảnh logo", "Đường dẫn ảnh bìa", "Đường dẫn ảnh thực đơn", "Tên chi nhánh", "Địa chỉ chi nhánh đầy đủ", "Số điện thoại chi nhánh", "Vĩ độ", "Kinh độ", "Giờ mở cửa (ví dụ Thứ 2–Chủ nhật, 07:00–22:00)"],
   en: ["Full name", "Contact phone", "Brand to suggest", "Category (e.g. Coffee, Tea, Pastries)", "Brand description", "Brand website", "Logo image URL", "Cover image URL", "Menu image URL", "Branch name", "Full branch address", "Branch phone", "Latitude", "Longitude", "Opening hours (e.g. Mon–Sun, 07:00–22:00)"],

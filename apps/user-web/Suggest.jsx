@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { LANGUAGES, useLanguage } from "./LanguageContext.jsx";
 import { localizedCategory, screenText } from "./brandDetailTranslations.js";
 import { getUserApi, toBrandCard } from "./api.js";
-import { emptySuggestion, getBrandSuggestionValues, suggestionFields, suggestionText, validateSuggestion } from "./suggestionForm.mjs";
+import { emptySuggestion, getBrandSuggestionValues, isExistingBrandFieldReadOnly, suggestionFields, suggestionText, validateSuggestion } from "./suggestionForm.mjs";
 import SuggestionImageField from "./SuggestionImageField.jsx";
 import { imageFields } from "./suggestionImages.mjs";
 
@@ -349,10 +349,7 @@ export default function SuggestionsPage({ recentBrands = [], onNavigate }) {
                 {suggestionFields.map(field => {
                   const Field = field.multiline ? "textarea" : "input";
                   const value = formData[field.name];
-                  const hasExistingValue = typeof value === "string" && value.trim() !== "";
-                  const readOnly = !isNewBrand &&
-                    (field.name === "brandName" || field.brandOnly) &&
-                    hasExistingValue;
+                  const readOnly = isExistingBrandFieldReadOnly(field, existingBrand);
                   const required = isNewBrand || !field.brandOnly;
                   return <div className="sg-field-group" key={field.name}>
                     <label htmlFor={imageFields.includes(field.name) ? `${field.name}-file` : field.name}>{ft(field.name)} {required && <span className="req">*</span>}</label>
