@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { LANGUAGES, useLanguage } from "./LanguageContext.jsx";
 import { localizedCategory, screenText } from "./brandDetailTranslations.js";
 import { getUserApi, toBrandCard } from "./api.js";
-import { emptySuggestion, suggestionFields, suggestionText, validateSuggestion } from "./suggestionForm.mjs";
+import { emptySuggestion, getBrandSuggestionValues, suggestionFields, suggestionText, validateSuggestion } from "./suggestionForm.mjs";
 import SuggestionImageField from "./SuggestionImageField.jsx";
 import { imageFields } from "./suggestionImages.mjs";
 
@@ -201,9 +201,11 @@ export default function SuggestionsPage({ recentBrands = [], onNavigate }) {
   const imagesPending = Object.values(readingImages).some(Boolean);
   const [catalogStatus, setCatalogStatus] = useState("loading");
   const formRef = useRef(null);
-  const existingBrand = catalogBrands.find(brand => brand.name.trim().toLocaleLowerCase() === formData.brandName.trim().toLocaleLowerCase());
+  const normalizedBrandName = formData.brandName.trim().toLocaleLowerCase();
+  const existingBrand = [...catalogBrands, ...recentBrands].find(brand =>
+    brand.name.trim().toLocaleLowerCase() === normalizedBrandName
+  );
   const isNewBrand = !existingBrand;
-  const fields = suggestionFields.filter(field => isNewBrand || !field.brandOnly || field.optionalForExisting);
   const ft = key => suggestionText(languageCode, key);
 
   const [submitted, setSubmitted] = useState(false);
@@ -224,10 +226,15 @@ export default function SuggestionsPage({ recentBrands = [], onNavigate }) {
 
   const handleSelectPreBrand = (brand) => {
     setFieldErrors({});
-    setFormData(prev => ({
-      ...prev,
-      brandName: prev.brandName === brand.name ? "" : brand.name
-    }));
+    setFormData(prev => {
+      const selectedBrand = prev.brandName === brand.name ? null : brand;
+      const clearedBrandFields = Object.fromEntries(
+        suggestionFields
+          .filter(field => field.brandOnly || field.name === "brandName")
+          .map(field => [field.name, ""])
+      );
+      return { ...prev, ...clearedBrandFields, ...getBrandSuggestionValues(selectedBrand) };
+    });
   };
 
   const handleChange = (e) => {
@@ -339,15 +346,22 @@ export default function SuggestionsPage({ recentBrands = [], onNavigate }) {
                   <p>{ft(isNewBrand ? "newBrand" : "existingBrand")}</p>
                 </div>
 
-                {fields.map(field => {
+                {suggestionFields.map(field => {
                   const Field = field.multiline ? "textarea" : "input";
+                  const value = formData[field.name];
+                  const hasExistingValue = typeof value === "string" && value.trim() !== "";
+                  const readOnly = !isNewBrand &&
+                    (field.name === "brandName" || field.brandOnly) &&
+                    hasExistingValue;
+                  const required = isNewBrand || !field.brandOnly;
                   return <div className="sg-field-group" key={field.name}>
-                    <label htmlFor={imageFields.includes(field.name) ? `${field.name}-file` : field.name}>{ft(field.name)} {(isNewBrand || !field.optionalForExisting) && <span className="req">*</span>}</label>
+                    <label htmlFor={imageFields.includes(field.name) ? `${field.name}-file` : field.name}>{ft(field.name)} {required && <span className="req">*</span>}</label>
                     {imageFields.includes(field.name) ? <SuggestionImageField
                       name={field.name}
-                      value={formData[field.name]}
+                      value={value}
                       language={languageCode}
                       invalid={Boolean(fieldErrors[field.name])}
+                      disabled={readOnly}
                       onChange={value => handleChange({ target: { name: field.name, value } })}
                       onError={error => setFieldErrors(previous => ({ ...previous, [field.name]: error }))}
                       onReadingChange={reading => setReadingImages(previous => ({ ...previous, [field.name]: reading }))}
@@ -361,10 +375,12 @@ export default function SuggestionsPage({ recentBrands = [], onNavigate }) {
                       max={field.max}
                       maxLength={field.maxLength}
                       placeholder={field.type === "url" ? "https://..." : undefined}
-                      value={formData[field.name]}
+                      value={value}
                       onChange={handleChange}
-                      required
+                      readOnly={readOnly}
+                      required={required}
                       aria-invalid={Boolean(fieldErrors[field.name])}
+                      aria-readonly={readOnly || undefined}
                       aria-describedby={fieldErrors[field.name] ? `${field.name}-error` : undefined}
                     />}
                     {fieldErrors[field.name] && <small id={`${field.name}-error`} className="sg-field-error">{ft(fieldErrors[field.name])}</small>}
@@ -659,6 +675,11 @@ const styles = `
   background: #fff;
   border-color: var(--brown-mid);
   outline: none !important;
+}
+.sg-field-group input:read-only, .sg-field-group textarea:read-only {
+  background: #F1EEE9;
+  color: var(--text-muted);
+  cursor: not-allowed;
 }
 
 .sg-btn-submit {

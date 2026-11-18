@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { emptySuggestion, suggestionFields, validateSuggestion } from "./suggestionForm.mjs";
+import { emptySuggestion, getBrandSuggestionValues, suggestionFields, validateSuggestion } from "./suggestionForm.mjs";
 
 const complete = {
   name: "Nguyễn An", phone: "+84 901 234 567", brandName: "Thương hiệu mới",
@@ -22,6 +22,25 @@ test("each mandatory field blocks a new brand when absent or whitespace", () => 
   assert.equal(Object.keys(validateSuggestion(emptySuggestion, true)).length, suggestionFields.length);
 });
 
+test("existing brand details prefill only data available in the catalog", () => {
+  assert.deepEqual(getBrandSuggestionValues({
+    name: "Cà phê X",
+    type: "Cà phê",
+    description: "Mô tả",
+    website: "https://example.com",
+    logo: "https://example.com/logo.png",
+  }), {
+    brandName: "Cà phê X",
+    type: "Cà phê",
+    description: "Mô tả",
+    websiteUrl: "https://example.com",
+    logoUrl: "https://example.com/logo.png",
+    coverUrl: "",
+    menuImageUrl: "",
+  });
+  assert.deepEqual(getBrandSuggestionValues(null), {});
+});
+
 test("existing brands still require all branch and contact details", () => {
   const branch = { ...complete };
   for (const field of suggestionFields.filter(field => field.brandOnly)) delete branch[field.name];
@@ -29,6 +48,11 @@ test("existing brands still require all branch and contact details", () => {
   assert.equal(validateSuggestion({ ...branch, address: " " }, false).address, "required");
   assert.equal(validateSuggestion({ ...branch, branchName: "" }, false).branchName, "required");
   assert.equal(validateSuggestion(branch, true).description, "required");
+});
+
+test("optional details for existing brands are validated when provided", () => {
+  assert.equal(validateSuggestion({ ...complete, websiteUrl: "not-a-url" }, false).websiteUrl, "url");
+  assert.equal(validateSuggestion({ ...complete, description: "x".repeat(10001) }, false).description, "tooLong");
 });
 
 test("URLs require complete HTTP or HTTPS addresses", () => {

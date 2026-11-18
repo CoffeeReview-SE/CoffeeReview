@@ -20,6 +20,19 @@ export const suggestionFields = [
 
 export const emptySuggestion = Object.fromEntries([...suggestionFields.map(field => [field.name, ""]), ["note", ""]]);
 
+export function getBrandSuggestionValues(brand) {
+  if (!brand) return {};
+  return {
+    brandName: brand.name || "",
+    type: brand.type || "",
+    description: brand.description || "",
+    websiteUrl: brand.websiteUrl || brand.website || "",
+    logoUrl: brand.logoUrl || brand.logo || "",
+    coverUrl: brand.coverUrl || "",
+    menuImageUrl: brand.menuImageUrl || "",
+  };
+}
+
 const labels = {
   vi: ["Họ và tên", "Số điện thoại liên hệ", "Thương hiệu muốn đề xuất", "Loại hình (ví dụ Cà phê, Trà, Bánh)", "Mô tả thương hiệu", "Website thương hiệu", "Đường dẫn ảnh logo", "Đường dẫn ảnh bìa", "Đường dẫn ảnh thực đơn", "Tên chi nhánh", "Địa chỉ chi nhánh đầy đủ", "Số điện thoại chi nhánh", "Vĩ độ", "Kinh độ", "Giờ mở cửa (ví dụ Thứ 2–Chủ nhật, 07:00–22:00)"],
   en: ["Full name", "Contact phone", "Brand to suggest", "Category (e.g. Coffee, Tea, Pastries)", "Brand description", "Brand website", "Logo image URL", "Cover image URL", "Menu image URL", "Branch name", "Full branch address", "Branch phone", "Latitude", "Longitude", "Opening hours (e.g. Mon–Sun, 07:00–22:00)"],
@@ -42,9 +55,9 @@ export function suggestionText(language, key) {
 
 export function validateSuggestion(data, isNewBrand) {
   const errors = {};
-  for (const field of suggestionFields.filter(field => isNewBrand || !field.brandOnly || field.optionalForExisting)) {
+  for (const field of suggestionFields) {
     const value = String(data[field.name] ?? "").trim();
-    if (!isNewBrand && field.optionalForExisting && !value) continue;
+    if (!isNewBrand && field.brandOnly && !value) continue;
     if (!value) errors[field.name] = "required";
     else if (imageFields.includes(field.name) && value.startsWith("data:")) {
       const error = imageDataError(value);
