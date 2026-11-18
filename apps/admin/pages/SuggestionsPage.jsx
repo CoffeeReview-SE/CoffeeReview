@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { adminRequest } from './adminApi';
-import SubmissionDetails, { readSubmissionData } from './SubmissionDetails.jsx';
+import { adminRequest } from '../api/adminApi.js';
+import SubmissionDetails, { readSubmissionData } from '../features/suggestions/SubmissionDetails.jsx';
+import CreateSuggestionDialog from '../features/suggestions/CreateSuggestionDialog.jsx';
 
 const INITIAL_SUGGESTIONS = [
   {
@@ -155,6 +156,7 @@ export default function SuggestionsManagement({ onNavigate }) {
   const [items, setItems] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
   const selectedItem = items.find(item => item.id === selectedId);
+  const [createOpen, setCreateOpen] = useState(false);
   const [filterStatus, setFilterStatus] = useState('Tất cả');
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -167,16 +169,23 @@ export default function SuggestionsManagement({ onNavigate }) {
   };
 
   const [apiError, setApiError] = useState('');
-  useEffect(() => {
-    adminRequest('submissions').then(rows => setItems(rows.map(x => ({
+  const reload = async () => {
+    try {
+      const rows = await adminRequest('submissions');
+      setItems(rows.map(x => ({
       id: x.id, title: x.name || `Đề xuất #${x.id}`, brand: x.name || '—',
       branch: x.address || '—', address: x.address, dataJson: x.dataJson,
       type: ({ BRAND: 'Thương hiệu mới', BRANCH: 'Chi nhánh mới' })[x.targetType] || x.targetType,
       author: readSubmissionData(x.dataJson).contactName || readSubmissionData(x.dataJson).name || x.author || 'Khách',
       date: new Date(x.createdAt).toLocaleDateString('vi-VN'),
       status: ({PENDING:'Chờ duyệt', APPROVED:'Đã duyệt', REJECTED:'Từ chối'})[x.status] || x.status,
-    })))).catch(e => setApiError(e.message));
-  }, []);
+      })));
+      setApiError('');
+    } catch (e) {
+      setApiError(e.message);
+    }
+  };
+  useEffect(() => { reload(); }, []);
   const filteredItems = items.filter((item) => {
     const matchesStatus = filterStatus === 'Tất cả' || item.status === filterStatus;
     const matchesSearch =
@@ -226,7 +235,7 @@ export default function SuggestionsManagement({ onNavigate }) {
           <div className="ad-tools">
             <button
               className="ad-btn-primary"
-              onClick={() => window.alert('Mở form tạo đề xuất mới')}
+              onClick={() => setCreateOpen(true)}
             >
               <Icon n="plus" size={16} /> Tạo đề xuất mới
             </button>
@@ -368,6 +377,7 @@ export default function SuggestionsManagement({ onNavigate }) {
         onClose={() => setSelectedId(null)}
         onReview={selectedItem.status === 'Chờ duyệt' ? () => go('approvals') : undefined}
       />}
+      {createOpen && <CreateSuggestionDialog onClose={() => setCreateOpen(false)} onCreated={reload} />}
     </div>
   );
 }

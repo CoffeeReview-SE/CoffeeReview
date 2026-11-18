@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { adminRequest, adminJson } from './adminApi';
-import SubmissionDetails, { readSubmissionData } from './SubmissionDetails.jsx';
+import { adminRequest, adminJson } from '../api/adminApi.js';
+import SubmissionDetails, { readSubmissionData } from '../features/suggestions/SubmissionDetails.jsx';
 
 /* Danh mục điều hướng liên kết đồng bộ với AdminDashboard */
 const NAV = [

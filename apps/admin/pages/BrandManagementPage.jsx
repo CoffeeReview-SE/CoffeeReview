@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { adminRequest, adminJson } from './adminApi';
+import { adminRequest, adminJson } from '../api/adminApi.js';
 
 /* Danh mục Navigation liên kết đồng bộ với AdminDashboard */
 const NAV = [

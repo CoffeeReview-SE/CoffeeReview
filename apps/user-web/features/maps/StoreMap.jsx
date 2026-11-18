@@ -1,12 +1,12 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { divIcon } from "leaflet";
 import { MapContainer, Marker, Polyline, Popup, TileLayer, Tooltip, useMap, useMapEvents } from "react-leaflet";
-import { useLanguage } from "./LanguageContext.jsx";
-import LocalizedBranchAddress from "./LocalizedBranchAddress.jsx";
-import { brandDescriptionLanguage, getUserApi } from "./api.js";
-import { trackAudio } from "../analytics/tracking.js";
-import { getSpeechVoice, speechLanguageTag } from "./speechVoice.js";
-import { getOfflineBrandTranslation } from "./offlineBrandTranslations.js";
+import { useLanguage } from "../../contexts/LanguageContext.jsx";
+import LocalizedBranchAddress from "../../components/LocalizedBranchAddress.jsx";
+import { brandDescriptionLanguage, getUserApi } from "../../../shared/api/userApi.js";
+import { trackAudio } from "../../../analytics/tracking.js";
+import { getSpeechVoice, speechLanguageTag } from "../../utils/speechVoice.js";
+import { getOfflineBrandTranslation } from "../../i18n/offlineBrandTranslations.js";
 import "./StoreMap.css";
 import { distanceToRoute, shouldReroute } from "./routeTracking.mjs";
 

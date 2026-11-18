@@ -8,9 +8,9 @@
 
 | Phần | File | Kết quả |
 | --- | --- | --- |
-| Dashboard | `apps/admin/AdminDashboard.jsx` | Đang dùng số mẫu, biểu đồ mẫu; chưa gọi Analytics API |
+| Dashboard | `apps/admin/pages/AdminDashboard.jsx` | Đang dùng số mẫu, biểu đồ mẫu; chưa gọi Analytics API |
 | Tracking | `apps/analytics/PageTracker.jsx` | Có visitor ID, sessionStorage, ghi page view; chưa heartbeat/end-session; tab được nhân bản có thể sao chép sessionStorage |
-| Audio | `apps/user-web/BrandDetailPage.jsx` | AudioCard có play/pause/loop; chưa tracking, lấy nguồn đầu tiên nếu audio là object, dữ liệu demo chưa có URL audio |
+| Audio | `apps/user-web/pages/BrandDetailPage.jsx` | AudioCard có play/pause/loop; chưa tracking, lấy nguồn đầu tiên nếu audio là object, dữ liệu demo chưa có URL audio |
 | Analytics | `services/analytics/src/SGCoffee.Analytics/Program.cs` | Có `/track`, `/admin/summary`, kiểm tra gateway key và rate limit; chưa có API vòng đời phiên/audio/aggregation |
 | Gateway | `services/gateway/src/SGCoffee.Gateway/Gateway.cs` | YARP đã chuyển tiếp cả nhóm analytics; summary được miễn chặn khi Admin tắt; chưa có xác thực Admin |
 | Routes | `services/gateway/src/SGCoffee.Gateway/appsettings.json` | Public POST và admin route đã có wildcard; không cần thêm route trùng |

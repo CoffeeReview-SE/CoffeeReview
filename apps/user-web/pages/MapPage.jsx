@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { LANGUAGES, useLanguage } from "./LanguageContext.jsx";
-import StoreMap from "./StoreMap.jsx";
+import { LANGUAGES, useLanguage } from "../contexts/LanguageContext.jsx";
+import StoreMap from "../features/maps/StoreMap.jsx";
 
 export default function MapPage() {
   const navigate = useNavigate();

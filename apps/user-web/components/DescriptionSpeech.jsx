@@ -1,10 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { trackAudio } from '../analytics/tracking.js';
-import { useLanguage } from './LanguageContext.jsx';
-import { detailText } from './brandDetailTranslations.js';
-import { getUserApi } from './api.js';
-import { getSpeechVoice, speechLanguageTag } from './speechVoice.js';
-import { getOfflineBrandTranslation } from './offlineBrandTranslations.js';
+import { trackAudio } from '../../analytics/tracking.js';
+import { useLanguage } from '../contexts/LanguageContext.jsx';
+import { detailText } from '../i18n/brandDetailTranslations.js';
+import { getUserApi } from '../../shared/api/userApi.js';
+import { getSpeechVoice, speechLanguageTag } from '../utils/speechVoice.js';
+import { getOfflineBrandTranslation } from '../i18n/offlineBrandTranslations.js';
 
 export default function DescriptionSpeech({ brandId, brandName, description, sourceLanguageCode }) {
   const { languageCode: uiLanguage } = useLanguage();

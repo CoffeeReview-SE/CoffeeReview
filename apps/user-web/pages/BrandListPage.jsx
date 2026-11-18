@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
-import { LANGUAGES, useLanguage } from "./LanguageContext.jsx";
-import { localizedCategory, screenText } from "./brandDetailTranslations.js";
-import { getUserApi, toBrandCard } from "./api.js";
-import BrandDescriptionAudio from "./BrandDescriptionAudio.jsx";
+import { LANGUAGES, useLanguage } from "../contexts/LanguageContext.jsx";
+import { localizedCategory, screenText } from "../i18n/brandDetailTranslations.js";
+import { getUserApi, toBrandCard } from "../../shared/api/userApi.js";
+import BrandDescriptionAudio from "../components/BrandDescriptionAudio.jsx";
 
 /* ==========================================================================
    [PHẦN CHÈN THÊM - ĐỂ MÌNH CHÈN]: IMPORT HÌNH ẢNH TỪ 2 THƯ MỤC CỦA BẠN
@@ -10,28 +10,28 @@ import BrandDescriptionAudio from "./BrandDescriptionAudio.jsx";
    ========================================================================== */
 
 // 1. Ảnh Không gian (image coffee shop/)
-import coverHighlands from "../../public/image/highlands-coffee/cover.jpg";
-import coverKatinat from "../../public/image/katinat/cover.jpg";
-import coverKoi from "../../public/image/koi-the/cover.jpg";
-import coverMilano from "../../public/image/milano-coffee/cover.jpg";
-import coverPheLa from "../../public/image/phe-la/cover.jpg";
-import coverPhucLong from "../../public/image/phuc-long/cover.jpg";
-import coverStarbucks from "../../public/image/starbucks/cover.jpg";
-import coverTheCoffeeHouse from "../../public/image/the-coffee-house/cover.jpg";
-import coverTrungNguyen from "../../public/image/trung-nguyen/cover.jpg";
-import coverVivaStar from "../../public/image/viva-star-coffee/cover.jpg";
+import coverHighlands from "../../../public/image/highlands-coffee/cover.jpg";
+import coverKatinat from "../../../public/image/katinat/cover.jpg";
+import coverKoi from "../../../public/image/koi-the/cover.jpg";
+import coverMilano from "../../../public/image/milano-coffee/cover.jpg";
+import coverPheLa from "../../../public/image/phe-la/cover.jpg";
+import coverPhucLong from "../../../public/image/phuc-long/cover.jpg";
+import coverStarbucks from "../../../public/image/starbucks/cover.jpg";
+import coverTheCoffeeHouse from "../../../public/image/the-coffee-house/cover.jpg";
+import coverTrungNguyen from "../../../public/image/trung-nguyen/cover.jpg";
+import coverVivaStar from "../../../public/image/viva-star-coffee/cover.jpg";
 
 // 2. Ảnh Logo (image logo/)
-import logoHighlands from "../../public/image/highlands-coffee/logo.jpg";
-import logoKatinat from "../../public/image/katinat/logo.png";
-import logoKoi from "../../public/image/koi-the/logo.jpg";
-import logoMilano from "../../public/image/milano-coffee/logo.png";
-import logoPheLa from "../../public/image/phe-la/logo.jpg";
-import logoPhucLong from "../../public/image/phuc-long/logo.jpg";
-import logoStarbucks from "../../public/image/starbucks/logo.png";
-import logoTheCoffeeHouse from "../../public/image/the-coffee-house/logo.jpg";
-import logoTrungNguyen from "../../public/image/trung-nguyen/logo.png";
-import logoVivaStar from "../../public/image/viva-star-coffee/logo.png";
+import logoHighlands from "../../../public/image/highlands-coffee/logo.jpg";
+import logoKatinat from "../../../public/image/katinat/logo.png";
+import logoKoi from "../../../public/image/koi-the/logo.jpg";
+import logoMilano from "../../../public/image/milano-coffee/logo.png";
+import logoPheLa from "../../../public/image/phe-la/logo.jpg";
+import logoPhucLong from "../../../public/image/phuc-long/logo.jpg";
+import logoStarbucks from "../../../public/image/starbucks/logo.png";
+import logoTheCoffeeHouse from "../../../public/image/the-coffee-house/logo.jpg";
+import logoTrungNguyen from "../../../public/image/trung-nguyen/logo.png";
+import logoVivaStar from "../../../public/image/viva-star-coffee/logo.png";
 
 const DATABASE_BRANDS_IMAGES = {
   "phuc-long": { cover: coverPhucLong, image: logoPhucLong },

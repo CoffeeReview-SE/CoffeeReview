@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { useLanguage } from "./LanguageContext.jsx";
+import { useLanguage } from "../contexts/LanguageContext.jsx";
 
 const chatLabels = {
   vi: { open: "Mở chatbot", close: "Đóng chatbot", connected: "Đang kết nối", disconnected: "Chưa kết nối", hello: "Xin chào! Bạn đang muốn tìm quán cà phê như thế nào?", typing: "Đang soạn câu trả lời…", placeholder: "Nhập tin nhắn…", send: "Gửi tin nhắn", title: "Trò chuyện với SaigonCoffee", failed: "Chatbot chưa thể trả lời lúc này.", failedConnection: "Không thể kết nối chatbot." },

@@ -1,22 +1,22 @@
 import React, { useEffect, useRef, useState } from "react";
-import { LANGUAGES, useLanguage } from "./LanguageContext.jsx";
-import { localizedCategory, screenText } from "./brandDetailTranslations.js";
-import { getUserApi, toBrandCard } from "./api.js";
-import { emptySuggestion, getBrandSuggestionValues, isExistingBrandFieldReadOnly, suggestionFields, suggestionText, validateSuggestion } from "./suggestionForm.mjs";
-import SuggestionImageField from "./SuggestionImageField.jsx";
-import { imageFields } from "./suggestionImages.mjs";
+import { LANGUAGES, useLanguage } from "../contexts/LanguageContext.jsx";
+import { localizedCategory, screenText } from "../i18n/brandDetailTranslations.js";
+import { getUserApi, toBrandCard } from "../../shared/api/userApi.js";
+import { emptySuggestion, getBrandSuggestionValues, isExistingBrandFieldReadOnly, suggestionFields, suggestionText, validateSuggestion } from "../../shared/suggestions/suggestionForm.mjs";
+import SuggestionImageField from "../../shared/suggestions/SuggestionImageField.jsx";
+import { imageFields } from "../../shared/suggestions/suggestionImages.mjs";
 
 // 2. Ảnh Logo (image logo/)
-import logoHighlands from "../../public/image/highlands-coffee/logo.jpg";
-import logoKatinat from "../../public/image/katinat/logo.png";
-import logoKoi from "../../public/image/koi-the/logo.jpg";
-import logoMilano from "../../public/image/milano-coffee/logo.png";
-import logoPheLa from "../../public/image/phe-la/logo.jpg";
-import logoPhucLong from "../../public/image/phuc-long/logo.jpg";
-import logoStarbucks from "../../public/image/starbucks/logo.png";
-import logoTheCoffeeHouse from "../../public/image/the-coffee-house/logo.jpg";
-import logoTrungNguyen from "../../public/image/trung-nguyen/logo.png";
-import logoVivaStar from "../../public/image/viva-star-coffee/logo.png";
+import logoHighlands from "../../../public/image/highlands-coffee/logo.jpg";
+import logoKatinat from "../../../public/image/katinat/logo.png";
+import logoKoi from "../../../public/image/koi-the/logo.jpg";
+import logoMilano from "../../../public/image/milano-coffee/logo.png";
+import logoPheLa from "../../../public/image/phe-la/logo.jpg";
+import logoPhucLong from "../../../public/image/phuc-long/logo.jpg";
+import logoStarbucks from "../../../public/image/starbucks/logo.png";
+import logoTheCoffeeHouse from "../../../public/image/the-coffee-house/logo.jpg";
+import logoTrungNguyen from "../../../public/image/trung-nguyen/logo.png";
+import logoVivaStar from "../../../public/image/viva-star-coffee/logo.png";
 
 const DATABASE_BRANDS_IMAGES = {
   "phuc-long": { image: logoPhucLong },

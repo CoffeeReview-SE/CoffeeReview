@@ -1,19 +1,19 @@
 import React, { lazy, Suspense, useState } from 'react';
 import { Navigate, Route, Routes, useNavigate, useParams } from 'react-router-dom';
 
-const HomePage = lazy(() => import('./user-web/HomePage.jsx'));
-const BrandListPage = lazy(() => import('./user-web/Brand_list.jsx'));
-const BrandDetailPage = lazy(() => import('./user-web/BrandDetailPage.jsx'));
-const SuggestionsPage = lazy(() => import('./user-web/Suggest.jsx'));
-const MapPage = lazy(() => import('./user-web/MapPage.jsx'));
+const HomePage = lazy(() => import('./user-web/pages/HomePage.jsx'));
+const BrandListPage = lazy(() => import('./user-web/pages/BrandListPage.jsx'));
+const BrandDetailPage = lazy(() => import('./user-web/pages/BrandDetailPage.jsx'));
+const SuggestionsPage = lazy(() => import('./user-web/pages/SuggestionPage.jsx'));
+const MapPage = lazy(() => import('./user-web/pages/MapPage.jsx'));
 
-const AdminDashboard = lazy(() => import('./admin/AdminDashboard.jsx'));
-const BrandManagement = lazy(() => import('./admin/Manage_Brand.jsx'));
-const BranchManagement = lazy(() => import('./admin/Branch_manage.jsx'));
-const SuggestionsManagement = lazy(() => import('./admin/Sugguest_manage.jsx'));
-const ApprovalsManagement = lazy(() => import('./admin/Approve_manage.jsx'));
+const AdminDashboard = lazy(() => import('./admin/pages/AdminDashboard.jsx'));
+const BrandManagement = lazy(() => import('./admin/pages/BrandManagementPage.jsx'));
+const BranchManagement = lazy(() => import('./admin/pages/BranchManagementPage.jsx'));
+const SuggestionsManagement = lazy(() => import('./admin/pages/SuggestionsPage.jsx'));
+const ApprovalsManagement = lazy(() => import('./admin/pages/ApprovalsPage.jsx'));
 import PageTracker from './analytics/PageTracker.jsx';
-import ChatWidget from './user-web/ChatWidget.jsx';
+import ChatWidget from './user-web/components/ChatWidget.jsx';
 /* Map: section trên URL -> trang quản trị tương ứng (đã bỏ menu) */
 const ADMIN_PAGES = {
   brands: BrandManagement,

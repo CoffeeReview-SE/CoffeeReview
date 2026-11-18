@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { adminRequest } from './adminApi.js';
+import { adminRequest } from '../api/adminApi.js';
 import './AdminDashboard.css';
 
 const NAV = [

@@ -1,11 +1,11 @@
 import React, { useEffect, useRef, useState } from "react";
 import { MapContainer, Marker, TileLayer, useMapEvents } from "react-leaflet";
 import { divIcon } from "leaflet";
-import { adminRequest, adminJson } from "./adminApi.js";
+import { adminRequest, adminJson } from "../../api/adminApi.js";
 import { branchFields, branchForm, branchPayload, branchStatuses, duplicateBranches, hoursText, readBranchHistory, readEditorName, recordBranchHistory, sameBranchData, validBranchPosition, validateBranch } from "./branchForm.mjs";
 import { getBrandFallbackImage } from "./branchBrandImages.mjs";
-import SuggestionImageField from "../user-web/SuggestionImageField.jsx";
-import { imageFields, imageText } from "../user-web/suggestionImages.mjs";
+import SuggestionImageField from "../../../shared/suggestions/SuggestionImageField.jsx";
+import { imageFields, imageText } from "../../../shared/suggestions/suggestionImages.mjs";
 import "./BranchEditor.css";
 
 const pin = divIcon({ className: "branch-editor__pin", html: '<span aria-hidden="true">●</span>', iconSize: [28, 28], iconAnchor: [14, 14] });

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
-import { useLanguage } from "./LanguageContext.jsx";
-import { getOfflineAddressTranslation } from "./offlineAddressTranslations.js";
-import { getUserApi } from "./api.js";
+import { useLanguage } from "../contexts/LanguageContext.jsx";
+import { getOfflineAddressTranslation } from "../i18n/offlineAddressTranslations.js";
+import { getUserApi } from "../../shared/api/userApi.js";
 
 const translations = new Map();
 const pendingTranslations = new Map();

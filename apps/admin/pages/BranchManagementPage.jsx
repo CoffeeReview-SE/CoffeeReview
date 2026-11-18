@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { adminRequest, adminJson } from './adminApi';
-import BranchEditor from './BranchEditor.jsx';
-import { branchStatuses, branchStatus, incompleteBranch, normalizeBranchText, recordBranchHistory, readEditorName } from './branchForm.mjs';
+import { adminRequest, adminJson } from '../api/adminApi.js';
+import BranchEditor from '../features/branches/BranchEditor.jsx';
+import { branchStatuses, branchStatus, incompleteBranch, normalizeBranchText, recordBranchHistory, readEditorName } from '../features/branches/branchForm.mjs';
 
 /* Navigation links - identical to AdminDashboard */
 const NAV = [

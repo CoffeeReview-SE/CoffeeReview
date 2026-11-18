@@ -1,10 +1,10 @@
 import React, { useEffect, useRef, useState } from "react";
-import { trackAudio } from "../analytics/tracking.js";
-import { useLanguage } from "./LanguageContext.jsx";
-import { brandDescriptionLanguage, getUserApi } from "./api.js";
-import { getSpeechVoice, speechLanguageTag } from "./speechVoice.js";
-import { getOfflineBrandTranslation } from "./offlineBrandTranslations.js";
-import { detailText } from "./brandDetailTranslations.js";
+import { trackAudio } from "../../analytics/tracking.js";
+import { useLanguage } from "../contexts/LanguageContext.jsx";
+import { brandDescriptionLanguage, getUserApi } from "../../shared/api/userApi.js";
+import { getSpeechVoice, speechLanguageTag } from "../utils/speechVoice.js";
+import { getOfflineBrandTranslation } from "../i18n/offlineBrandTranslations.js";
+import { detailText } from "../i18n/brandDetailTranslations.js";
 
 let latestSpeechRequest = 0;
 
