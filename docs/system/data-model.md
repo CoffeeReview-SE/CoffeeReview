@@ -30,12 +30,10 @@ erDiagram
 
 Quan hệ trong sơ đồ thể hiện cách các module dùng dữ liệu; hãy đối chiếu constraint thực tế trong SQL trước khi thay đổi schema.
 
-## SQL hỗ trợ
+## SQL
 
-- `analytics_migration.sql`, `analytics_dashboard_migration.sql` — cấu trúc tracking/dashboard.
-- `brand_descriptions_vi_migration.sql` — cập nhật mô tả thương hiệu tiếng Việt.
-- `branches_hcm_verified_seed.sql` và `branches_hcm_verified.json` — dữ liệu chi nhánh đã chuẩn hóa.
-- `rls.sql` — chính sách Row Level Security.
-- `remove_unused_tables.sql` — thay đổi/dọn dẹp bảng theo đợt cập nhật.
+`infrastructure/Database/SGCoffeeData.sql` contains the complete initial schema, Analytics columns and indexes, Vietnamese brand descriptions, categories, branch seed and RLS for the seven application tables. Previously applied migration and cleanup scripts have been removed from the repository.
 
-Các script không được tự động chạy bởi `npm run dev:stack`. Trước khi áp dụng lên database đang dùng, cần đọc nội dung migration, xác nhận backup và thứ tự chạy. Hướng dẫn chi tiết về schema/chi nhánh: [Database schema and branches](../catalog/database-schema-and-branches.md).
+`branches_hcm_verified.json` retains branch source data. `infrastructure/scripts/generate-branch-seed.py` updates the embedded branch seed in the main SQL file.
+
+Use the main SQL file for a new database. The existing Supabase database already has the updates applied. Running the seed again updates reference data and does not automatically upgrade existing table definitions.

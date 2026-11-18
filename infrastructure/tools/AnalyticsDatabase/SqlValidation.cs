@@ -3,7 +3,7 @@ using System.Text.RegularExpressions;
 
 static class SqlValidation
 {
-    // Validate fresh-install SQL, repeatability and migrations inside an isolated rolled-back schema.
+    // Validate the consolidated schema inside an isolated rolled-back schema.
     public static async Task RunAsync(NpgsqlConnection connection, string directory)
     {
         var schema = "sgcoffee_check_" + Guid.NewGuid().ToString("N");
@@ -39,13 +39,15 @@ static class SqlValidation
             Check(await Count("SELECT COUNT(*) FROM branch") == 30, "thirty branches seeded");
             Check(await Count("SELECT COUNT(DISTINCT brand_id) FROM branch") == 10, "branches cover all ten brands");
             await RunFile("SGCoffeeData.sql");
-            await RunFile("branches_hcm_verified_seed.sql");
-            await RunFile("branches_hcm_verified_seed.sql");
             Check(await Count("SELECT COUNT(*) FROM branch") == 30, "repeated schema and branch imports do not duplicate branches");
-            await RunFile("analytics_migration.sql");
-            await RunFile("analytics_dashboard_migration.sql");
             Check(await Count("SELECT COUNT(*) FROM visit_session") == 0 && await Count("SELECT COUNT(*) FROM audio_play") == 0,
-                "analytics migrations remain compatible and no fake events are seeded");
+                "no fake analytics events are seeded");
+            Check(await Count($"SELECT COUNT(*) FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='{schema}' AND c.relkind='r' AND c.relrowsecurity") == 7,
+                "row level security is enabled on all seven tables");
+            Check(await Count("SELECT COUNT(*) FROM brand WHERE description_language_code='vi'") == 10,
+                "all brand descriptions use Vietnamese");
+            Check(await Count("SELECT COUNT(*) FROM brand WHERE type IS NOT NULL AND type NOT LIKE '%?%'") == 10,
+                "all ten brands have valid category labels");
             Check(await Count("SELECT COUNT(*) FROM branch WHERE latitude IS NOT NULL OR longitude IS NOT NULL OR opening_hours IS NOT NULL") == 0,
                 "unverified coordinates and opening hours stay empty");
         }

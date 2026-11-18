@@ -22,18 +22,9 @@ try
         await SqlValidation.RunAsync(connection, directory);
         return 0;
     }
-    if (args.Length == 1 && args[0] == "--apply-dashboard-migration")
+    if (args.Length != 0)
     {
-        var sqlPath = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory,
-            "../../../../../Database/analytics_dashboard_migration.sql"));
-        await using var migration = new NpgsqlCommand(await File.ReadAllTextAsync(sqlPath), connection);
-        migration.CommandTimeout = 90;
-        await migration.ExecuteNonQueryAsync();
-        Console.WriteLine("Dashboard migration applied successfully; inspecting resulting schema.");
-    }
-    else if (args.Length != 0)
-    {
-        Console.Error.WriteLine("Usage: AnalyticsDatabase [--apply-dashboard-migration | --validate-current-sql]");
+        Console.Error.WriteLine("Usage: AnalyticsDatabase [--validate-current-sql]");
         return 1;
     }
     await using var transaction = await connection.BeginTransactionAsync();
