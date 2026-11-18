@@ -3,6 +3,7 @@ import { MapContainer, Marker, TileLayer, useMapEvents } from "react-leaflet";
 import { divIcon } from "leaflet";
 import { adminRequest, adminJson } from "./adminApi.js";
 import { branchFields, branchForm, branchPayload, branchStatuses, duplicateBranches, hoursText, readBranchHistory, readEditorName, recordBranchHistory, sameBranchData, validBranchPosition, validateBranch } from "./branchForm.mjs";
+import { getBrandFallbackImage } from "./branchBrandImages.mjs";
 import SuggestionImageField from "../user-web/SuggestionImageField.jsx";
 import { imageFields, imageText } from "../user-web/suggestionImages.mjs";
 import "./BranchEditor.css";
@@ -40,6 +41,7 @@ export default function BranchEditor({ row, brands, readOnly, onClose, onSaved }
   const [history, setHistory] = useState(() => row?.id ? readBranchHistory(row.id) : []);
   const imagePending = Object.values(readingImages).some(Boolean);
   const position = validBranchPosition(form) ? [Number(form.latitude), Number(form.longitude)] : null;
+  const selectedBrand = brands.find(brand => String(brand.id) === form.brandId);
   useEffect(() => {
     const dialog = dialogRef.current;
     const overflow = document.body.style.overflow;
@@ -118,13 +120,23 @@ export default function BranchEditor({ row, brands, readOnly, onClose, onSaved }
         {position && <a href={`https://www.google.com/maps/dir/?api=1&destination=${position.join(",")}`} target="_blank" rel="noopener noreferrer">Thử chỉ đường đến chi nhánh</a>}
       </section>
       <fieldset disabled={readOnly || saving}><legend>Hình ảnh chi nhánh</legend><div className="branch-editor__images">
-        {imageFields.map(name => <div key={name}><h4>{imageText("vi", name)}</h4>{readOnly ? (form.images[name] ? <img src={form.images[name]} alt={imageText("vi", name)} /> : <p>Chưa cung cấp</p>) : <>
-          {form.images[name] && !form.images[name].startsWith("data:") && <img src={form.images[name]} alt={imageText("vi", name)} />}
+        {imageFields.map(name => {
+          const branchImage = form.images[name];
+          const imageKind = { logoUrl: "logo", coverUrl: "cover", menuImageUrl: "menu" }[name];
+          const brandImage = !branchImage && selectedBrand
+            ? getBrandFallbackImage(selectedBrand.name, imageKind)
+            : "";
+          return <div key={name}><h4>{imageText("vi", name)}</h4>{readOnly ? (branchImage
+            ? <img src={branchImage} alt={imageText("vi", name)} />
+            : brandImage ? <><img src={brandImage} alt={`${imageText("vi", name)} thương hiệu`} /><p>Ảnh thương hiệu</p></> : <p>Chưa cung cấp</p>) : <>
+          {!branchImage && brandImage && <><img src={brandImage} alt={`${imageText("vi", name)} thương hiệu`} /><p>Ảnh thương hiệu (chỉ hiển thị thay thế)</p></>}
+          {branchImage && !branchImage.startsWith("data:") && <img src={branchImage} alt={imageText("vi", name)} />}
           <SuggestionImageField name={name} value={form.images[name]} language="vi" invalid={Boolean(errors[name])}
             onChange={value => { change("images", { ...form.images, [name]: value }); setErrors(previous => ({ ...previous, [name]: undefined })); }}
             onError={code => setErrors(previous => ({ ...previous, [name]: imageText("vi", code) }))}
             onReadingChange={reading => setReadingImages(previous => ({ ...previous, [name]: reading }))} />{errors[name] && <small>{errors[name]}</small>}
-        </>}</div>)}
+        </>}</div>;
+        })}
       </div></fieldset>
       {!readOnly && <label>Tên người chỉnh sửa trong lịch sử trình duyệt<input maxLength={100} value={actor} onChange={event => setActor(event.target.value)} placeholder="Quản trị viên" disabled={saving} /></label>}
       {duplicates.length > 0 && <section className="branch-editor__duplicates"><h3>Chi nhánh có thể trùng</h3><p>Cùng thương hiệu, trùng địa chỉ hoặc cách nhau tối đa 50 m.</p><ul>{duplicates.map(item => <li key={item.id}>#{item.id} · {item.name} · {item.address}</li>)}</ul><label><input type="checkbox" checked={allowDuplicate} onChange={event => setAllowDuplicate(event.target.checked)} /> Tôi đã đối chiếu và xác nhận đây là chi nhánh riêng.</label></section>}
