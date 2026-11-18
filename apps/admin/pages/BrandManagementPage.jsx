@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { adminRequest, adminJson } from '../api/adminApi.js';
 import BrandFormDialog from '../features/brands/BrandFormDialog.jsx';
 import { useAdminFeedback } from '../components/AdminFeedback.jsx';
@@ -113,9 +113,8 @@ const paths = {
   edit: (
     <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
   ),
-  trash: (
-    <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-  ),
+  pause: <path d="M9 5v14M15 5v14" />,
+  play: <path d="m8 5 11 7-11 7V5z" />,
 };
 
 const Icon = ({ n, size = 18 }) => (
@@ -139,6 +138,8 @@ export default function BrandManagement({ onNavigate }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
   const [brandForm, setBrandForm] = useState(null);
+  const [changingId, setChangingId] = useState(null);
+  const changingRef = useRef(false);
   const { notify, confirm } = useAdminFeedback();
   const reload = async () => {
     try { const rows = await adminRequest('catalog/brands');
@@ -161,33 +162,43 @@ export default function BrandManagement({ onNavigate }) {
   });
 
   const saveBrand = async values => {
-    const editing = brandForm !== 'new';
-    const payload = { ...values, ...(editing ? { isActive: brandForm.isActive } : {}) };
-    await adminRequest(editing ? `catalog/brands/${brandForm.id}` : 'catalog/brands',
-      adminJson(editing ? 'PUT' : 'POST', payload));
+    const payload = { ...values, isActive: brandForm.isActive, expectedUpdatedAt: brandForm.updatedAt };
+    await adminRequest(`catalog/brands/${brandForm.id}`, adminJson('PUT', payload));
     const refreshed = await reload();
     setBrandForm(null);
     if (refreshed) {
-      notify(editing ? 'Thông tin thương hiệu đã được cập nhật.' : 'Thương hiệu đã được thêm trực tiếp vào danh mục.', 'success',
-        editing ? 'Đã lưu thay đổi' : 'Đã thêm thương hiệu');
+      notify('Thông tin thương hiệu đã được cập nhật.', 'success', 'Đã lưu thay đổi');
     } else {
       notify('Thay đổi đã được lưu, nhưng chưa tải lại được danh sách.', 'warning', 'Đã lưu, cần làm mới');
     }
   };
-  const handleDelete = async (id, name) => {
-    const accepted = await confirm({
-      title: 'Tạm ngừng thương hiệu?',
-      message: `Thương hiệu “${name}” sẽ không còn được sử dụng như một thương hiệu đang hoạt động. Bạn có thể bật lại sau.`,
-      confirmLabel: 'Tạm ngừng',
-      tone: 'danger',
-    });
-    if (!accepted) return;
+  const handleActiveChange = async brand => {
+    if (changingRef.current) return;
+    changingRef.current = true;
+    setChangingId(brand.id);
     try {
-      await adminRequest(`catalog/brands/${id}`, { method: 'DELETE' });
-      notify(`Đã tạm ngừng thương hiệu ${name}.`, 'success', 'Đã cập nhật trạng thái');
-      await reload();
+      const nextActive = !brand.isActive;
+      const accepted = await confirm({
+        title: nextActive ? 'Bật lại thương hiệu?' : 'Tạm ngưng thương hiệu?',
+        message: nextActive
+          ? `Thương hiệu “${brand.name}” và các chi nhánh đang hoạt động sẽ được hiển thị lại cho người dùng.`
+          : `Thương hiệu “${brand.name}” và các chi nhánh của thương hiệu sẽ được ẩn phía người dùng. Dữ liệu được lưu để bật lại sau.`,
+        confirmLabel: nextActive ? 'Bật lại' : 'Tạm ngưng',
+        tone: nextActive ? 'success' : 'danger',
+      });
+      if (!accepted) return;
+      const saved = await adminRequest(`catalog/brands/${brand.id}/active`, adminJson('PATCH', {
+        isActive: nextActive, expectedUpdatedAt: brand.updatedAt,
+      }));
+      setBrands(previous => previous.map(item => item.id === brand.id
+        ? { ...item, ...saved, status: saved.isActive ? 'Hoạt động' : 'Tạm dừng' } : item));
+      notify(`Đã ${saved.isActive ? 'bật lại' : 'tạm ngưng'} thương hiệu ${brand.name}.`, 'success', 'Đã cập nhật trạng thái');
     } catch (error) {
-      notify(`Không thể tạm ngừng thương hiệu: ${error.message}`, 'error', 'Thao tác thất bại');
+      await reload();
+      notify(`Không thể cập nhật thương hiệu: ${error.message}`, 'error', 'Thao tác thất bại');
+    } finally {
+      changingRef.current = false;
+      setChangingId(null);
     }
   };
 
@@ -221,12 +232,7 @@ export default function BrandManagement({ onNavigate }) {
         <header className="ad-head">
           <div>
             <h1>Quản lý thương hiệu</h1>
-            <p className="ad-sub">Danh sách và trạng thái các thương hiệu cà phê trong hệ thống</p>
-          </div>
-          <div className="ad-tools">
-            <button className="ad-btn-primary" onClick={() => setBrandForm('new')}>
-              <Icon n="plus" size={16} /> Thêm thương hiệu trực tiếp
-            </button>
+            <p className="ad-sub">Thương hiệu mới được thêm vào danh mục sau khi đề xuất được duyệt.</p>
           </div>
         </header>
 
@@ -290,15 +296,17 @@ export default function BrandManagement({ onNavigate }) {
                       </td>
                       <td style={{ textAlign: 'right' }}>
                         <div className="ad-actions">
-                          <button title="Chỉnh sửa" onClick={() => setBrandForm(b)}>
+                          <button title="Chỉnh sửa" disabled={changingId !== null} onClick={() => setBrandForm(b)}>
                             <Icon n="edit" size={15} />
                           </button>
                           <button
-                            title="Xóa"
-                            className="danger"
-                            onClick={() => handleDelete(b.id, b.name)}
+                            title={b.isActive ? "Tạm ngưng thương hiệu" : "Bật lại thương hiệu"}
+                            aria-label={`${b.isActive ? "Tạm ngưng" : "Bật lại"} ${b.name}`}
+                            disabled={changingId !== null}
+                            className={b.isActive ? "danger" : ""}
+                            onClick={() => handleActiveChange(b)}
                           >
-                            <Icon n="trash" size={15} />
+                            <Icon n={b.isActive ? "pause" : "play"} size={15} />
                           </button>
                         </div>
                       </td>
@@ -320,7 +328,7 @@ export default function BrandManagement({ onNavigate }) {
         </section>
       </main>
       {brandForm && <BrandFormDialog
-        brand={brandForm === 'new' ? null : brandForm}
+        brand={brandForm}
         onClose={() => setBrandForm(null)}
         onSave={saveBrand}
       />}

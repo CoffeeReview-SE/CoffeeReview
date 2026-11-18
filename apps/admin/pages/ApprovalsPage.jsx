@@ -175,7 +175,9 @@ export default function ApprovalsManagement({ onNavigate }) {
     setProcessingId(id);
     const accepted = await confirm({
       title: `${newStatus} đề xuất?`,
-      message: `Đề xuất #${id} sẽ được ${newStatus.toLowerCase()}. Việc này cập nhật trạng thái duyệt; dữ liệu không tự động được thêm vào danh mục.`,
+      message: newStatus === 'Đã duyệt'
+        ? `Duyệt đề xuất #${id} và thêm thông tin hợp lệ vào danh mục thương hiệu, chi nhánh?`
+        : `Từ chối đề xuất #${id}?`,
       confirmLabel: newStatus,
       tone: newStatus === 'Từ chối' ? 'danger' : 'success',
     });
@@ -185,7 +187,7 @@ export default function ApprovalsManagement({ onNavigate }) {
     }
     try {
       await adminRequest(`submissions/${id}/decision`, adminJson('POST', { status: newStatus === 'Đã duyệt' ? 'APPROVED' : 'REJECTED' }));
-      notify(`Đã ${newStatus.toLowerCase()} đề xuất #${id}.`, 'success', 'Đã cập nhật trạng thái');
+      notify(newStatus === 'Đã duyệt' ? `Đã duyệt và đưa đề xuất #${id} vào danh mục.` : `Đã từ chối đề xuất #${id}.`, 'success', 'Đã cập nhật đề xuất');
       await reload();
     }
     catch(e) { notify(`Không thể cập nhật đề xuất: ${e.message}`, 'error', 'Thao tác thất bại'); }

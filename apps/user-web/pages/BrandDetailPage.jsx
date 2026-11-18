@@ -363,9 +363,10 @@ export default function BrandDetailPage({ brandId, brand, onBack, onNavigate, on
 
   
   const dbBrandImgs = getDatabaseBrandImages(item.id, item.name);
-  const resolvedCover = item.cover || dbBrandImgs?.cover;
+  const branches = Array.isArray(item.branches) ? item.branches : [];
+  const resolvedCover = item.cover || dbBrandImgs?.cover || branches.find(branch => branch.images?.coverUrl)?.images.coverUrl;
   
-  const resolvedMenuImages = item.menuImages?.length ? [item.menuImages[0]] : (dbBrandImgs?.menu || [null]);
+  const resolvedMenuImages = item.menuImages?.length ? [item.menuImages[0]] : (dbBrandImgs?.menu || [branches.find(branch => branch.images?.menuImageUrl)?.images.menuImageUrl || null]);
 
   const localized = translation?.languageCode === languageCode ? translation : null;
   const currentDescription = localized?.description ?? item.description;
@@ -374,7 +375,6 @@ export default function BrandDetailPage({ brandId, brand, onBack, onNavigate, on
   const translationFailed = translationStatus.languageCode === languageCode && translationStatus.status === "error";
   const type = item.type || item.category || "";
   const displayType = localizedCategory(type, languageCode);
-  const branches = Array.isArray(item.branches) ? item.branches : [];
   const count = item.branchCount ?? (typeof item.branches === 'number' ? item.branches : branches.length);
   const images = resolvedMenuImages;
   const [view, setView] = useState(null);

@@ -53,7 +53,7 @@ static class SuggestionValidation
         Image("menuImageUrl", input.MenuImageUrl);
         if (isNewBrand)
         {
-            Required("type", input.Type, 160);
+            Required("type", input.Type, 80);
             Required("description", input.Description, 10000);
             Url("websiteUrl", input.WebsiteUrl);
         }

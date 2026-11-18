@@ -4,7 +4,7 @@ export const suggestionFields = [
   { name: "name", maxLength: 160 },
   { name: "phone", type: "tel", maxLength: 30 },
   { name: "brandName", maxLength: 160 },
-  { name: "type", maxLength: 160, brandOnly: true },
+  { name: "type", maxLength: 80, brandOnly: true },
   { name: "description", multiline: true, maxLength: 10000, brandOnly: true },
   { name: "websiteUrl", type: "url", maxLength: 2000, brandOnly: true },
   { name: "logoUrl", type: "url", maxLength: 2000, brandOnly: true, optionalForExisting: true },

@@ -11,6 +11,15 @@ builder.Services.AddSingleton<ImageFileStore>();
 var app = builder.Build();
 app.MapBranchMedia();
 app.MapGet("/health", () => Results.Ok(new { status = "ok" }));
+app.MapPost("/admin/submissions/images", async (AdminImageInput input, ImageFileStore images, CancellationToken ct) => {
+    if (string.IsNullOrWhiteSpace(input.BrandName) || input.BrandName.Trim().Length > 160 ||
+        input.Kind is not ("logo" or "cover" or "menu") || input.Value?.StartsWith("data:") != true)
+        return Results.BadRequest(new { error = "Vui lòng nhập tên thương hiệu và chọn ảnh hợp lệ." });
+    try { return Results.Ok(new { url = await images.StoreAsync(input.Value, input.BrandName, input.Kind, ct) }); }
+    catch (ArgumentException) { return Results.BadRequest(new { error = "Ảnh phải là JPG, PNG hoặc WebP hợp lệ, tối đa 2 MB." }); }
+    catch (Exception error) when (error is IOException or UnauthorizedAccessException)
+    { return Results.Json(new { error = "Chưa lưu được ảnh. Vui lòng thử lại." }, statusCode: 503); }
+});
 app.Use(async (ctx, next) => {
     if (ctx.Request.Path == "/health") { await next(); return; }
     var expected = app.Configuration["Gateway:SharedKey"];
@@ -100,34 +109,7 @@ app.MapPost("/", async (SuggestionInput input, NpgsqlDataSource db, ImageFileSto
     var id = (long)(await cmd.ExecuteScalarAsync(ct))!;
     return Results.Accepted("/", new { id, status = "PENDING" });
 });
-app.MapPost("/admin/submissions/{id:long}/decision",async(long id,DecisionInput input,NpgsqlDataSource db,CancellationToken ct)=>{
-    if(input.Status is not ("APPROVED" or "REJECTED"))return Results.BadRequest("Invalid decision");
-    if (input.Status == "APPROVED")
-    {
-        await using var read = db.CreateCommand("SELECT data_json::text, suggested_name, suggested_address FROM submission WHERE submission_id=@id AND status='PENDING'");
-        read.Parameters.AddWithValue("id", id);
-        SuggestionInput suggestion;
-        await using (var reader = await read.ExecuteReaderAsync(ct))
-        {
-            if (!await reader.ReadAsync(ct)) return Results.Conflict("Not found or already processed");
-            try
-            {
-                suggestion = JsonSerializer.Deserialize<SuggestionInput>(reader.GetString(0), new JsonSerializerOptions(JsonSerializerDefaults.Web)) ?? new();
-            }
-            catch (JsonException) { return Results.BadRequest(new { error = "Thông tin đề xuất chưa đầy đủ. Cần bổ sung trước khi duyệt." }); }
-            suggestion = suggestion with {
-                BrandName = reader.IsDBNull(1) ? null : reader.GetString(1),
-                Address = reader.IsDBNull(2) ? null : reader.GetString(2)
-            };
-        }
-        var isNewBrand = await IsNewBrand(suggestion.BrandName ?? "", db, ct);
-        var errors = SuggestionValidation.Validate(suggestion, isNewBrand);
-        if (errors.Count > 0) return Results.BadRequest(new { error = "Thông tin đề xuất chưa đầy đủ. Cần bổ sung trước khi duyệt.", errors });
-    }
-    await using var cmd=db.CreateCommand("UPDATE submission SET status=@status,processed_at=now() WHERE submission_id=@id AND status='PENDING'");
-    cmd.Parameters.AddWithValue("status",input.Status);cmd.Parameters.AddWithValue("id",id);
-    return await cmd.ExecuteNonQueryAsync(ct)==0?Results.Conflict("Not found or already processed"):Results.NoContent();
-});
+app.MapPost("/admin/submissions/{id:long}/decision", (long id, DecisionInput input, NpgsqlDataSource db, ImageFileStore images, CancellationToken ct) => SubmissionApproval.Decide(id, input, db, images, ct));
 app.Run();
 static async Task<bool> IsNewBrand(string brandName, NpgsqlDataSource db, CancellationToken ct)
 {
@@ -136,3 +118,4 @@ static async Task<bool> IsNewBrand(string brandName, NpgsqlDataSource db, Cancel
     return !(bool)(await cmd.ExecuteScalarAsync(ct))!;
 }
 record DecisionInput(string Status);
+record AdminImageInput(string? BrandName, string? Kind, string? Value);
