@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { LANGUAGES, useLanguage } from "../contexts/LanguageContext.jsx";
 import { localizedCategory, screenText } from "../i18n/brandDetailTranslations.js";
 import { getUserApi, toBrandCard } from "../../shared/api/userApi.js";
-import { emptySuggestion, getBrandSuggestionValues, isExistingBrandFieldReadOnly, suggestionFields, suggestionText, validateSuggestion } from "../../shared/suggestions/suggestionForm.mjs";
+import { emptySuggestion, getBrandSuggestionValues, getSuggestionBrands, isExistingBrandFieldReadOnly, suggestionFields, suggestionText, validateSuggestion } from "../../shared/suggestions/suggestionForm.mjs";
 import SuggestionImageField from "../../shared/suggestions/SuggestionImageField.jsx";
 import { imageFields } from "../../shared/suggestions/suggestionImages.mjs";
 
@@ -193,7 +193,7 @@ export default function SuggestionsPage({ recentBrands = [], onNavigate }) {
   const { languageCode } = useLanguage();
   const st = (key, values) => screenText(languageCode, key, values);
   const [catalogBrands, setCatalogBrands] = useState([]);
-  const displayBrands = recentBrands.length > 0 ? recentBrands : catalogBrands;
+  const displayBrands = getSuggestionBrands(catalogBrands, recentBrands);
 
   const [formData, setFormData] = useState({ ...emptySuggestion });
   const [fieldErrors, setFieldErrors] = useState({});
@@ -239,6 +239,8 @@ export default function SuggestionsPage({ recentBrands = [], onNavigate }) {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+    const field = suggestionFields.find(field => field.name === name);
+    if (field && isExistingBrandFieldReadOnly(field, existingBrand)) return;
     setFormData(prev => ({ ...prev, [name]: value }));
     setFieldErrors(previous => ({ ...previous, [name]: undefined }));
   };

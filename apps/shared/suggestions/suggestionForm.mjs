@@ -20,6 +20,13 @@ export const suggestionFields = [
 
 export const emptySuggestion = Object.fromEntries([...suggestionFields.map(field => [field.name, ""]), ["note", ""]]);
 
+export function getSuggestionBrands(catalogBrands, recentBrands = []) {
+  const recentOrder = new Map(recentBrands.map((brand, index) => [String(brand.id), index]));
+  return [...catalogBrands].sort((a, b) =>
+    (recentOrder.get(String(a.id)) ?? Infinity) - (recentOrder.get(String(b.id)) ?? Infinity)
+  );
+}
+
 export function getBrandSuggestionValues(brand) {
   if (!brand) return {};
   return {
@@ -35,6 +42,7 @@ export function getBrandSuggestionValues(brand) {
 }
 
 export function isExistingBrandFieldReadOnly(field, brand) {
+  if (brand && field.brandOnly) return true;
   if (!brand || (!field.brandOnly && field.name !== "brandName" && field.name !== "branchName")) return false;
   const value = getBrandSuggestionValues(brand)[field.name];
   return typeof value === "string" && value.trim() !== "";

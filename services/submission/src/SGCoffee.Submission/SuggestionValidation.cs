@@ -2,6 +2,11 @@ using System.Text.RegularExpressions;
 
 static class SuggestionValidation
 {
+    public static SuggestionInput WithoutBrandDetails(SuggestionInput input) => input with {
+        Type = null, Description = null, WebsiteUrl = null,
+        LogoUrl = null, CoverUrl = null, MenuImageUrl = null
+    };
+
     public static Dictionary<string, string> Validate(SuggestionInput input, bool isNewBrand)
     {
         var errors = new Dictionary<string, string>();

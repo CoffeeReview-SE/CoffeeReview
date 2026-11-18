@@ -1,6 +1,15 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { emptySuggestion, getBrandSuggestionValues, isExistingBrandFieldReadOnly, suggestionFields, validateSuggestion } from "./suggestionForm.mjs";
+import { emptySuggestion, getBrandSuggestionValues, getSuggestionBrands, isExistingBrandFieldReadOnly, suggestionFields, validateSuggestion } from "./suggestionForm.mjs";
+
+test("suggestion brands include the full catalog after viewing Highlands", () => {
+  const catalog = [{ id: 1, name: "Phuc Long" }, { id: 2, name: "Highlands" }, { id: 3, name: "Katinat" }];
+  const recent = [{ id: "2", name: "Outdated Highlands" }, { id: 99, name: "Removed brand" }];
+  assert.deepEqual(getSuggestionBrands(catalog, recent), [catalog[1], catalog[0], catalog[2]]);
+  assert.deepEqual(getSuggestionBrands(catalog), catalog);
+  assert.deepEqual(getSuggestionBrands([], recent), []);
+  assert.deepEqual(catalog.map(brand => brand.id), [1, 2, 3]);
+});
 
 const complete = {
   name: "Nguyễn An", phone: "+84 901 234 567", brandName: "Thương hiệu mới",
@@ -43,8 +52,11 @@ test("existing brand details prefill only data available in the catalog", () => 
   assert.deepEqual(getBrandSuggestionValues(null), {});
   assert.equal(isExistingBrandFieldReadOnly(suggestionFields.find(field => field.name === "description"), brand), true);
   assert.equal(isExistingBrandFieldReadOnly(suggestionFields.find(field => field.name === "logoUrl"), brand), true);
-  assert.equal(isExistingBrandFieldReadOnly(suggestionFields.find(field => field.name === "menuImageUrl"), brand), false);
-  assert.equal(isExistingBrandFieldReadOnly(suggestionFields.find(field => field.name === "coverUrl"), brand), false);
+  assert.equal(isExistingBrandFieldReadOnly(suggestionFields.find(field => field.name === "menuImageUrl"), brand), true);
+  assert.equal(isExistingBrandFieldReadOnly(suggestionFields.find(field => field.name === "coverUrl"), brand), true);
+  for (const field of suggestionFields.filter(field => field.brandOnly)) {
+    assert.equal(isExistingBrandFieldReadOnly(field, { name: "Existing brand" }), true, field.name);
+  }
   assert.equal(isExistingBrandFieldReadOnly(suggestionFields.find(field => field.name === "branchName"), brand), true);
   assert.equal(isExistingBrandFieldReadOnly(suggestionFields.find(field => field.name === "brandName"), brand), true);
   assert.equal(isExistingBrandFieldReadOnly(suggestionFields.find(field => field.name === "description"), null), false);

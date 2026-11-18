@@ -70,9 +70,10 @@ app.MapPost("/", async (SuggestionInput input, NpgsqlDataSource db, ImageFileSto
     var brandName = input.BrandName?.Trim();
     var address = input.Address?.Trim();
     var note = input.Note?.Trim();
-    var errors = SuggestionValidation.Validate(input, false);
+    var errors = SuggestionValidation.Validate(SuggestionValidation.WithoutBrandDetails(input), false);
     if (errors.Count > 0) return Results.BadRequest(new { error = "incomplete_submission", errors });
     var isNewBrand = await IsNewBrand(brandName!, db, ct);
+    if (!isNewBrand) input = SuggestionValidation.WithoutBrandDetails(input);
     errors = SuggestionValidation.Validate(input, isNewBrand);
     if (errors.Count > 0) return Results.BadRequest(new { error = "incomplete_submission", errors });
 

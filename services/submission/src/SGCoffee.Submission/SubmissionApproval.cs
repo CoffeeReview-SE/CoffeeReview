@@ -62,6 +62,9 @@ static class SubmissionApproval
                     brandId = reader.GetInt64(0); brandName = reader.GetString(1);
                 }
             }
+            // Recheck at approval time: another submission may already have created the brand.
+            // Existing brand details and images must never come from a branch proposal.
+            if (brandId.HasValue) suggestion = SuggestionValidation.WithoutBrandDetails(suggestion);
             var errors = SuggestionValidation.Validate(suggestion, !brandId.HasValue);
             if (errors.Count > 0) return Results.BadRequest(new { error = "Thông tin đề xuất chưa đầy đủ. Cần bổ sung trước khi duyệt.", errors });
 
