@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { adminRequest } from '../api/adminApi.js';
+import { useAdminFeedback } from '../components/AdminFeedback.jsx';
 import './AdminDashboard.css';
 
 const NAV = [
@@ -122,6 +123,10 @@ export default function AdminDashboard({ onNavigate }) {
   const [data, setData] = useState(null);
   const [error, setError] = useState('');
   const [refresh, setRefresh] = useState(0);
+  const lastNotifiedError = useRef('');
+  const dataRef = useRef(data);
+  dataRef.current = data;
+  const { notify } = useAdminFeedback();
   useEffect(() => {
     const controller = new AbortController();
     let timer;
@@ -142,9 +147,17 @@ export default function AdminDashboard({ onNavigate }) {
         if (!controller.signal.aborted) {
           setData(result);
           setError('');
+          lastNotifiedError.current = '';
         }
       } catch (err) {
-        if (!controller.signal.aborted) setError(`Không tải được thống kê: ${err.message}`);
+        if (!controller.signal.aborted) {
+          const message = `Không tải được thống kê: ${err.message}${dataRef.current ? ' Dashboard đang hiển thị dữ liệu từ lần tải thành công gần nhất.' : ''}`;
+          setError(message);
+          if (lastNotifiedError.current !== message) {
+            notify(message, 'error', 'Lỗi tải thống kê');
+            lastNotifiedError.current = message;
+          }
+        }
       } finally {
         if (!controller.signal.aborted) timer = setTimeout(load, 5000);
       }
@@ -154,7 +167,7 @@ export default function AdminDashboard({ onNavigate }) {
       controller.abort();
       clearTimeout(timer);
     };
-  }, [refresh]);
+  }, [notify, refresh]);
   const stats = data && [
     ['Tổng lượt truy cập / phiên', data.sessions],
     ['Active', data.active, true],
@@ -194,12 +207,6 @@ export default function AdminDashboard({ onNavigate }) {
           </button>
         </header>
         <p>Toàn bộ thời gian · Tự cập nhật sau mỗi 5 giây · Giờ Việt Nam</p>
-        {error && (
-          <p role="alert" style={{ color: '#B42318' }}>
-            {error}
-            {data && ' Các số liệu bên dưới là dữ liệu lần tải thành công gần nhất.'}
-          </p>
-        )}
         {!data && !error && <p role="status">Đang tải thống kê…</p>}
         {data && (
           <>

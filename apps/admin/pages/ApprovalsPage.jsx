@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { adminRequest, adminJson } from '../api/adminApi.js';
 import SubmissionDetails, { readSubmissionData } from '../features/suggestions/SubmissionDetails.jsx';
+import { useAdminFeedback } from '../components/AdminFeedback.jsx';
 
 /* Danh mục điều hướng liên kết đồng bộ với AdminDashboard */
 const NAV = [
@@ -153,10 +154,10 @@ export default function ApprovalsManagement({ onNavigate }) {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('Tất cả');
   const [typeFilter, setTypeFilter] = useState('Tất cả');
+  const { notify, confirm } = useAdminFeedback();
 
-  const go = (key) => (onNavigate ? onNavigate(key) : window.alert(`Chuyển đến trang: ${key}`));
+  const go = key => onNavigate?.(key);
 
-  const [apiError, setApiError] = useState('');
   const reload = async () => {
     try { const rows = await adminRequest('submissions');
       setApprovals(rows.map(x => ({ id:x.id, title:x.name || `Đề xuất #${x.id}`,
@@ -166,17 +167,28 @@ export default function ApprovalsManagement({ onNavigate }) {
         status:({PENDING:'Chờ duyệt',APPROVED:'Đã duyệt',REJECTED:'Từ chối'})[x.status] || x.status,
         dataJson:x.dataJson, address:x.address
       })));
-      setApiError('');
-    } catch(e) { setApiError(e.message); }
+    } catch(e) { notify(`Không tải được danh sách đề xuất: ${e.message}`, 'error', 'Lỗi tải dữ liệu'); }
   };
   useEffect(() => { reload(); }, []);
   const handleStatusChange = async (id, newStatus) => {
     if (processingId !== null) return;
-    if (!window.confirm(`Xác nhận ${newStatus.toLowerCase()} đề xuất #${id}? Thao tác này chỉ cập nhật trạng thái, chưa tự thêm dữ liệu vào danh mục.`)) return;
     setProcessingId(id);
-    setApiError('');
-    try { await adminRequest(`submissions/${id}/decision`, adminJson('POST', { status: newStatus === 'Đã duyệt' ? 'APPROVED' : 'REJECTED' })); await reload(); }
-    catch(e) { setApiError(e.message); }
+    const accepted = await confirm({
+      title: `${newStatus} đề xuất?`,
+      message: `Đề xuất #${id} sẽ được ${newStatus.toLowerCase()}. Việc này cập nhật trạng thái duyệt; dữ liệu không tự động được thêm vào danh mục.`,
+      confirmLabel: newStatus,
+      tone: newStatus === 'Từ chối' ? 'danger' : 'success',
+    });
+    if (!accepted) {
+      setProcessingId(null);
+      return;
+    }
+    try {
+      await adminRequest(`submissions/${id}/decision`, adminJson('POST', { status: newStatus === 'Đã duyệt' ? 'APPROVED' : 'REJECTED' }));
+      notify(`Đã ${newStatus.toLowerCase()} đề xuất #${id}.`, 'success', 'Đã cập nhật trạng thái');
+      await reload();
+    }
+    catch(e) { notify(`Không thể cập nhật đề xuất: ${e.message}`, 'error', 'Thao tác thất bại'); }
     finally { setProcessingId(null); }
   };
   const filteredList = approvals.filter((item) => {
@@ -220,7 +232,6 @@ export default function ApprovalsManagement({ onNavigate }) {
       </aside>
 
       <main className="ad-main">
-        {apiError && <p role="alert" style={{color:"#a22"}}>Lỗi API: {apiError}</p>}
         <header className="ad-head">
           <div>
             <h1>Duyệt đề xuất</h1>
@@ -391,7 +402,6 @@ export default function ApprovalsManagement({ onNavigate }) {
         item={selectedItem}
         onClose={() => setSelectedId(null)}
         busy={processingId !== null}
-        error={apiError}
         onApprove={selectedItem.status === 'Chờ duyệt' ? () => handleStatusChange(selectedItem.id, 'Đã duyệt') : undefined}
         onReject={selectedItem.status === 'Chờ duyệt' ? () => handleStatusChange(selectedItem.id, 'Từ chối') : undefined}
       />}

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { adminRequest } from '../api/adminApi.js';
 import SubmissionDetails, { readSubmissionData } from '../features/suggestions/SubmissionDetails.jsx';
 import CreateSuggestionDialog from '../features/suggestions/CreateSuggestionDialog.jsx';
+import { useAdminFeedback } from '../components/AdminFeedback.jsx';
 
 const INITIAL_SUGGESTIONS = [
   {
@@ -134,7 +135,6 @@ const paths = {
       <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
     </>
   ),
-  close: <path d="m18 6-12 12M6 6l12 12" />,
 };
 
 const Icon = ({ n, size = 18 }) => (
@@ -160,17 +160,10 @@ export default function SuggestionsManagement({ onNavigate }) {
   const [createOpen, setCreateOpen] = useState(false);
   const [filterStatus, setFilterStatus] = useState('Tất cả');
   const [searchTerm, setSearchTerm] = useState('');
-  const [notice, setNotice] = useState(null);
+  const { notify } = useAdminFeedback();
 
-  const go = (key) => {
-    if (onNavigate) {
-      onNavigate(key);
-    } else {
-      window.alert(`Chuyển hướng liên kết tới mục ${key}`);
-    }
-  };
+  const go = key => onNavigate?.(key);
 
-  const [apiError, setApiError] = useState('');
   const reload = async () => {
     try {
       const rows = await adminRequest('submissions');
@@ -182,17 +175,11 @@ export default function SuggestionsManagement({ onNavigate }) {
       date: new Date(x.createdAt).toLocaleDateString('vi-VN'),
       status: ({PENDING:'Chờ duyệt', APPROVED:'Đã duyệt', REJECTED:'Từ chối'})[x.status] || x.status,
       })));
-      setApiError('');
     } catch (e) {
-      setApiError(e.message);
+      notify(`Không tải được danh sách đề xuất: ${e.message}`, 'error', 'Lỗi tải dữ liệu');
     }
   };
   useEffect(() => { reload(); }, []);
-  useEffect(() => {
-    if (!notice) return undefined;
-    const timeoutId = window.setTimeout(() => setNotice(null), 6000);
-    return () => window.clearTimeout(timeoutId);
-  }, [notice]);
   const filteredItems = items.filter((item) => {
     const matchesStatus = filterStatus === 'Tất cả' || item.status === filterStatus;
     const matchesSearch =
@@ -202,36 +189,9 @@ export default function SuggestionsManagement({ onNavigate }) {
     return matchesStatus && matchesSearch;
   });
 
-  const handleDelete = () => setNotice({
-    title: 'Không thể xóa đề xuất',
-    message: 'Lịch sử đề xuất được giữ lại để theo dõi. Hãy dùng chức năng duyệt hoặc từ chối.',
-  });
-
   return (
     <div className="ad">
       <style>{css}</style>
-      {notice && (
-        <div className="ad-notice" role="status" aria-live="polite">
-          <span className="ad-notice__icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none">
-              <circle cx="12" cy="12" r="9" />
-              <path d="M12 11v5M12 8h.01" />
-            </svg>
-          </span>
-          <span className="ad-notice__content">
-            <strong>{notice.title}</strong>
-            <span>{notice.message}</span>
-          </span>
-          <button
-            className="ad-notice__close"
-            type="button"
-            aria-label="Đóng thông báo"
-            onClick={() => setNotice(null)}
-          >
-            <Icon n="close" size={16} />
-          </button>
-        </div>
-      )}
 
       <aside className="ad-side">
         <div className="ad-brand">
@@ -254,9 +214,7 @@ export default function SuggestionsManagement({ onNavigate }) {
           ))}
         </nav>
       </aside>
-
       <main className="ad-main">
-        {apiError && <p role="alert" style={{color:"#a22"}}>Lỗi API: {apiError}</p>}
         <header className="ad-head">
           <div>
             <h1>Quản lý đề xuất</h1>
@@ -377,13 +335,6 @@ export default function SuggestionsManagement({ onNavigate }) {
                           >
                             <Icon n="eye" size={16} />
                           </button>
-                          <button
-                            className="ad-icon-btn danger"
-                            title="Xóa đề xuất"
-                            onClick={() => handleDelete(item.id)}
-                          >
-                            <Icon n="trash" size={16} />
-                          </button>
                         </div>
                       </td>
                     </tr>
@@ -409,7 +360,10 @@ export default function SuggestionsManagement({ onNavigate }) {
         onClose={() => setSelectedId(null)}
         onReview={selectedItem.status === 'Chờ duyệt' ? () => go('approvals') : undefined}
       />}
-      {createOpen && <CreateSuggestionDialog onClose={() => setCreateOpen(false)} onCreated={reload} />}
+      {createOpen && <CreateSuggestionDialog onClose={() => setCreateOpen(false)} onCreated={async () => {
+        await reload();
+        notify('Đề xuất đã được gửi vào danh sách chờ duyệt.', 'success', 'Đã gửi đề xuất');
+      }} />}
     </div>
   );
 }
@@ -469,19 +423,6 @@ const css = `
 .ad-actions{display:flex;justify-content:flex-end;gap:6px}
 .ad-icon-btn{display:grid;place-items:center;width:30px;height:30px;border:1px solid var(--line);border-radius:6px;background:#fff;color:var(--brown);cursor:pointer;transition:all .15s}
 .ad-icon-btn:hover{background:#FAF5EF;border-color:#D0C0B0}
-.ad-icon-btn.danger{color:#C0392B}
-.ad-icon-btn.danger:hover{background:#FDE4E1;border-color:#E8B4B0}
-
-.ad-notice{position:fixed;z-index:1200;top:24px;right:24px;display:flex;align-items:flex-start;gap:12px;width:min(420px,calc(100vw - 32px));padding:16px;border:1px solid #EAD9C9;border-radius:14px;background:#FFFEFC;box-shadow:0 16px 48px rgba(42,24,16,.2);animation:ad-notice-in .22s ease-out}
-.ad-notice__icon{display:grid;place-items:center;flex:none;width:38px;height:38px;border-radius:12px;background:#FFF0DE;color:#B25E14}
-.ad-notice__icon svg{width:20px;height:20px;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-.ad-notice__content{display:grid;gap:4px;padding-top:1px}
-.ad-notice__content strong{color:var(--ink);font-size:14px}
-.ad-notice__content span{color:#76675B;font-size:12.5px;line-height:1.5}
-.ad-notice__close{display:grid;place-items:center;flex:none;width:28px;height:28px;margin:-4px -4px 0 auto;padding:0;border:0;border-radius:7px;background:transparent;color:#8B7A6C;cursor:pointer}
-.ad-notice__close:hover{background:#F5EEE7;color:var(--ink)}
-@keyframes ad-notice-in{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
-
 @media (max-width:900px){
   .ad{grid-template-columns:minmax(0,1fr);grid-template-rows:auto 1fr;grid-template-areas:"side" "main"}
   .ad-side{padding:12px 12px 4px}
@@ -489,6 +430,5 @@ const css = `
   .ad-nav{display:flex;gap:6px;overflow-x:auto}
   .ad-nav button{width:auto;margin:0;white-space:nowrap}
   .ad-main{border-radius:18px 18px 0 0}
-  .ad-notice{top:12px;right:12px}
 }
 `;

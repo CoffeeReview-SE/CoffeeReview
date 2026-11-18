@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { adminRequest, adminJson } from '../api/adminApi.js';
+import BrandFormDialog from '../features/brands/BrandFormDialog.jsx';
+import { useAdminFeedback } from '../components/AdminFeedback.jsx';
 
 /* Danh mục Navigation liên kết đồng bộ với AdminDashboard */
 const NAV = [
@@ -114,12 +116,6 @@ const paths = {
   trash: (
     <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
   ),
-  eye: (
-    <>
-      <path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z" />
-      <circle cx="12" cy="12" r="3" />
-    </>
-  ),
 };
 
 const Icon = ({ n, size = 18 }) => (
@@ -142,22 +138,19 @@ export default function BrandManagement({ onNavigate }) {
   const [brands, setBrands] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
-
-  const [apiError, setApiError] = useState('');
+  const [brandForm, setBrandForm] = useState(null);
+  const { notify, confirm } = useAdminFeedback();
   const reload = async () => {
     try { const rows = await adminRequest('catalog/brands');
       setBrands(rows.map(b => ({ ...b, code: String(b.id), color: '#4A2C1E', views: 0, audio: 0, rating: 0, status: b.isActive ? 'Hoạt động' : 'Tạm dừng' })));
-      setApiError('');
-    } catch (e) { setApiError(e.message); }
-  };
-  useEffect(() => { reload(); }, []);
-  const go = (key) => {
-    if (onNavigate) {
-      onNavigate(key);
-    } else {
-      window.alert(`Chuyển sang trang: ${key}`);
+      return true;
+    } catch (e) {
+      notify(`Không tải được danh sách thương hiệu: ${e.message}`, 'error', 'Lỗi tải dữ liệu');
+      return false;
     }
   };
+  useEffect(() => { reload(); }, []);
+  const go = key => onNavigate?.(key);
 
   const filteredBrands = brands.filter((b) => {
     const matchesSearch =
@@ -167,22 +160,35 @@ export default function BrandManagement({ onNavigate }) {
     return matchesSearch && matchesStatus;
   });
 
-  const handleAddBrand = async () => {
-    const name = window.prompt('Tên thương hiệu:');
-    if (!name?.trim()) return;
-    try { await adminRequest('catalog/brands', adminJson('POST', { name: name.trim() })); await reload(); }
-    catch(e) { setApiError(e.message); }
-  };
-  const handleEditBrand = async (b) => {
-    const name = window.prompt('Tên thương hiệu:', b.name);
-    if (!name?.trim()) return;
-    try { await adminRequest(`catalog/brands/${b.id}`, adminJson('PUT', { name: name.trim(), description: b.description, logoUrl: b.logoUrl, websiteUrl: b.websiteUrl, isActive: b.isActive })); await reload(); }
-    catch(e) { setApiError(e.message); }
+  const saveBrand = async values => {
+    const editing = brandForm !== 'new';
+    const payload = { ...values, ...(editing ? { isActive: brandForm.isActive } : {}) };
+    await adminRequest(editing ? `catalog/brands/${brandForm.id}` : 'catalog/brands',
+      adminJson(editing ? 'PUT' : 'POST', payload));
+    const refreshed = await reload();
+    setBrandForm(null);
+    if (refreshed) {
+      notify(editing ? 'Thông tin thương hiệu đã được cập nhật.' : 'Thương hiệu đã được thêm trực tiếp vào danh mục.', 'success',
+        editing ? 'Đã lưu thay đổi' : 'Đã thêm thương hiệu');
+    } else {
+      notify('Thay đổi đã được lưu, nhưng chưa tải lại được danh sách.', 'warning', 'Đã lưu, cần làm mới');
+    }
   };
   const handleDelete = async (id, name) => {
-    if (!window.confirm(`Tạm ngừng thương hiệu "${name}"?`)) return;
-    try { await adminRequest(`catalog/brands/${id}`, { method: 'DELETE' }); await reload(); }
-    catch(e) { setApiError(e.message); }
+    const accepted = await confirm({
+      title: 'Tạm ngừng thương hiệu?',
+      message: `Thương hiệu “${name}” sẽ không còn được sử dụng như một thương hiệu đang hoạt động. Bạn có thể bật lại sau.`,
+      confirmLabel: 'Tạm ngừng',
+      tone: 'danger',
+    });
+    if (!accepted) return;
+    try {
+      await adminRequest(`catalog/brands/${id}`, { method: 'DELETE' });
+      notify(`Đã tạm ngừng thương hiệu ${name}.`, 'success', 'Đã cập nhật trạng thái');
+      await reload();
+    } catch (error) {
+      notify(`Không thể tạm ngừng thương hiệu: ${error.message}`, 'error', 'Thao tác thất bại');
+    }
   };
 
   return (
@@ -212,15 +218,14 @@ export default function BrandManagement({ onNavigate }) {
       </aside>
 
       <main className="ad-main">
-        {apiError && <p role="alert" style={{color:"#a22"}}>Lỗi API: {apiError}</p>}
         <header className="ad-head">
           <div>
             <h1>Quản lý thương hiệu</h1>
             <p className="ad-sub">Danh sách và trạng thái các thương hiệu cà phê trong hệ thống</p>
           </div>
           <div className="ad-tools">
-            <button className="ad-btn-primary" onClick={handleAddBrand}>
-              <Icon n="plus" size={16} /> Thêm thương hiệu
+            <button className="ad-btn-primary" onClick={() => setBrandForm('new')}>
+              <Icon n="plus" size={16} /> Thêm thương hiệu trực tiếp
             </button>
           </div>
         </header>
@@ -285,13 +290,7 @@ export default function BrandManagement({ onNavigate }) {
                       </td>
                       <td style={{ textAlign: 'right' }}>
                         <div className="ad-actions">
-                          <button
-                            title="Xem chi tiết"
-                            onClick={() => window.alert(`Xem ${b.name}`)}
-                          >
-                            <Icon n="eye" size={15} />
-                          </button>
-                          <button title="Chỉnh sửa" onClick={() => handleEditBrand(b)}>
+                          <button title="Chỉnh sửa" onClick={() => setBrandForm(b)}>
                             <Icon n="edit" size={15} />
                           </button>
                           <button
@@ -320,6 +319,11 @@ export default function BrandManagement({ onNavigate }) {
           </div>
         </section>
       </main>
+      {brandForm && <BrandFormDialog
+        brand={brandForm === 'new' ? null : brandForm}
+        onClose={() => setBrandForm(null)}
+        onSave={saveBrand}
+      />}
     </div>
   );
 }

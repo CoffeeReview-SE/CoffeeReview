@@ -14,6 +14,7 @@ const SuggestionsManagement = lazy(() => import('./admin/pages/SuggestionsPage.j
 const ApprovalsManagement = lazy(() => import('./admin/pages/ApprovalsPage.jsx'));
 import PageTracker from './analytics/PageTracker.jsx';
 import ChatWidget from './user-web/components/ChatWidget.jsx';
+import { AdminFeedbackProvider } from './admin/components/AdminFeedback.jsx';
 /* Map: section trên URL -> trang quản trị tương ứng (đã bỏ menu) */
 const ADMIN_PAGES = {
   brands: BrandManagement,
@@ -123,14 +124,14 @@ function Suggestions({ recentBrands }) {
 
 /* 5. Khu vực Quản trị Admin */
 function Dashboard() {
-  return <AdminDashboard onNavigate={useAdminNav()} />;
+  return <AdminFeedbackProvider><AdminDashboard onNavigate={useAdminNav()} /></AdminFeedbackProvider>;
 }
 
 function Management() {
   const { section } = useParams();
   const Page = ADMIN_PAGES[section];
   if (!Page) return <Navigate to="/admin" replace />;
-  return <Page onNavigate={useAdminNav()} />;
+  return <AdminFeedbackProvider><Page onNavigate={useAdminNav()} /></AdminFeedbackProvider>;
 }
 
 /* Main App Component */

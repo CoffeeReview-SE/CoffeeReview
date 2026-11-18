@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { adminRequest, adminJson } from '../api/adminApi.js';
 import BranchEditor from '../features/branches/BranchEditor.jsx';
 import { branchStatuses, branchStatus, incompleteBranch, normalizeBranchText, recordBranchHistory, readEditorName } from '../features/branches/branchForm.mjs';
+import { useAdminFeedback } from '../components/AdminFeedback.jsx';
 
 /* Navigation links - identical to AdminDashboard */
 const NAV = [
@@ -174,11 +175,10 @@ export default function BranchManagement({ onNavigate }) {
   const [areaFilter, setAreaFilter] = useState('');
   const [missingOnly, setMissingOnly] = useState(false);
   const [editor, setEditor] = useState(null);
-  const [feedback, setFeedback] = useState('');
   const [changingId, setChangingId] = useState(null);
   const changingRef = useRef(false);
 
-  const [apiError, setApiError] = useState('');
+  const { notify, confirm } = useAdminFeedback();
   const [brandOptions, setBrandOptions] = useState([]);
   const reload = async () => {
     try {
@@ -187,17 +187,10 @@ export default function BranchManagement({ onNavigate }) {
       setBrandOptions(brands);
       setBranches(rows.map(b => ({ ...b, code: String(b.id), brandColor: '#4A2C1E',
         status: branchStatus(b.isActive), images: media[b.id]?.images || {}, mediaVersion: media[b.id]?.version })));
-      setApiError('');
-    } catch(e) { setApiError(e.message); }
+    } catch(e) { notify(`Không tải được danh sách chi nhánh: ${e.message}`, 'error', 'Lỗi tải dữ liệu'); }
   };
   useEffect(() => { reload(); }, []);
-  const go = (key) => {
-    if (onNavigate) {
-      onNavigate(key);
-    } else {
-      window.alert(`Chuyển sang trang: ${key}`);
-    }
-  };
+  const go = key => onNavigate?.(key);
 
   const filteredBranches = branches.filter(branch => {
     const query = normalizeBranchText(searchQuery);
@@ -212,18 +205,25 @@ export default function BranchManagement({ onNavigate }) {
   const handleActiveChange = async branch => {
     if (changingRef.current) return;
     const nextActive = !branch.isActive;
-    if (!window.confirm(`${nextActive ? "Bật lại" : "Tạm ngưng"} chi nhánh "${branch.name}"?`)) return;
+    const accepted = await confirm({
+      title: `${nextActive ? "Bật lại" : "Tạm ngưng"} chi nhánh?`,
+      message: `Bạn muốn ${nextActive ? "bật lại" : "tạm ngưng"} chi nhánh “${branch.name}”?`,
+      confirmLabel: nextActive ? "Bật lại" : "Tạm ngưng",
+      tone: nextActive ? "success" : "danger",
+    });
+    if (!accepted) return;
     changingRef.current = true;
-    setChangingId(branch.id); setApiError(""); setFeedback("");
+    setChangingId(branch.id);
     try {
       const saved = await adminRequest(`catalog/branches/${branch.id}/active`, adminJson("PATCH", { isActive: nextActive, expectedUpdatedAt: branch.updatedAt }));
       const after = { ...branch, ...saved, status: branchStatus(saved.isActive) };
       setBranches(previous => previous.map(item => item.id === branch.id ? after : item));
       const historySaved = recordBranchHistory(branch.id, branch, after, readEditorName());
-      setFeedback(`${saved.isActive ? "Đã bật lại chi nhánh." : "Đã tạm ngưng chi nhánh."}${historySaved ? "" : " Trình duyệt chưa lưu được lịch sử."}`);
+      notify(`${saved.isActive ? "Đã bật lại chi nhánh." : "Đã tạm ngưng chi nhánh."}${historySaved ? "" : " Trình duyệt chưa lưu được lịch sử."}`,
+        historySaved ? "success" : "warning", historySaved ? "Đã cập nhật trạng thái" : "Cần lưu ý");
     } catch (error) {
       await reload();
-      setApiError(error.message);
+      notify(`Không thể cập nhật trạng thái chi nhánh: ${error.message}`, 'error', 'Thao tác thất bại');
     } finally {
       changingRef.current = false;
       setChangingId(null);
@@ -259,8 +259,6 @@ export default function BranchManagement({ onNavigate }) {
       </aside>
 
       <main className="ad-main">
-        {feedback && <p role="status">{feedback}</p>}
-        {apiError && <div role="alert" style={{color:"#a22"}}><p>Lỗi API: {apiError}</p><button type="button" onClick={reload}>Tải lại danh sách</button></div>}
         <header className="ad-head">
           <div>
             <h1>Quản lý chi nhánh</h1>
@@ -400,7 +398,10 @@ export default function BranchManagement({ onNavigate }) {
         </section>
       </main>
       {editor && <BranchEditor key={editor.row?.id || "new"} row={editor.row} brands={brandOptions} readOnly={editor.readOnly}
-        onClose={() => setEditor(null)} onSaved={async message => { setFeedback(message); await reload(); }} />}
+        onClose={() => setEditor(null)} onSaved={async message => {
+          notify(message, message.includes("Trình duyệt chưa lưu") ? "warning" : "success", "Đã lưu chi nhánh");
+          await reload();
+        }} />}
     </div>
   );
 }

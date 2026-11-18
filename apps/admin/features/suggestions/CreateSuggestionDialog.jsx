@@ -181,7 +181,7 @@ export default function CreateSuggestionDialog({ onClose, onCreated }) {
 
   return <dialog ref={dialogRef} className="create-suggestion" aria-labelledby="create-suggestion-title" onCancel={event => { event.preventDefault(); if (!busy) onClose(); }} onClick={event => { if (event.target === event.currentTarget && !busy) onClose(); }}>
     <header className="create-suggestion__header">
-      <div><h2 id="create-suggestion-title">Tạo đề xuất mới</h2><p>Thông tin sẽ được lưu vào danh sách chờ duyệt.</p></div>
+      <div><h2 id="create-suggestion-title">Tạo đề xuất chờ duyệt</h2><p>Thông tin chỉ được thêm vào danh mục sau khi admin xem xét và duyệt.</p></div>
       <button type="button" onClick={onClose} disabled={busy} aria-label="Đóng form">Đóng</button>
     </header>
     <form ref={formRef} onSubmit={submit} noValidate>
@@ -220,7 +220,7 @@ export default function CreateSuggestionDialog({ onClose, onCreated }) {
       <footer>
         <button type="button" onClick={onClose} disabled={busy}>Hủy</button>
         <button type="submit" className="create-suggestion__submit" disabled={busy || imagePending || (!isNewBrand && catalogStatus !== "ready")}>
-          {busy ? "Đang gửi…" : imagePending ? "Đang đọc ảnh…" : "Gửi đề xuất"}
+          {busy ? "Đang gửi…" : imagePending ? "Đang đọc ảnh…" : "Gửi chờ duyệt"}
         </button>
       </footer>
     </form>
