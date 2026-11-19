@@ -46,9 +46,9 @@ Milano chỉ thêm một địa điểm có thông báo chính thức rõ ràng 
 
 ## File cần chạy trên Supabase
 
-**Database đang sử dụng:** mở Supabase SQL Editor và chạy riêng `infrastructure/Database/branches_hcm_verified_seed.sql`. Script chỉ thêm chi nhánh còn thiếu, không sửa dữ liệu cũ, không tự bật lại chi nhánh đã tắt. Chạy lại không tăng bản ghi trùng theo thương hiệu và địa chỉ đã chuẩn hóa khoảng trắng/chữ hoa thường. Tên thương hiệu phải khớp đủ 10 seed gốc, thiếu tên sẽ báo lỗi và rollback.
+The existing Supabase database already includes the applied updates. Use `infrastructure/Database/SGCoffeeData.sql` for a new database.
 
-**Database trống hoàn toàn:** dùng `infrastructure/Database/SGCoffeeData.sql`; file này chứa 7 bảng, 4 ngôn ngữ, 10 thương hiệu và 30 chi nhánh. Sau đó chạy `rls.sql` theo cấu hình hiện tại. Không cần nhập lại hai migration Analytics trên database mới đã dùng schema này.
+Use `infrastructure/Database/SGCoffeeData.sql` for a new database, including all seven tables, reference data and RLS.
 
 Không chạy lại toàn bộ SQL khởi tạo chỉ để thêm chi nhánh vào database thật, vì phần seed thương hiệu có cập nhật mô tả. Push code/deploy Railway không tự import dữ liệu SQL.
 

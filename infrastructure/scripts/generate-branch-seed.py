@@ -45,7 +45,6 @@ WHERE NOT EXISTS (
 );
 {END}
 """
-    (DATABASE / "branches_hcm_verified_seed.sql").write_text("BEGIN;\nSET LOCAL lock_timeout = '5s';\n" + sql + "COMMIT;\n", encoding="utf-8")
     base = DATABASE / "SGCoffeeData.sql"
     schema = base.read_text(encoding="utf-8")
     if START in schema:

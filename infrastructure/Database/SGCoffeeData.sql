@@ -117,8 +117,7 @@ ON CONFLICT (language_code) DO UPDATE SET
     native_name = EXCLUDED.native_name,
     is_enabled = EXCLUDED.is_enabled;
 
--- Brand descriptions below are copied verbatim from official brand websites/pages where available.
--- Keep the source URL and source language so the wording can be audited; do not treat these as translations.
+-- Brand descriptions retain their official sources; KOI and Starbucks use Vietnamese translations.
 INSERT INTO brand (brand_name, description, description_language_code, description_source_url, website_url) VALUES
 (
  'Phúc Long',
@@ -200,16 +199,16 @@ ON CONFLICT (brand_name) DO UPDATE SET
 -- BEGIN VERIFIED BRAND TYPES
 WITH verified(brand_name, type) AS (
     VALUES
-    ('Ph?c Long', 'C? ph?, Tr?, B?nh'),
-    ('Highlands Coffee', 'C? ph?, Tr?, B?nh'),
-    ('Trung Nguy?n', 'C? ph?'),
-    ('KATINAT', 'Tr?, C? ph?'),
-    ('KOI Th?', 'Tr?'),
-    ('Ph? La', 'Tr?, C? ph?'),
-    ('Milano Coffee', 'Tr?, C? ph?'),
-    ('Viva Star Coffee', 'Tr?, C? ph?'),
-    ('The Coffee House', 'C? ph?, Tr?, B?nh'),
-    ('Starbucks', 'C? ph?, Tr?, B?nh')
+    ('Phúc Long', 'Cà phê, Trà, Bánh'),
+    ('Highlands Coffee', 'Cà phê, Trà, Bánh'),
+    ('Trung Nguyên', 'Cà phê'),
+    ('KATINAT', 'Trà, Cà phê'),
+    ('KOI Thé', 'Trà'),
+    ('Phê La', 'Trà, Cà phê'),
+    ('Milano Coffee', 'Trà, Cà phê'),
+    ('Viva Star Coffee', 'Trà, Cà phê'),
+    ('The Coffee House', 'Cà phê, Trà, Bánh'),
+    ('Starbucks', 'Cà phê, Trà, Bánh')
 )
 UPDATE public.brand b
 SET type = v.type, updated_at = CURRENT_TIMESTAMP
@@ -270,6 +269,15 @@ WHERE NOT EXISTS (
       AND lower(regexp_replace(trim(old.address), '\s+', ' ', 'g')) = lower(regexp_replace(trim(v.address), '\s+', ' ', 'g'))
 );
 -- END VERIFIED BRANCH SEED
+
+-- Bật RLS trên bảy bảng ứng dụng để giới hạn truy cập qua Data API.
+ALTER TABLE public.language ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.brand ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.branch ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.submission ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.visit_session ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.page_view ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.audio_play ENABLE ROW LEVEL SECURITY;
 
 COMMIT;
 

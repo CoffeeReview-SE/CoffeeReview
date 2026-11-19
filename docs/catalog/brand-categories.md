@@ -19,7 +19,7 @@ Chỉ gán nhãn đã xác minh; không có nhãn không có nghĩa thương hi�
 
 ## Áp dụng
 
-Database đang sử dụng: chạy `infrastructure/Database/brand_types_migration.sql` trong Supabase SQL Editor trước khi deploy Catalog mới. Script thêm cột `brand.type` nếu thiếu và cập nhật phân loại của 10 tên thương hiệu; không tạo thương hiệu thiếu và không xóa dữ liệu. Chạy lại sẽ gán lại các nhãn đã xác minh trong script.
+Brand categories have been applied on Supabase and are included in `infrastructure/Database/SGCoffeeData.sql` for new databases.
 
 Database mới: dùng `SGCoffeeData.sql`, đã có cột và dữ liệu phân loại.
 

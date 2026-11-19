@@ -15,7 +15,7 @@
 | Gateway | `services/gateway/src/SGCoffee.Gateway/Gateway.cs` | YARP đã chuyển tiếp cả nhóm analytics; summary được miễn chặn khi Admin tắt; chưa có xác thực Admin |
 | Routes | `services/gateway/src/SGCoffee.Gateway/appsettings.json` | Public POST và admin route đã có wildcard; không cần thêm route trùng |
 | SQL gốc | `infrastructure/Database/SGCoffeeData.sql` | Có session/page/audio/brand/branch/language; SQL gốc thiếu visitor_id nhưng DB thật đã có |
-| Migration cũ | `infrastructure/Database/analytics_migration.sql` | Bổ sung visitor_id và index; đã phản ánh trong DB thật |
+| Migration cũ | `infrastructure/Database/SGCoffeeData.sql` | Bổ sung visitor_id và index; đã phản ánh trong DB thật |
 
 Đã kết nối Supabase bằng cấu hình Analytics hiện có, chỉ đọc metadata trước khi viết migration. Không in connection string, IP hoặc bản ghi người dùng.
 
@@ -29,7 +29,7 @@ Schema xác nhận trước migration:
 
 ## Bước 2 — Migration đã áp dụng
 
-File: `infrastructure/Database/analytics_dashboard_migration.sql`.
+File: `infrastructure/Database/SGCoffeeData.sql`.
 
 - Thêm `visit_session.ended_at` TIMESTAMPTZ nullable.
 - Thêm `page_view.event_id`, `audio_play.event_id` UUID nullable, unique index cho event mới; dữ liệu cũ giữ NULL.
@@ -49,13 +49,7 @@ dotnet run --project infrastructure/tools/AnalyticsDatabase/AnalyticsDatabase.cs
 
 Kết quả mong đợi: danh sách cột, index và constraint; có ended_at và hai event_id. Tool đọc `ConnectionStrings:Supabase` từ Analytics User Secrets hoặc biến môi trường, không lưu secret vào source.
 
-Lệnh áp dụng migration (đã chạy thành công trong phiên này):
-
-```powershell
-dotnet run --project infrastructure/tools/AnalyticsDatabase/AnalyticsDatabase.csproj -- --apply-dashboard-migration
-```
-
-Kết quả mong đợi: `Dashboard migration applied successfully` rồi in schema. Script dùng IF NOT EXISTS nên hỗ trợ chạy lại; không tự sửa cột cùng tên nếu kiểu không khớp.
+The migration was previously applied. Use `--validate-current-sql` to validate the consolidated SQL.
 
 Nếu báo `Missing ConnectionStrings:Supabase`, kiểm tra cấu hình Analytics User Secrets hoặc biến môi trường. Nếu báo `NpgsqlException`, kiểm tra mạng, quyền truy cập Supabase và thông tin kết nối tại máy; tool cố ý không in exception chi tiết chứa endpoint. Nếu migration báo schema khác hoặc lock timeout, kiểm tra lại schema/transaction đang giữ khóa trước khi chạy lại.
 

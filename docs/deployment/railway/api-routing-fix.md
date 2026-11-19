@@ -52,7 +52,7 @@ Mở cùng domain frontend tại `/api/admin/analytics/summary`. Kết quả đ�
 
 ## Supabase SQL
 
-Migration `infrastructure/Database/analytics_dashboard_migration.sql` đã áp dụng thành công vào Supabase được cấu hình ở môi trường local trong phiên làm việc trước. Nó thêm ended_at, event_id và index. Không cần import lại vào cùng database; chỉ chạy migration bổ sung nếu backend Railway trỏ tới một database/project Supabase khác chưa có các cột này. Không import lại file SQL dữ liệu gốc để sửa lỗi API.
+Migration `infrastructure/Database/SGCoffeeData.sql` đã áp dụng thành công vào Supabase được cấu hình ở môi trường local trong phiên làm việc trước. Nó thêm ended_at, event_id và index. Không cần import lại vào cùng database; chỉ chạy migration bổ sung nếu backend Railway trỏ tới một database/project Supabase khác chưa có các cột này. Không import lại file SQL dữ liệu gốc để sửa lỗi API.
 
 Chỉ đọc metadata để kiểm tra database local đang cấu hình:
 

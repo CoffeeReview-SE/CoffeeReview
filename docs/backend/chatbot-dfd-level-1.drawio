@@ -1,0 +1,137 @@
+<?xml version='1.0' encoding='utf-8'?>
+<mxfile host="app.diagrams.net">
+  <diagram name="DFD mức 1">
+    <mxGraphModel page="1" pageWidth="1400" pageHeight="900">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" value="DFD mức 1 · Chatbot SaigonCoffee" style="text;align=left;fontStyle=1;spacingLeft=12;fontSize=26;html=1;whiteSpace=wrap;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="40" y="15" width="1260" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="u" value="E1 · Người dùng" style="rounded=0;fillColor=#f5f5f5;strokeColor=#666666;fontStyle=1;html=1;whiteSpace=wrap;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="40" y="320" width="150" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="ui" value="1.0 · Nhận và hiển thị hội thoại&lt;br&gt;ChatWidget" style="rounded=1;arcSize=18;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;html=1;whiteSpace=wrap;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="285" y="310" width="200" height="85" as="geometry" />
+        </mxCell>
+        <mxCell id="h" value="D1 · Lịch sử hội thoại&lt;br&gt;React state" style="shape=partialRectangle;left=0;right=0;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;html=1;whiteSpace=wrap;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="285" y="105" width="200" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="v" value="2.0 · Kiểm tra yêu cầu chat&lt;br&gt;Gateway" style="rounded=1;arcSize=18;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;html=1;whiteSpace=wrap;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="600" y="310" width="200" height="85" as="geometry" />
+        </mxCell>
+        <mxCell id="q" value="3.0 · Tra cứu quán cà phê&lt;br&gt;FindCoffeeContext" style="rounded=1;arcSize=18;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;html=1;whiteSpace=wrap;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="600" y="105" width="200" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="db" value="D2 · Supabase&lt;br&gt;brand, branch" style="shape=partialRectangle;left=0;right=0;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;html=1;whiteSpace=wrap;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="940" y="105" width="200" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="g" value="4.0 · Xử lý câu trả lời&lt;br&gt;Gateway" style="rounded=1;arcSize=18;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;html=1;whiteSpace=wrap;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="940" y="310" width="200" height="85" as="geometry" />
+        </mxCell>
+        <mxCell id="api" value="E2 · Groq API" style="rounded=0;fillColor=#f5f5f5;strokeColor=#666666;fontStyle=1;html=1;whiteSpace=wrap;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="940" y="530" width="200" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="st" value="5.0 · Kiểm tra kết nối&lt;br&gt;Gateway" style="rounded=1;arcSize=18;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;html=1;whiteSpace=wrap;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="285" y="530" width="200" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="10" source="u" target="ui" value="Câu hỏi" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#526171;fontSize=12;labelBackgroundColor=#ffffff;exitX=1;exitY=0.27;entryX=0;entryY=0.32;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="11" source="ui" target="u" value="Phản hồi / lỗi / trạng thái" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#526171;fontSize=12;labelBackgroundColor=#ffffff;exitX=0;exitY=0.73;entryX=1;entryY=0.8;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="12" source="ui" target="h" value="Tin nhắn mới" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#526171;fontSize=12;labelBackgroundColor=#ffffff;exitX=0.25;exitY=0;entryX=0.25;entryY=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="13" source="h" target="ui" value="Lịch sử chat" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#526171;fontSize=12;labelBackgroundColor=#ffffff;exitX=0.75;exitY=1;entryX=0.75;entryY=0;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="14" source="ui" target="v" value="Lịch sử + ngôn ngữ" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#526171;fontSize=12;labelBackgroundColor=#ffffff;exitX=1;exitY=0.28;entryX=0;entryY=0.28;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="15" source="v" target="ui" value="Lỗi kiểm tra" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#526171;fontSize=12;labelBackgroundColor=#ffffff;exitX=0;exitY=0.72;entryX=1;entryY=0.72;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="16" source="v" target="q" value="Câu hỏi mới nhất" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#526171;fontSize=12;labelBackgroundColor=#ffffff;exitX=0.5;exitY=0;entryX=0.5;entryY=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="17" source="v" target="g" value="Lịch sử hợp lệ + ngôn ngữ" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#526171;fontSize=12;labelBackgroundColor=#ffffff;exitX=1;exitY=0.46;entryX=0;entryY=0.46;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="18" source="q" target="db" value="Từ khóa" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#526171;fontSize=12;labelBackgroundColor=#ffffff;exitX=1;exitY=0.25;entryX=0;entryY=0.25;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="19" source="db" target="q" value="Dữ liệu phù hợp" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#526171;fontSize=12;labelBackgroundColor=#ffffff;exitX=0;exitY=0.75;entryX=1;entryY=0.75;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="20" source="q" target="g" value="Dữ liệu tham chiếu JSON" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#526171;fontSize=12;labelBackgroundColor=#ffffff;exitX=1;exitY=1;entryX=0.25;entryY=0;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="825" y="175" />
+              <mxPoint x="825" y="235" />
+              <mxPoint x="990" y="235" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="21" source="g" target="api" value="Yêu cầu sinh câu trả lời" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#526171;fontSize=12;labelBackgroundColor=#ffffff;exitX=0.75;exitY=1;entryX=0.75;entryY=0;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="22" source="api" target="g" value="Phản hồi mô hình" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#526171;fontSize=12;labelBackgroundColor=#ffffff;exitX=0.25;exitY=0;entryX=0.25;entryY=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="23" source="g" target="ui" value="Câu trả lời / lỗi dịch vụ" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#526171;fontSize=12;labelBackgroundColor=#ffffff;exitX=0.1;exitY=1;entryX=1;entryY=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="960" y="440" />
+              <mxPoint x="510" y="440" />
+              <mxPoint x="510" y="395" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="24" source="q" target="ui" value="Lỗi truy vấn" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#526171;fontSize=12;labelBackgroundColor=#ffffff;exitX=0;exitY=0.7;entryX=1;entryY=0;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="540" y="154" />
+              <mxPoint x="540" y="245" />
+              <mxPoint x="485" y="245" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="25" source="ui" target="st" value="GET /api/assistant/status" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#526171;fontSize=12;labelBackgroundColor=#ffffff;exitX=0.25;exitY=1;entryX=0.25;entryY=0;dashed=1;strokeColor=#8064a2;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="26" source="st" target="ui" value="Trạng thái kết nối" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#526171;fontSize=12;labelBackgroundColor=#ffffff;exitX=0.75;exitY=0;entryX=0.75;entryY=1;dashed=1;strokeColor=#8064a2;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="27" source="st" target="api" value="Yêu cầu danh sách model" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#526171;fontSize=12;labelBackgroundColor=#ffffff;exitX=1;exitY=0.27;entryX=0;entryY=0.27;dashed=1;strokeColor=#8064a2;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="28" source="api" target="st" value="Danh sách model / lỗi" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#526171;fontSize=12;labelBackgroundColor=#ffffff;exitX=0;exitY=0.73;entryX=1;entryY=0.73;dashed=1;strokeColor=#8064a2;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="29" source="st" target="db" value="Truy vấn kiểm tra" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#526171;fontSize=12;labelBackgroundColor=#ffffff;exitX=0.75;exitY=1;entryX=1;entryY=0.25;dashed=1;strokeColor=#8064a2;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="435" y="665" />
+              <mxPoint x="1220" y="665" />
+              <mxPoint x="1220" y="122" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="30" source="db" target="st" value="Kết quả kiểm tra" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#526171;fontSize=12;labelBackgroundColor=#ffffff;exitX=1;exitY=0.75;entryX=0.25;entryY=1;dashed=1;strokeColor=#8064a2;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1270" y="158" />
+              <mxPoint x="1270" y="720" />
+              <mxPoint x="335" y="720" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="note" value="Đường liền · Hỏi đáp     |     Đường nét đứt · Kiểm tra kết nối" style="text;align=left;fontColor=#526171;html=1;whiteSpace=wrap;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="40" y="765" width="600" height="40" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
