@@ -174,7 +174,7 @@ export default function AdminDashboard({ onNavigate }) {
     ['Inactive', data.inactive, false],
     ['Tổng lượt nghe audio', data.audioPlays],
     ['Khách duy nhất', data.visitors],
-    ['Lượt xem trang', data.pageViews],
+    ['Lượt xem trang · 5 giờ gần nhất', data.pageViews],
   ];
   return (
     <div className="ad">
@@ -206,7 +206,7 @@ export default function AdminDashboard({ onNavigate }) {
             Làm mới
           </button>
         </header>
-        <p>Toàn bộ thời gian · Tự cập nhật sau mỗi 5 giây · Giờ Việt Nam</p>
+        <p>Lượt xem trang trong 5 giờ gần nhất · Các tổng khác theo toàn bộ thời gian · Tự cập nhật sau mỗi 5 giây · Giờ Việt Nam</p>
         {!data && !error && <p role="status">Đang tải thống kê…</p>}
         {data && (
           <>
