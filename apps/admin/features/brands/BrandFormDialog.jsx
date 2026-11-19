@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import SuggestionImageField from "../../../shared/suggestions/SuggestionImageField.jsx";
 import { imageDataError, imageText } from "../../../shared/suggestions/suggestionImages.mjs";
 import { adminJson, adminRequest } from "../../api/adminApi.js";
+import BrandTranslations from "./BrandTranslations.jsx";
 
 const emptyBrand = { name: "", description: "", logoUrl: "", websiteUrl: "" };
 
@@ -108,6 +109,7 @@ export default function BrandFormDialog({ brand, onClose, onSave }) {
           <input name="websiteUrl" type="url" placeholder="https://..." value={form.websiteUrl} onChange={change} disabled={saving} />
         </label>
       </div>
+      {brand?.id && <BrandTranslations brandId={brand.id} description={form.description} disabled={saving} />}
       {error && <p className="brand-form__error" role="alert">{error}</p>}
       <footer>
         <button type="button" className="brand-form__cancel" onClick={onClose} disabled={saving}>Hủy</button>

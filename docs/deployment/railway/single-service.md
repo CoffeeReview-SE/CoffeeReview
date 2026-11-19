@@ -1,5 +1,7 @@
 # Railway: frontend và năm backend trong một service
 
+Quản lý bản dịch thương hiệu và cấu hình thư mục lưu bền: [Bản dịch thương hiệu](../../brand-translations.md).
+
 Dockerfile tại gốc repo build React và publish Gateway/Analytics/Catalog/Submission. Node khởi động bốn tiến trình .NET, chờ health check rồi mở frontend trên PORT của Railway. Backend dùng cổng nội bộ 5100/5101/5104/5105. Nếu một backend dừng, launcher dừng toàn bộ ứng dụng để Railway có thể restart.
 
 ## Cấu hình service Railway hiện có

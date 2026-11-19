@@ -15,4 +15,5 @@ bin/
 obj/
 public/image/uploads/
 public/image/.metadata/
+**/translations/brands/
 .tmp/

@@ -10,6 +10,7 @@ builder.WebHost.UseUrls($"http://0.0.0.0:{Environment.GetEnvironmentVariable("PO
 var connectionString = builder.Configuration.GetConnectionString("Supabase")
     ?? throw new InvalidOperationException("ConnectionStrings:Supabase is required.");
 builder.Services.AddSingleton(NpgsqlDataSource.Create(connectionString));
+builder.Services.AddSingleton<BrandTranslationStore>();
 builder.Services.AddHttpClient<ITranslationProvider, UnofficialGoogleTranslateProvider>(client =>
 {
     client.Timeout = TimeSpan.FromSeconds(20);
@@ -35,7 +36,7 @@ app.Use(async (context, next) =>
     await next();
 });
 
-// Public read: return the original description. Translations are generated on demand and not stored.
+// Public read: return the original description; translation endpoints prefer reviewed files.
 app.MapGet("/brands/{brandId:long}", async (long brandId, NpgsqlDataSource db, CancellationToken ct) =>
 {
     const string sql = """
@@ -63,10 +64,10 @@ app.MapGet("/brands/{brandId:long}", async (long brandId, NpgsqlDataSource db, C
     });
 });
 
-// User language selection translates on demand without persisting the translation.
+// User language selection prefers a current saved translation, then translates on demand.
 app.MapPost("/brands/{brandId:long}/translations/{languageCode}", async (
-    long brandId, string languageCode, NpgsqlDataSource db, ITranslationProvider translator, ILogger<Program> logger, CancellationToken ct) =>
-    await TranslateBrandAsync(brandId, languageCode, db, translator, logger, ct));
+    long brandId, string languageCode, NpgsqlDataSource db, BrandTranslationStore store, ITranslationProvider translator, ILogger<Program> logger, CancellationToken ct) =>
+    await TranslateBrandAsync(brandId, languageCode, db, translator, logger, ct, store));
 
 app.MapPost("/branches/{branchId:long}/translations/{languageCode}", async (
     long branchId, string languageCode, NpgsqlDataSource db, ITranslationProvider translator, ILogger<Program> logger, CancellationToken ct) =>
@@ -77,9 +78,42 @@ app.MapPost("/admin/brands/{brandId:long}/translations/{languageCode}", async (
     long brandId, string languageCode, NpgsqlDataSource db, ITranslationProvider translator, ILogger<Program> logger, CancellationToken ct) =>
     await TranslateBrandAsync(brandId, languageCode, db, translator, logger, ct));
 
+app.MapGet("/admin/brands/{brandId:long}/translations", async (long brandId, NpgsqlDataSource db, BrandTranslationStore store, CancellationToken ct) =>
+{
+    await using var cmd = db.CreateCommand("SELECT COALESCE(description,'') FROM brand WHERE brand_id=@id");
+    cmd.Parameters.AddWithValue("id", brandId);
+    if (await cmd.ExecuteScalarAsync(ct) is not string source) return Results.NotFound();
+    var translations = new Dictionary<string, object>();
+    foreach (var language in new[] { "en", "ja", "zh" })
+    {
+        var saved = await store.Read(brandId, language, ct);
+        translations[language] = new { description = saved?.Description ?? "", revision = saved?.Revision,
+            savedAt = saved?.SavedAt, status = saved is null ? "missing" : saved.SourceHash == BrandTranslationStore.Hash(source) ? "saved" : "stale" };
+    }
+    return Results.Ok(new { sourceDescription = source, translations });
+});
+
+app.MapPut("/admin/brands/{brandId:long}/translations/{languageCode}", async (long brandId, string languageCode, SaveBrandTranslation input, NpgsqlDataSource db, BrandTranslationStore store, CancellationToken ct) =>
+{
+    if (!BrandTranslationStore.Supported(languageCode) || string.IsNullOrWhiteSpace(input.Description) || input.Description.Length > 20000 || input.SourceDescription is null)
+        return Results.BadRequest(new { error = "Ngôn ngữ hoặc nội dung dịch không hợp lệ." });
+    await using var cmd = db.CreateCommand("SELECT COALESCE(description,'') FROM brand WHERE brand_id=@id");
+    cmd.Parameters.AddWithValue("id", brandId);
+    if (await cmd.ExecuteScalarAsync(ct) is not string source) return Results.NotFound();
+    if (source != input.SourceDescription) return Results.Conflict(new { error = "Mô tả gốc đã thay đổi. Tải lại trước khi lưu bản dịch." });
+    if (string.IsNullOrWhiteSpace(source)) return Results.BadRequest(new { error = "Cần có mô tả gốc trước khi lưu bản dịch." });
+    try
+    {
+        var saved = await store.Save(brandId, languageCode, input, ct);
+        return saved is null ? Results.Conflict(new { error = "Bản dịch đã được sửa ở phiên khác. Tải lại để đối chiếu." }) : Results.Ok(saved);
+    }
+    catch (Exception error) when (error is IOException or UnauthorizedAccessException)
+    { return Results.Problem("Không lưu được file bản dịch. Kiểm tra thư mục lưu trữ.", statusCode: 503); }
+});
+
 app.Run();
 
-static async Task<IResult> TranslateBrandAsync(long brandId, string languageCode, NpgsqlDataSource db, ITranslationProvider translator, ILogger logger, CancellationToken ct)
+static async Task<IResult> TranslateBrandAsync(long brandId, string languageCode, NpgsqlDataSource db, ITranslationProvider translator, ILogger logger, CancellationToken ct, BrandTranslationStore? store = null)
 {
     languageCode = languageCode.Trim().ToLowerInvariant();
     if (languageCode.Length is < 2 or > 10)
@@ -106,6 +140,12 @@ static async Task<IResult> TranslateBrandAsync(long brandId, string languageCode
     if (brandName.Contains("KOI", StringComparison.OrdinalIgnoreCase) ||
         brandName.Contains("Starbucks", StringComparison.OrdinalIgnoreCase))
         sourceLanguage = "vi";
+    if (store is not null && BrandTranslationStore.Supported(languageCode))
+    {
+        var saved = await store.Read(brandId, languageCode, ct);
+        if (saved is not null && saved.SourceHash == BrandTranslationStore.Hash(source))
+            return Results.Ok(new { brandId, brandName, languageCode, description = saved.Description, isTranslated = true });
+    }
     if (source.Length > 5000)
         return Results.BadRequest(new { error = "Source description cannot exceed 5000 characters." });
 

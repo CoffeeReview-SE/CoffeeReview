@@ -285,7 +285,6 @@ export default function BrandDetailPage({ brandId, brand, onBack, onNavigate, on
   const dt = (key, values) => detailText(languageCode, key, values);
   const [translation, setTranslation] = useState(null);
   const [translationStatus, setTranslationStatus] = useState({ languageCode: "", status: "idle" });
-  const translationCache = useRef(new Map());
   useEffect(() => {
     const controller = new AbortController();
     setLoaded(null); setLoadError(false);
@@ -318,7 +317,7 @@ export default function BrandDetailPage({ brandId, brand, onBack, onNavigate, on
     const sourceLanguage = brandDescriptionLanguage(sourceBrand);
 
     const offlineTranslation = getOfflineBrandTranslation(sourceBrand, languageCode);
-    if (offlineTranslation) {
+    if (offlineTranslation && loadError) {
       setTranslation({ languageCode, description: offlineTranslation, isTranslated: true });
       setTranslationStatus({ languageCode, status: "idle" });
       return () => { active = false; };
@@ -330,13 +329,6 @@ export default function BrandDetailPage({ brandId, brand, onBack, onNavigate, on
       return () => { active = false; };
     }
 
-    const cacheKey = `${brandId}:${languageCode}:${sourceBrand.description}`;
-    const cachedDescription = translationCache.current.get(cacheKey);
-    if (cachedDescription) {
-      setTranslation({ languageCode, description: cachedDescription, isTranslated: true });
-      setTranslationStatus({ languageCode, status: "idle" });
-      return () => { active = false; };
-    }
 
     setTranslationStatus({ languageCode, status: "loading" });
     fetch(`/api/localization/brands/${brandId}/translations/${languageCode}`, { method: "POST" })
@@ -348,17 +340,21 @@ export default function BrandDetailPage({ brandId, brand, onBack, onNavigate, on
       .then(data => {
         if (!active) return;
         if (typeof data.description !== "string" || !data.description.trim()) throw new Error("Empty translation");
-        translationCache.current.set(cacheKey, data.description);
         setTranslation({ languageCode, description: data.description, isTranslated: data.isTranslated === true });
         setTranslationStatus({ languageCode, status: "idle" });
       })
       .catch(() => {
         if (!active) return;
+        if (offlineTranslation) {
+          setTranslation({ languageCode, description: offlineTranslation, isTranslated: true });
+          setTranslationStatus({ languageCode, status: "idle" });
+          return;
+        }
         setTranslation(null);
         setTranslationStatus({ languageCode, status: "error" });
       });
     return () => { active = false; };
-  }, [brandId, languageCode, sourceBrand?.description, sourceBrand?.descriptionLanguageCode]);
+  }, [brandId, languageCode, sourceBrand?.description, sourceBrand?.descriptionLanguageCode, loadError]);
   const item = (loaded?.id === brandId ? loaded : null) || brand || { id: brandId };
 
   
