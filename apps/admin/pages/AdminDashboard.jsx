@@ -173,8 +173,8 @@ export default function AdminDashboard({ onNavigate }) {
     ['Active', data.active, true],
     ['Inactive', data.inactive, false],
     ['Tổng lượt nghe audio', data.audioPlays],
-    ['Khách duy nhất', data.visitors],
-    ['Lượt xem trang · 5 giờ gần nhất', data.pageViews],
+    ['Tổng Thiết Bị Xem', data.visitors],
+    ['Tổng lượt xem trang', data.pageViews],
   ];
   return (
     <div className="ad">
