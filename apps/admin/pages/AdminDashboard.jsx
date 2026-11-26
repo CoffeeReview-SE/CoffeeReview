@@ -173,7 +173,7 @@ export default function AdminDashboard({ onNavigate }) {
     ['Active', data.active, true],
     ['Inactive', data.inactive, false],
     ['Tổng lượt nghe audio', data.audioPlays],
-    ['Tổng Thiết Bị Xem', data.visitors],
+    ['Số trình duyệt truy cập duy nhất', data.visitors],
     ['Tổng lượt xem trang', data.pageViews],
   ];
   return (
